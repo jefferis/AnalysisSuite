@@ -984,7 +984,7 @@ WritePovMesh<-function(mesh,col,OutFile="mesh.pov"){
     
     # DECIDED TO ADD SECOND LIGHT SOURCE TO BRIGHTEN THINGS UP
     cat("light_source { <0,0,0> color White } \n",file=OutFile,append=TRUE)
-    cat("\#declare myRadius=1;\n",file=OutFile,append=TRUE)
+    cat("#declare myRadius=1;\n",file=OutFile,append=TRUE)
 
     textLines=paste("sphere{ <",mesh[,1],",",mesh[,2],",",mesh[,3],"> myRadius pigment{",col,"}}")
     textLines<<-textLines
@@ -1035,8 +1035,8 @@ WriteBlendedPovMesh<-function(mesh,col,RegMesh,OutFile="BlendedMesh.pov"){
     
     # DECIDED TO ADD SECOND LIGHT SOURCE TO BRIGHTEN THINGS UP
     cat("light_source { <0,0,0> color White } \n",file=OutFile,append=TRUE)
-    cat("\#declare myRadius=0.5;\n",file=OutFile,append=TRUE)
-    cat("\#declare mClock=clock;\n",file=OutFile,append=TRUE)
+    cat("#declare myRadius=0.5;\n",file=OutFile,append=TRUE)
+    cat("#declare mClock=clock;\n",file=OutFile,append=TRUE)
 
     dP=RegMesh[,1:3]-mesh
     

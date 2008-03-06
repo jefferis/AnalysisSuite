@@ -134,7 +134,7 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE){
 	}
 	nHeaderLines=length(headerLines)
 	# trim comments and blanks & convert all white space to single spaces
-	headerLines=trim(sub("(.*)\#.*","\\1",headerLines))
+	headerLines=trim(sub("(.*)#.*","\\1",headerLines))
 	headerLines=headerLines[headerLines!=""]
 	headerLines=gsub("[[:space:]]+"," ",headerLines)
 	
@@ -696,14 +696,14 @@ WriteNeuronToAM<-function(ANeuron,AMFile=NULL,
 	cat("define Lines",nLinePoints,"\n",file=fc)
 	cat("define Vertices", nVertices,"\n\n",file=fc)
 	
-	cat("Parameters \{\n",file=fc)
+	cat("Parameters {\n",file=fc)
 	cat("    ContentType \"HxLineSet\"\n",file=fc)
-	cat("\}\n\n",file=fc)
+	cat("}\n\n",file=fc)
 
-	cat("Vertices \{ float\[3\] Coordinates \} = @1\n",file=fc)
-	cat("Vertices \{ float Data \} = @2\n",file=fc)
-	cat("Lines \{ int LineIdx \} = @3\n",file=fc)
-	if(WriteAllSubTrees) cat("Vertices \{ float Data2 \} =@4\n",file=fc)
+	cat("Vertices { float[3] Coordinates } = @1\n",file=fc)
+	cat("Vertices { float Data } = @2\n",file=fc)
+	cat("Lines { int LineIdx } = @3\n",file=fc)
+	if(WriteAllSubTrees) cat("Vertices { float Data2 } =@4\n",file=fc)
 	cat("\n",file=fc)
 	
 	# Write the 3D coords
@@ -781,11 +781,11 @@ WritePointsToAM<-function(d,AMFile=NULL,suffix="am",Force=F,MakeDir=T){
 
 	nVertices=nrow(d)
 	cat("define Markers",nVertices,"Parameters {\nContentType \"LandmarkSet\",NumSets 1\n}\n",file=fc)
-# 	cat("Parameters \{\n",file=fc)
+# 	cat("Parameters {\n",file=fc)
 # 	cat("    ContentType \"HxLineSet\"\n",file=fc)
-# 	cat("\}\n\n",file=fc)
+# 	cat("}\n\n",file=fc)
 
-	cat("Markers \{ float\[3\] Coordinates \} = @1\n",file=fc)
+	cat("Markers { float[3] Coordinates } = @1\n",file=fc)
 	cat("\n",file=fc)
 	
 	# Write the 3D coords
@@ -868,17 +868,17 @@ WriteNeuronToAM3D<-function(ANeuron,AMFile=NULL,
 	cat("# AmiraMesh 3D ASCII 2.0\n",file=AMFile)
 	fc=file(AMFile,open="at") # ie append, text mode
 
-	cat("\# Created by WriteNeuronToAM3D -",format(Sys.time(),usetz=T),"\n\n",file=fc)	
+	cat("# Created by WriteNeuronToAM3D -",format(Sys.time(),usetz=T),"\n\n",file=fc)	
 	cat("nVertices", nVertices,"\nnEdges",nEdgeList,"\n",file=fc)
 	cat("define Origins 1\ndefine vertexTypeList 0\n\n",file=fc)
 	
-	cat("Parameters \{\n",file=fc)
+	cat("Parameters {\n",file=fc)
 	cat("    ContentType \"SkeletonGraph\"\n",file=fc)
-	cat("\}\n\n",file=fc)
+	cat("}\n\n",file=fc)
 
-	cat("Vertices \{ float\[3\] Coordinates \} @1\n",file=fc)
-	cat("Vertices \{ int NeighbourCount } @2\n",file=fc)
-	cat("Vertices \{ float Radii \} = @3\n",file=fc)
+	cat("Vertices { float[3] Coordinates } @1\n",file=fc)
+	cat("Vertices { int NeighbourCount } @2\n",file=fc)
+	cat("Vertices { float Radii } = @3\n",file=fc)
 	cat("EdgeData { int NeighbourList } @4\n",file=fc)
 	cat("Origins { int Origins } @5\n",file=fc)
 	cat("Vertices { int vertexTypeCounter } @6\n",file=fc)
@@ -901,16 +901,16 @@ WriteNeuronToAM3D<-function(ANeuron,AMFile=NULL,
 	write.table(ANeuron$d$W[chosenVertices]/2,col.names=F,row.names=F,file=fc)
 
 	# Write the edgelist information
-	cat("\n@4 \#",nEdgeList,"bidirectional edges\n",file=fc)
+	cat("\n@4 #",nEdgeList,"bidirectional edges\n",file=fc)
 	#NB -1 since Amira is 0 indexed
 	write.table(EdgeList$Neighbour-1,col.names=F,row.names=F,file=fc)
 
 	# Write the origin information NB -1 since 0 indexed
-	cat("\n@5 \#n 1\n",file=fc)
+	cat("\n@5 #n 1\n",file=fc)
 	cat(ANeuron$StartPoint-1,"\n",file=fc)
 	
 	# Write the vertexTypeCounter information
-	cat("\n@6 \#",nVertices,"\n",file=fc)
+	cat("\n@6 #",nVertices,"\n",file=fc)
 	cat(paste(rep(0,nVertices),"\n"),sep="",file=fc)
 	
 	# nb have to -1 from each point because amira is 0 indexed
@@ -964,7 +964,7 @@ ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inne
 	if(Verbose) cat(nLines,"lines of text to parse\n")
 	
 	# Find the start of the Vertices
-	dataStart=grep("^\s*Vertices\s*",t)[1]
+	dataStart=grep("^\\s*Vertices\\s*",t)[1]
 	if(Verbose) cat("Data start line =",dataStart,"\n")
 	headerLines=t[seq(dataStart-1)]
 	trim=function(x) sub('^\\s+', '', sub('\\s+$', '', x, perl = TRUE), perl = TRUE)
@@ -983,7 +983,7 @@ ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inne
 	# Now read in Triangles that define patches:
 	linesSkipped=dataStart+nVertices-1
 	remainingLines=t[(dataStart+nVertices):nLines]
-	PatchDefLine=grep("^\s*Patches\s*",remainingLines,perl=TRUE)
+	PatchDefLine=grep("^\\s*Patches\\s*",remainingLines,perl=TRUE)
 	cat("PatchDefLine =",PatchDefLine,"\n")
 	nPatches=as.numeric(getfield("Patches",remainingLines[PatchDefLine],2))
 	cat("nPatches =",nPatches,"\n")
@@ -1040,13 +1040,13 @@ WriteAmiraLandmarkSet=function(filename,d){
 WriteHxSurface=function(filename,Vertices,Indices=NULL,
 		material=sub("^([^.]+)\\..*","\\1",basename(filename))){
 		
-	cat("\# HyperSurface ASCII\nParameters {\n",file=filename)
+	cat("# HyperSurface ASCII\nParameters {\n",file=filename)
 	fc=file(filename,open="at") # ie append, text mode
 	#cat("\tMaterials{\n\t\tInterior {\n\t\t\tid 0\n\t\t}\n",file=fc)
 	cat("\t{color 0.83562 0.78 0.06,\nName \"",sep="",material,"\"}",file=fc)
 	cat("\t\t",sep="",material," {\n\t\t\tid 1\n\t\t}\n",file=fc)
 	cat("\t}\n",file=fc)
-	cat("\tBoundaryIds {\n\t\t\Id0 {\n\t\t\tId 0,Info \"undefined\",Color 0.6 0.6 0.6\n\t\t}\n\t\tname \"BoundaryConditions\"\n\t}\n}\n",file=fc)
+	cat("\tBoundaryIds {\n\t\tId0 {\n\t\t\tId 0,Info \"undefined\",Color 0.6 0.6 0.6\n\t\t}\n\t\tname \"BoundaryConditions\"\n\t}\n}\n",file=fc)
 
 
 	nVertices=nrow(Vertices)
@@ -1063,7 +1063,7 @@ WriteHxSurface=function(filename,Vertices,Indices=NULL,
 Write3DDensityToAmiraRectilinear<-function(filename,d){
 		# Produces a Rectilinear format file -
 		# that is one with an arbitrary x,y,z grid
-		cat("\# AmiraMesh ASCII 1.0\n\n",file=filename)
+		cat("# AmiraMesh ASCII 1.0\n\n",file=filename)
 		fc=file(filename,open="at") # ie append, text mode
 		lattice=apply(d$eval.points,2,length)
 		cat("define Lattice",lattice,"\n",file=fc)
@@ -1071,10 +1071,10 @@ Write3DDensityToAmiraRectilinear<-function(filename,d){
 		cat("Parameters {CoordType \"rectilinear\"}\n\n",file=fc)
 		cat("Lattice { float ScalarField } = @1\n",file=fc)
 		cat("Coordinates { float xyz } = @2\n\n",file=fc)
-		cat("\@1\n",file=fc)
+		cat("@1\n",file=fc)
 		
 		cat(as.vector(d$estimate),file=fc)
-		cat("\@2\n",file=fc)
+		cat("@2\n",file=fc)
 		cat(d$eval.points[,1],"\n",file=fc)
 		cat(d$eval.points[,2],"\n",file=fc)
 		cat(d$eval.points[,3],"\n",file=fc)
@@ -1087,8 +1087,8 @@ Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text"),
 	# Can also write a detached Nrrd header that points to the AmiraMesh
 	# data to allow it to be opened by a nrrd reader
 	ftype=match.arg(ftype)
-	if(ftype=='text') cat("\# AmiraMesh ASCII 1.0\n\n",file=filename)
-	else cat("\# AmiraMesh 3D BINARY 2.0\n\n",file=filename)
+	if(ftype=='text') cat("# AmiraMesh ASCII 1.0\n\n",file=filename)
+	else cat("# AmiraMesh 3D BINARY 2.0\n\n",file=filename)
 		
 	fc=file(filename,open="at") # ie append, text mode
 	cat("# Created by Write3DDensityToAmiraLattice - ",format(Sys.time(),usetz=T),"\n\n",file=fc)	
@@ -1112,7 +1112,7 @@ Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text"),
 	# the range of the voxel centres.
 	# So eval.points should correspond to the CENTRE of the
 	# voxels at which the density is evaluated
-	cat("\t\# BoundingBox is xmin xmax ymin ymax zmin zmax\n",file=fc)
+	cat("\t# BoundingBox is xmin xmax ymin ymax zmin zmax\n",file=fc)
 	BoundingBox=NULL
 	if(!is.null(attr(dens,"BoundingBox"))){
 		BoundingBox=attr(dens,"BoundingBox")
@@ -1124,7 +1124,7 @@ Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text"),
 	
 	cat("Lattice {",dtype,"ScalarField } = @1\n\n",file=fc)
 
-	cat("\@1\n",file=fc)
+	cat("@1\n",file=fc)
 	
 	#cat(str(as.vector(d)))
 	close(fc)
@@ -1181,7 +1181,7 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	LatticeDefLine=grep("define\\s+lattice",headerLines,ignore.case=TRUE,perl=TRUE)
 	LatticeTypeDefLine=grep("^Lattice.*}\\s*[=]{0,1}\\s*@1",headerLines,ignore.case=TRUE,perl=FALSE)
 	#cat("LatticeTypeDefLine = ",LatticeTypeDefLine)
-	LatticeBoundsLine=grep("^[^\#]*BoundingBox",headerLines,ignore.case=TRUE,perl=TRUE)
+	LatticeBoundsLine=grep("^[^#]*BoundingBox",headerLines,ignore.case=TRUE,perl=TRUE)
 	if(!any(LatticeDefLine)){
 		warning(paste("No lattice definition line in file",filename))
 		close(fc); return(-1)

@@ -58,7 +58,7 @@ WriteAnalyzeFromDensity<-function(d,file.name,pixdim=rep(1.4,3),vox.units='um',.
 	}
 	
 	# Trim suffix if reqd since f.write.analyze doesn't do this
-	file.name<-sub("\.(hdr|img)","",ignore.case=TRUE,file.name)
+	file.name<-sub("\\.(hdr|img)","",ignore.case=TRUE,file.name)
 	f.write.analyze(dd,file.name,pixdim=pixdim, vox.units=vox.units,...)	
 }
 #@nonl

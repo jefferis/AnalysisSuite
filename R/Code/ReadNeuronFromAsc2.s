@@ -175,7 +175,7 @@ GetContourData<-function(AscData,ContourType,minContourLength=5, WithConvexHull=
     
     # Find lines ending contours
     # -1 since this line follows the last data point
-    EndLines<-grep("^\)",AscData)-1
+    EndLines<-grep("^)",AscData)-1
     # nb this will find EndLines for all blocks ie both LH and MB contours
     # so have to pair up the correct EndLines with thte StartLines
     # Need to find the number which is just larger than each StartLine
@@ -433,7 +433,7 @@ GetAxonData<-function(AscData,AscFile){
     # The line in front is chosen since there first level of brackets
     # only enclose the declaration that this is an axon, not
     # actual structural components.
-    AxonBlockLength<-grep( "^\)", AscData[StartLine:length(AscData)] )-1
+    AxonBlockLength<-grep( "^)", AscData[StartLine:length(AscData)] )-1
     
     # Check that we actually found the end
     if (length(AxonBlockLength)<1 || is.na(AxonBlockLength)){
@@ -471,7 +471,7 @@ ParseAxonData<-function(AxonData,AscFile){
 	stop(paste("Duplicated Instruction lines in function ParseAxonData() for file",AscFile))
     }
     # Find the lines actually containing Data
-    # DataLines<-grep("\[(]([0-9]|[ .-])*\)",AxonData)
+    # DataLines<-grep("[(]([0-9]|[ .-])*\\)",AxonData)
     # Modified grep 031112 to remove lines indicating spines which look like
     #  >( X Y Z W); Spine
    # DataLines<-grep("^[[:space:]]*[(]([0-9]|[ .-])*\\)",AxonData)
