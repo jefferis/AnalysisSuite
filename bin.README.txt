@@ -1,0 +1,17 @@
+This directory already contains the perl scripts from scripts.zip
+You may want to add registration binaries for your operating system.
+
+Although the R scripts do not need this, you may wish to add the directory to your path if you want to use the tools from the command line.
+
+For bash (default on osx 10.3)
+
+Edit your ~/.profile or ~/.bashrc to add:
+
+PATH="${PATH}:/path/to/Registration/folder/bin"
+export PATH
+
+Check that the path has been set by starting a new command line session and typing:
+
+echo $PATH
+
+You can also put the contents somewhere else sensible like /usr/local/bin or ~/bin

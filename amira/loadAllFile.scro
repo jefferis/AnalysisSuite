@@ -1,0 +1,262 @@
+# Amira-Script-Object V3.0
+
+#RELEASE
+#BEGINCOPYRIGHT
+###############
+# Copyright (C) 2007 Gregory Jefferis <gsxej2@cam.ac.uk>
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#################
+#ENDMAINCOPYRIGHT
+#################
+# Copyright Addendum
+# Additional contributions by Christopher Potter and Alexander Chan
+
+$this proc constructor { } {
+	global this
+	$this newPortFilename filename
+	$this newPortFilename fileListName
+    $this newPortButtonList Action 6
+	$this Action setLabel Action:
+	$this Action setLabel 0 LoadAll
+	$this Action setLabel 1 Remove
+	$this Action setLabel 2 Update
+	$this Action setLabel 3 Show
+	$this Action setLabel 4 LoadFileList
+	$this Action setLabel 5 ShowIcons
+	
+	$this newPortFloatSlider red
+	$this red setMinMax 0 1
+	$this newPortFloatSlider green
+	$this green setMinMax 0 1
+	$this newPortFloatSlider blue
+	$this blue setMinMax 0 1
+	
+	$this newPortFloatSlider width
+	$this width setMinMax 0 2.5
+	$this width setValue 1
+	
+	$this newPortIntSlider ScoreThreshold
+	$this ScoreThreshold setMinMax 0 4
+	$this ScoreThreshold setValue 0
+	
+	$this newPortInfo dirName
+	$this newPortInfo numObjects
+	$this newPortInfo numDisplayedObjects
+	$this numDisplayedObjects setValue 0
+	
+	$this setVar lvList ""
+	$this setVar fileList ""
+	$this setVar scoreList ""
+}
+
+
+$this proc compute { } {
+	if { [ $this Action isNew  ] && [$this Action getValue]==0} {
+		$this makeFileListFromDir
+		$this loadFiles
+	}
+	if { [ $this Action isNew  ] && [$this Action getValue]==1} {
+		$this removeAll
+	}
+
+	if { [ $this Action isNew  ] && [$this Action getValue]==2} {
+		$this myupdate
+	}
+	if { [ $this Action isNew  ] && [$this Action getValue]==3} {		
+		if { [ $this Action getLabel 3]=="Show" } {
+			$this showLineViews 1
+		} elseif {[ $this Action getLabel 3]=="Hide" } {
+			$this showLineViews 0
+		}
+	}
+	if { [ $this Action isNew  ] && [$this Action getValue]==4} {
+		$this loadFileList
+		$this loadFiles
+	}
+	if { [ $this Action isNew  ] && [$this Action getValue]==5} {
+		#echo "Button 5 pressed"
+		if { [ $this Action getLabel 5]=="ShowIcons" } {
+			$this showIcons 1
+		} elseif {[ $this Action getLabel 5]=="HideIcons" } {
+			$this showIcons 0
+		}
+	}
+	if { [ $this ScoreThreshold isNew ] } {
+		$this showLineViews 1
+	}
+	if { [ $this red isNew ] || [ $this green isNew ] || [ $this blue isNew ] || [ $this width isNew ]} {
+		$this myupdate
+	}
+	# uncomment to turn on continuous update
+	#$this myupdate
+}
+
+$this proc setrgb { r g b } {
+	$this red setValue $r
+	$this green setValue $g
+	$this blue setValue $b
+	$this myupdate
+}
+
+$this proc removeAll {} {
+	remove [$this getVar lvList]
+	foreach fn [$this getVar fileList] {
+		remove [file tail $fn]
+	}
+}
+
+$this proc myupdate {} {
+	set lvList [$this getVar lvList]
+	foreach lineView $lvList {
+		set lvstatus [exists $lineView]
+		#echo "line view is $lineView and its status is $lvstatus"
+		if {$lvstatus} {
+			$lineView setLineColor [$this red getValue] [$this green getValue] [$this blue getValue]
+			$lineView scaleFactor setValue [$this width getValue]
+			$lineView fire
+		}
+	}			
+}
+$this proc makeFileListFromDir {} {
+	set filename [ $this filename getValue ] 
+	set fileList [glob [file dirname $filename]/*[file extension $filename]]
+	# set the instance variable fileList to the value of the local fileList
+	$this setVar fileList $fileList
+	
+	#set scoreList [lrepeat [llength fileList] 0]
+	#$this setVar scoreList $scoreList
+	
+	$this dirName setValue [file dirname $filename]
+	#$this setLabel 
+	#set mymsg [$this Action getValue]			
+	#echo "My messge is: $mymsg"
+}
+
+$this proc loadFiles {} {
+	
+	set fileList [$this getVar fileList]	
+	set lvList [$this getVar lvList]
+	#echo $fileList
+	#set hideStatus [set hideNewModules]
+	#set hideNewModules 1	
+	set counter 0
+	foreach file $fileList {
+		set newModule [load $file]
+		set lineView [create HxDisplayLineSet]
+		$newModule hideIcon
+		$lineView hideIcon
+		$lineView data connect $newModule
+		$lineView setLineColor [$this red getValue] [$this green getValue] [$this blue getValue]
+		#$lineView setLineWidth 2
+		# Draw in circle mode
+		$lineView shape setState values 1 6
+		$lineView scaleFactor setValue [$this width getValue]
+		$lineView fire
+		set splitFile [file split $file]
+		set justfilename [lindex $splitFile [expr [llength $splitFile]-1]]
+		$lineView setLabel "$justfilename.lv"
+		lappend lvList "$justfilename.lv"
+		incr counter
+	}
+	#set hideNewModules 0
+	$this setVar lvList $lvList
+	$this numObjects setValue $counter
+	$this numDisplayedObjects setValue $counter
+
+}
+
+$this proc loadFileList { } {
+	# make a file list as follows
+	# dir /b  *average.clm* > averagefiles.txt
+	
+	set fileListName [ $this fileListName getValue ]
+	set justFileListName [split $fileListName /]
+	set fileList ""
+	set scoreList ""
+	if {$fileListName != ""} {
+    	set retcd [ catch { set infile [open $fileListName "r"] } ]
+	} else {
+		return
+	}
+    if {$retcd == 1} {
+		echo "unable to open $fileListName"
+	} elseif {$retcd == 0} {
+    	set inEOF -1
+     	while {[gets $infile inln] != $inEOF} {
+     		# split line to get name and score
+     		set splitLine [split $inln]
+     		set justfilename [lindex $splitLine 0]
+     		set score [lindex $splitLine 1]
+     		set fullpath [file join [file dirname $fileListName] $justfilename]
+     		if {[file exists $fullpath]} {
+	        	lappend fileList $fullpath
+	        	# append score to scores array
+	        	lappend scoreList $score
+        	}
+        }
+        close $infile
+    }
+    #echo $fileList
+    $this setVar fileList $fileList
+    # set object variable scores to local scores list
+    $this setVar scoreList $scoreList
+	$this dirName setValue $fileListName
+	#$this setLabel [lindex $justFileListName [expr [llength $justFileListName]-1]]
+	#set this [lindex $justFileListName [expr [llength $justFileListName]-1]]
+    return $fileListName
+}
+
+$this proc showLineViews { mask } {
+	#echo "entering showLineViews with mask $mask"
+	set lvList [$this getVar lvList]
+	set scoreList [$this getVar scoreList]
+	set numDisplayed 0
+	
+	for {set i 0} {$i<[llength $lvList]} {incr i} {
+		set lineView [lindex $lvList $i]
+		set lvstatus [exists $lineView]
+		if {$lvstatus && $mask == 1 } {
+			if {[lindex $scoreList $i] >= [$this ScoreThreshold getValue]} {
+				$lineView setViewerMask 1
+				incr numDisplayed
+			} else {
+				$lineView setViewerMask 0
+			}
+		} elseif {$lvstatus && $mask == 0} {
+				$lineView setViewerMask 0
+		}
+	}
+	if {$mask == 0} { $this Action setLabel 3 Show}
+	if {$mask == 1} { $this Action setLabel 3 Hide}
+	$this numDisplayedObjects setValue $numDisplayed
+ 
+}
+
+$this proc showIcons { mask } {
+	#echo "entering showIcons with mask $mask"
+	set lvList [$this getVar lvList]
+	foreach lineView $lvList {
+		set lvstatus [exists $lineView]
+		if {$lvstatus && $mask == 1} {
+			$lineView showIcon
+		}
+		if {$lvstatus && $mask == 0} {
+			$lineView hideIcon
+		}
+	}
+	if {$mask == 0} { $this Action setLabel 5 ShowIcons}
+	if {$mask == 1} { $this Action setLabel 5 HideIcons}
+}

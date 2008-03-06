@@ -1,0 +1,10 @@
+../WarpTransformed/1/LO15R.am 4
+../WarpTransformed/1/LO2R.am 4
+../WarpTransformed/1/TK6L.am 4
+../WarpTransformed/1/TL6L.am 4
+../WarpTransformed/1/TM25R.am 4
+../WarpTransformed/1/TN6R.am 4
+../WarpTransformed/1/TO12L.am 4
+../WarpTransformed/1/TP15L.am 4
+../WarpTransformed/1/TP19L.am 4
+../WarpTransformed/1/TP4L.am 4

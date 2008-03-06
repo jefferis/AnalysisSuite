@@ -1,0 +1,155 @@
+# InterpolateAlongNeuron.R
+
+#RELEASE
+#BEGINCOPYRIGHT
+###############
+# R Source Code to accompany the manuscript
+#
+# "Comprehensive Maps of Drosophila Higher Olfactory Centers: 
+# Spatially Segregated Fruit and Pheromone Representation"
+# Cell (2007), doi:10.1016/j.cell.2007.01.040
+# by Gregory S.X.E. Jefferis*, Christopher J. Potter*
+# Alexander M. Chan, Elizabeth C. Marin
+# Torsten Rohlfing, Calvin R. Maurer, Jr., and Liqun Luo
+#
+# Copyright (C) 2007 Gregory Jefferis <gsxej2@cam.ac.uk>
+# 
+# See flybrain.stanford.edu for further details
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#################
+#ENDMAINCOPYRIGHT
+
+# Need to make a function that can take a neuron 
+# and interpolate new points at a given step size along each line segment.
+# 
+# 2005-07-24: noticed that this version does not deal with branch points
+# - it actually duplicates each branchpoint the second (and third) times 
+# it encounters it.
+# In general this is part of failure to pay any attention to the structure
+# of the neuron.  Probably need to keep a table of the old and new branch
+# points
+
+# do this as follows
+# For each head of a segment, ask if we have an entry in our table.
+# If yes, then give the point in the seg list that number
+# else increment counter, and add old/newID pair
+# Then add as many internalpoints as required
+# then add the tail (which should never have appeared before)
+# and add an old/newID pair
+
+# TO DO: interpolate width as well
+#        calculate parents for new points
+
+# source(file.path(CodeDir,"InterpolateAlongNeuron.R"))
+InterpolateAlongNeuron<-function(ANeuron,stepSize=0.5){
+		# Scheme
+		d=matrix(unlist(ANeuron$d[,c("X","Y","Z")]),ncol=3)
+
+		# calculate seglengths if we haven't 
+		if(is.null(ANeuron$SegLengths)){
+				warning(paste("Calculating SegLengths for",ANeuron$NeuronName))
+				ANeuron$SegLengths=SegLengths(ANeuron)
+		}
+		
+		
+		oldID=NULL; newID=NULL
+		
+		newseglist=ANeuron$SegList
+		
+		totalPoints=sum(sapply(ANeuron$SegLengths,function(x) 2+floor((x-1e-9)/stepSize)))
+		pointsSoFar=0
+		pointArray=matrix(0,ncol=3,nrow=totalPoints)
+		for(i in seq(len=length(ANeuron$SegList))){
+				
+				# length in microns of this segment
+				l=ANeuron$SegLengths[i]
+				
+				if(l>stepSize){
+						# new internal points, measured in length along segment
+						internalPoints=seq(stepSize,l,by=stepSize)
+						nInternalPoints=length(internalPoints)
+						# if the last generated one is actually in exactly the same place 
+						# as the endpoint then discard it
+						if(internalPoints[nInternalPoints]==l) internalPoints=internalPoints[-length(internalPoints)]
+						
+						# find lengths between each original point on the segment
+						diffs=diff(d[ANeuron$SegList[[i]],])
+						indSegLens=sqrt(rowSums(diffs*diffs))
+						cs=c(0,cumsum(indSegLens))
+						
+						#idxs=sapply(internalPoints,function(x) max(which(x>=cs)))
+						#startPos=0;nextPos=internalPoints[1]
+						idxs=rep(0,length(internalPoints))
+						for(j in seq(len=length(cs))){
+								idxs[idxs==0 & internalPoints<cs[j]]=j-1
+						}
+								
+						newPoints=matrix(0,ncol=3,nrow=nInternalPoints+2)
+						newPoints[1,]= d[ANeuron$SegList[[i]][1],]
+
+						froms=d[ANeuron$SegList[[i]][idxs],]
+						deltas=diffs[idxs,]
+						fracs=(internalPoints-cs[idxs])/indSegLens[idxs]
+						newPoints[-c(1,nrow(newPoints)),]=froms+(deltas*fracs)
+						nNewPoints=nrow(newPoints)
+						newPoints[nNewPoints,]=d[ANeuron$SegList[[i]][length(ANeuron$SegList[[i]])],]
+				} else {
+						nNewPoints=2
+						newPoints=d[ANeuron$SegList[[i]][c(1,length(ANeuron$SegList[[i]]))],]
+				}
+				
+				newseg=NULL
+				# have we seen the headpoint of this seg before?
+				if(any(ANeuron$SegList[[i]][1]==oldID)){
+						# yes 
+						nNewPoints=nNewPoints-1
+						newPoints=newPoints[-1,] # prevent this head from being readded to point array
+						newseg=c(newID[ANeuron$SegList[[i]][1]==oldID],
+								seq(from=pointsSoFar+1,by=1,len=nNewPoints))
+				} else {
+						# no, make a note of it and add it to the array
+						oldID=c(oldID,ANeuron$SegList[[i]][1])
+						newID[length(oldID)]=pointsSoFar+1
+						newseg=	seq(from=pointsSoFar+1,by=1,len=nNewPoints)
+				}
+				
+				# add the tail to the table we are keeping track of
+ 				oldID=c(oldID,ANeuron$SegList[[i]][length(ANeuron$SegList[[i]])])
+				newID=c(newID,pointsSoFar+nNewPoints)
+				
+				newseglist[[i]]=newseg
+				pointArray[(pointsSoFar+1):(pointsSoFar+nNewPoints),]=newPoints
+				#cat("i = ",i," pointsSoFar=",pointsSoFar,"nNewPoints=",nNewPoints,"\n")
+				pointsSoFar=pointsSoFar+nNewPoints
+		}
+		pointArray=pointArray[1:pointsSoFar,]
+		colnames(pointArray)=c("X","Y","Z")
+
+		#return(oldID,newID,pointArray,newseglist)
+		# OK now return a new neuron
+		ANeuron$NumPoints=pointsSoFar
+		ANeuron$StartPoint=newID[oldID==ANeuron$StartPoint]
+		ANeuron$BranchPoints=newID[match(ANeuron$BranchPoints,oldID)]
+		ANeuron$EndPoints=newID[match(ANeuron$EndPoints,oldID)]
+		if(any(is.na(c(ANeuron$EndPoints,ANeuron$BranchPoints)))){
+				stop("Problem matching up old & new end/branchpoints")
+		}
+							
+		ANeuron$SegList=newseglist
+		ANeuron$d=data.frame(PointNo=1:pointsSoFar,X=pointArray[,1],Y=pointArray[,2],Z=pointArray[,3])
+		
+		return(ANeuron)
+}

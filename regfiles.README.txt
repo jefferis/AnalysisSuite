@@ -1,0 +1,5 @@
+You may want to download the registration files from this project if you want to transform some of our neurons.  The files are available from:
+
+http://flybrain.stanford.edu/registrationfiles
+
+just unzip regfiles.zip in this directory so that there is a new regfiles directory.

@@ -1,0 +1,6 @@
+Copy or link the WarpTransformed tracing files directory into this directory.
+
+To make a unix soft link, open the Terminal applcation, cd to the correct directory and then
+	ln -s /path/to/WarpTransformed .
+
+NB Make sure there is no terminal / at the end of the WarpTransformed path.

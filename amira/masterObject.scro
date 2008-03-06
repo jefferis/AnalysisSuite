@@ -1,0 +1,236 @@
+# Amira-Script-Object V3.0
+# Master script object to load subsidiry loadAllFiles objects
+# For some reason I have to make a copy of this variable
+set myScriptDir ${SCRIPTDIR}
+
+$this proc constructor { } {
+	global this
+	global myScriptDir
+	echo "Script directory is: $myScriptDir"
+	$this newPortFilename filename
+	$this filename setValue ${myScriptDir}/lists
+    $this newPortButtonList Action 5
+	$this Action setLabel Action:
+	$this Action setLabel 0 LoadAll
+	$this Action setLabel 1 Remove
+	$this Action setLabel 2 Update
+	$this Action setLabel 3 HideAll
+	$this Action setLabel 4 ShowIcons
+	
+	$this newPortFloatSlider red
+	$this red setMinMax 0 1
+	$this newPortFloatSlider green
+	$this green setMinMax 0 1
+	$this newPortFloatSlider blue
+	$this blue setMinMax 0 1
+	
+	$this newPortFloatSlider width
+	$this width setMinMax 0 2.5
+	$this width setValue 1
+	
+	$this newPortIntSlider ScoreThreshold
+	$this ScoreThreshold setMinMax 0 4
+	$this ScoreThreshold setValue 4
+	
+	$this newPortInfo dirName
+	
+	$this setVar lafObjectList ""
+	$this setVar fileList ""
+	$this setVar glomTogList ""
+	$this setVar glomActive ""
+
+	$this setVar thresholds ""
+	$this setVar widths ""
+	
+	$this newPortInfo numDisplayedObjects
+	$this updateNumDisplayedObjects
+
+	# Now define this based on script location - much cleaner
+	$this setVar lafScriptFile ${myScriptDir}/loadAllFile.scro
+}
+
+
+$this proc compute { } {
+	
+	if { [ $this Action isNew  ] && [$this Action getValue]==0 } {
+		$this makeFileListFromDir
+		$this loadFiles
+		$this updateNumDisplayedObjects
+	}
+	if { [ $this Action isNew  ] && [$this Action getValue]==2} {
+		#$this myupdate
+	}
+	if { [ $this Action isNew  ] && [$this Action getValue]==3} {		
+		if { [ $this Action getLabel 3]=="ShowAll" } {
+			$this showLineViews 1
+		} elseif {[ $this Action getLabel 3]=="HideAll" } {
+			$this showLineViews 0
+		}
+		$this updateNumDisplayedObjects
+	}
+	if { [ $this Action isNew  ] && [$this Action getValue]==4} {
+		if { [ $this Action getLabel 4]=="ShowIcons" } {
+			$this showIcons 1
+		} elseif {[ $this Action getLabel 4]=="HideIcons" } {
+			$this showIcons 0
+		}
+	}
+	if { [ $this ScoreThreshold isNew ] } {
+		$this updateLafObjectsThreshold
+		$this updateNumDisplayedObjects
+	}
+	if { [ $this red isNew ] || [ $this green isNew ] || [ $this blue isNew ] || [ $this width isNew ]} {
+		$this updateLafObjectsColor
+	}
+	set glomActive ""
+	foreach glomTog [$this getVar glomTogList] {
+		for {set i 0} {$i < 6} {incr i} {
+			set obj [$this $glomTog getLabel $i]
+			#echo "checking obj $obj"
+			if {[exists $obj]} {
+				#echo "obj $obj exists"
+				if {[ $this $glomTog isNew ]} {
+					$obj showLineViews [$this $glomTog getValue $i]
+				}
+				if {[$this $glomTog getValue $i]} {
+					lappend glomActive [$this $glomTog getLabel $i]
+					#echo [concat "added " [$this $glomTog getLabel $i]]
+				}
+			}
+		}
+	} 
+	$this setVar glomActive $glomActive
+	# echo $glomActive
+	# uncomment to turn on continuous update
+	# $this myupdate
+}
+
+$this proc showLineViews {mask} {
+	set glomActive ""
+	foreach glomTog [$this getVar glomTogList] {
+		for {set i 0} {$i < 6} {incr i} {
+			set obj [$this $glomTog getLabel $i]
+			#echo "checking obj $obj"
+			if {[exists $obj]} {
+				#echo "obj $obj exists"
+				$this $glomTog setValue $i $mask
+				if {$mask} {
+					lappend glomActive [$this $glomTog getLabel $i]
+					#echo [concat "added " [$this $glomTog getLabel $i]]
+				}
+			}
+		}
+	} 
+	$this setVar glomActive $glomActive
+	if {$mask == 0} { $this Action setLabel 3 ShowAll}
+	if {$mask == 1} { $this Action setLabel 3 HideAll}
+}
+
+$this proc updateNumDisplayedObjects {} {
+	set numDisplayedObjects 0
+	foreach lafObject [$this getVar lafObjectList] {
+		if {[exists $lafObject]} {
+			set numDisplayedObjects [expr $numDisplayedObjects + [$lafObject numDisplayedObjects getValue]]
+		}
+	}
+	$this setVar numDisplayedObjects $numDisplayedObjects
+}	
+
+
+
+$this proc updateLafObjectsThreshold {} {
+	foreach glom [$this getVar glomActive] {
+		if {[exists $glom]} {
+			$glom ScoreThreshold setValue [$this ScoreThreshold getValue]
+			$glom fire
+		}
+	} 
+}
+
+$this proc updateLafObjectsColor {} {
+	foreach glom [$this getVar glomActive] {
+		if {[exists $glom]} {
+			#if{[$this red isNew]} 
+			$glom red setValue [$this red getValue]
+			#if{[$this green isNew]} 
+			$glom green setValue [$this green getValue]
+			#if{[$this blue isNew]} 
+			$glom blue setValue [$this blue getValue]
+			#if{[$this width isNew]} 
+			$glom width setValue [$this width getValue]
+			$glom fire
+		}
+	} 
+}
+
+
+$this proc showIcons {mask} {
+}
+
+$this proc removeAll {} {
+	# remove all "loadAllFile.scro" objects and their dependent objects
+	foreach glom [$this getVar glomActive] {
+		if {[exists $glom]} {
+			$glom removeAll
+			$glom green setValue [$this green getValue]
+			$glom blue setValue [$this blue getValue]
+			$glom width setValue [$this width getValue]
+			$glom fire
+		}
+	} 
+}
+
+$this proc makeFileListFromDir {} {
+	set filename [ $this filename getValue ] 
+	set fileList [glob [file dirname $filename]/*[file extension $filename]]
+	# set the instance variable fileList to the value of the local fileList
+	$this setVar fileList $fileList
+	$this dirName setValue [file dirname $filename]
+}
+
+$this proc loadFiles {} {
+	set fileList [$this getVar fileList]	
+	set lafObjectList [$this getVar lafObjectList]
+	set thresholds [$this getVar thresholds]
+	set widths [$this getVar widths]
+	
+	#echo $fileList
+	foreach file $fileList {
+		if {[file size $file] > 0} {
+			set newModule [load [$this getVar lafScriptFile]]
+			# set the correct file list name for the new object
+			$newModule fileListName setValue $file
+			# tell the new module to load in the file list
+			$newModule Action setValue 4
+			$newModule width setValue [$this width getValue]
+			$newModule ScoreThreshold setValue [$this ScoreThreshold getValue]
+			$newModule fire
+			
+			#$newModule hideIcon
+			set splitFile [file split $file]
+			set justfilename [lindex $splitFile [expr [llength $splitFile]-1]]
+			set glom [lindex [split $justfilename _] 0]
+			$newModule setLabel $glom
+			lappend lafObjectList $glom
+			lappend widths [$this width getValue]
+			lappend thresholds [$this ScoreThreshold getValue]
+		}
+	}
+	#set hideNewModules 0
+	$this setVar lafObjectList $lafObjectList
+	$this makeGlomeruliToggles
+}
+
+$this proc makeGlomeruliToggles {} {
+	set lafObjectList [$this getVar lafObjectList]
+	for {set i 0} {$i<[llength $lafObjectList]} { set i [expr $i + 6]} {
+		set j [expr $i / 6]
+		$this newPortToggleList "Glomeruli$j" 6
+		lappend glomTogList "Glomeruli$j"
+		for {set k 0} {[expr $k + $i] < [llength $lafObjectList]} { incr k} {
+			$this "Glomeruli$j" setLabel $k [lindex $lafObjectList [expr $k + $i]] 
+			$this "Glomeruli$j" setValue $k 1
+		}
+	}		
+	$this setVar glomTogList $glomTogList
+}

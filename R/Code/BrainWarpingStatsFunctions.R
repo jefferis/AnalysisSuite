@@ -1,0 +1,439 @@
+# BrainWarpingStatsFunctions.R
+# Functiosn for Displacement and Volume Comparisons
+# including across the sexes for the amount of warping 
+# for each brain
+
+#RELEASE
+#BEGINCOPYRIGHT
+###############
+# R Source Code to accompany the manuscript
+#
+# "Comprehensive Maps of Drosophila Higher Olfactory Centers: 
+# Spatially Segregated Fruit and Pheromone Representation"
+# Cell (2007), doi:10.1016/j.cell.2007.01.040
+# by Gregory S.X.E. Jefferis*, Christopher J. Potter*
+# Alexander M. Chan, Elizabeth C. Marin
+# Torsten Rohlfing, Calvin R. Maurer, Jr., and Liqun Luo
+#
+# Copyright (C) 2007 Gregory Jefferis <gsxej2@cam.ac.uk>
+# 
+# See flybrain.stanford.edu for further details
+# 
+# This program is free software; you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation; either version 2 of the License, or
+# (at your option) any later version.
+# 
+# This program is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+# 
+# You should have received a copy of the GNU General Public License
+# along with this program; if not, write to the Free Software
+# Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
+#################
+#ENDMAINCOPYRIGHT
+
+# Need to write functions to
+# calculate deformations at given points - probably voxel centres for
+# MB/LH densities
+
+# source(file.path(CodeDir,"BrainWarpingStatsFunctions.R"))
+
+transformedPoints=function(Brain=NULL,xyzs=NULL,warpfile=NULL,AllRegDir=AllRegDir,
+	gregxform=file.path(IGSRegToolsDir,"gregxform"),direction=c("inverse","forward"),
+	transforms=c("warp","affine"),gregxoptions="-b"){
+	
+	if(any(grep("\\-b",gregxoptions))) binary=TRUE else binary=FALSE
+	gregxform=paste(gregxform,gregxoptions)
+	
+	transforms=match.arg(transforms,several.ok=TRUE)
+	direction=match.arg(direction) #nb inverse implies from sample to ref
+
+	tmpfile=tempfile(); tmpfile2=tempfile()
+	
+	if(binary) writeBin(as.vector(t(xyzs)),tmpfile,size=4) 
+	  else write.table(xyzs,col.names=F,row.names=F,file=tmpfile)
+
+	#gregxform=file.path("/Users/jefferis/bin/gregxform")
+	if(direction=="forward") gregxform=paste(gregxform,"--forward")
+
+	if(is.null(warpfile)){
+		# First check if we have an entry in MNInfo
+		if(is.null(warpfile<-MNInfo$WarpFile[MNInfo$Brain==Brain])){
+			# if not use traceinfo
+			if(!exists("TraceInfo")) {
+				warning("You must supply a warpfile, or make sure that there is an entry in the MNInfo$WarpFile column")
+				return(null)
+			}			
+			warpfile=file.path(RootDir,"allreg",TraceInfo$StudyList[TraceInfo$Brain==Brain])
+		}
+	} 
+	# check the warpfile name
+	if(isTRUE(charmatch("registration",basename(warpfile))==1))
+		warpfile=dirname(warpfile)
+	if(!file.exists(warpfile)){
+		# try and see if we can find the warpfile in another directory
+		warpfile=file.path(AllRegDir,basename(warpfile))
+		if(!file.exists(warpfile)) {
+			warning(paste("unable to locate warpfile:",warpfile))
+			return(NULL)
+		}
+	}
+
+	l=list(pre=xyzs)
+	if("affine"%in%transforms){
+		# afflistfile=sub(file.path("^(.*)","warp","(.*)_warp_.*\\.list"),file.path("\\1","affine","\\2_9dof.list"),warpfile)
+		# now use new affine switch of gregxform
+		system(paste(gregxform,"-i",warpfile,"< ",tmpfile,">",tmpfile2),
+			intern=FALSE,ignore.stderr=FALSE)
+		if(binary){
+			# cat("Reading Binary data\n")
+			l$affine=matrix(readBin(tmpfile2,"numeric",size=4,n=nrow(xyzs)*3),ncol=3,byrow=T)
+			attributes(l$affine)=attributes(xyzs)
+		} else {
+			l$affine=read.table(tmpfile2,col.names=c("X","Y","Z"))
+		}
+
+	}
+	
+	if("warp"%in%transforms){
+		system(paste(gregxform,warpfile,"< ",tmpfile,">",tmpfile2),
+			intern=FALSE,ignore.stderr=TRUE)
+		if(binary){
+			# cat("Reading Binary data\n")
+			l$warp=matrix(readBin(tmpfile2,"numeric",size=4,n=nrow(xyzs)*3),ncol=3,byrow=T)
+			attributes(l$warp)=attributes(xyzs)
+		} else {
+			l$warp=read.table(tmpfile2,na.strings="ERR",col.names=c("X","Y","Z"))
+		}
+	}
+	unlink(c(tmpfile,tmpfile2))
+	return(l)
+}
+
+TransformNeuron<-function(neuron,warpfile=NULL,transform=c("warp","affine"),...){
+	transform=match.arg(transform,several.ok=FALSE)
+	neuron$d[,c("X","Y","Z")]=transformedPoints(neuron$NeuronName,neuron$d[,c("X","Y","Z")],warpfile=warpfile,transforms=transform,...)[[transform]]
+	return(neuron)
+}
+
+TransformNeuronSimple<-function(neuron,transform=c("original","affine")){
+	# assumes that we are given a transformed neuron and want the original 
+	# back again, or the affine applied to the original
+	transform=match.arg(transform,several.ok=FALSE)
+	if(!is.neuron(neuron)) neuron=GetNeuron(neuron)
+	x<-TransformNeuron(neuron,direction='forward',transform='warp')
+	if(transform=="original") return(x)
+	if(transform=="affine") {
+		return(TransformNeuron(x,direction='inverse',transform='affine'))
+	}
+}
+
+CompareNeuronTransformations<-function(n,transforms=c("original","affine","warp"),...){
+	transforms=match.arg(transforms,several.ok=TRUE)
+	if(any(transforms=="original")) plotneuron3d(TransformNeuronSimple(n,"original"), Col='red',Clear=F)
+	if(any(transforms=="affine")) plotneuron3d(TransformNeuronSimple(n,"affine"), Col='green',Clear=F)
+	# warped version (ie that in MyNeurons)
+	if(any(transforms=="warp")) plotneuron3d(n,Col='blue',Clear=F)
+}
+
+
+calcOriginalPos<-function(Brain=NULL,xyzs=NULL,...){
+	# returns a list containing the position of a grid in reference space
+	# after transformation to the position only post affine and after warp
+	OriginalPos=transformedPoints(Brain=Brain,xyzs=xyzs,direction="inverse",transform="warp",...)$warp
+	# remove any NAs - gregxform seems to choke on NAs for some reason
+	NotNARows=!is.na(OriginalPos[,1])
+	OriginalPos2=OriginalPos[NotNARows,]
+	Warp.result=(transformedPoints(Brain=Brain,OriginalPos2,transform="warp",direction="forward"))$warp
+	Affine.result=(transformedPoints(Brain=Brain,OriginalPos2,transform="affine",direction="forward"))$affine
+	Warp<-(Affine<-OriginalPos)
+	Warp[NotNARows,]=Warp.result
+	Affine[NotNARows,]=Affine.result
+	DeltaWarpAffine=Warp-Affine
+# 	
+# 	DeltaWarpAffine.result=(transformedPoints(Brain=Brain,OriginalPos2,transform="warp",direction="forward"))$warp-
+# 		(transformedPoints(Brain=Brain,OriginalPos2,transform="affine",direction="forward"))$affine
+# 	# This little shuffle is to get NAs in empty slots
+# 	DeltaWarpAffine=OriginalPos 
+
+	return(list(pre=OriginalPos,post=xyzs,warp=Warp,affine=Affine,delta=DeltaWarpAffine))
+}
+
+
+findJacobian<-function(Brain=NULL,xyzs=NULL,warplistfile=NULL,
+	gregxform=file.path(IGSRegToolsDir,"gregxform"),gregxoptions="-j -b"){
+	
+	gregxform=paste(gregxform,gregxoptions)
+	if(any(grep("\\-b",gregxoptions))) binary=TRUE else binary=FALSE
+
+	tmpfile=tempfile(); tmpfile2=tempfile()
+	
+	if(binary) writeBin(as.vector(t(xyzs)),tmpfile,size=4) else write.table(xyzs,col.names=F,row.names=F,file=tmpfile)
+	
+	if(is.null(warplistfile)){
+		# we haven't been supplied with a warp file try and find one
+		warplistfile=findWarpFileFromBrainName(Brain)
+	}
+	# bail out if we can't find the registration file
+	if(!isTRUE(file.exists(warplistfile))) {
+		warning(paste("Unable to find a find a registration file for Brain =",Brain))
+		return(NULL)
+	}
+	
+	system(paste(gregxform,warplistfile,"< ",tmpfile,">",tmpfile2),
+				intern=FALSE,ignore.stderr=FALSE)
+	if(binary){
+		# cat("Reading Binary data\n")
+		jacobians=readBin(tmpfile2,"numeric",size=4,n=nrow(xyzs))
+	} else {
+		jacobians=scan(tmpfile2,na.strings="ERR",quiet=TRUE)
+	}
+	unlink(c(tmpfile,tmpfile2))
+	return(jacobians)
+}
+
+findJacobianVolume<-function(...){
+	jj=findJacobian(...)
+	sideLength=round(length(jj)^(1/3))
+	if( (sideLength*sideLength*sideLength)!=length(jj)){
+		stop("Cannot make an equal sided cubic volume")
+	}
+	if(!is.null(jj)) dim(jj)<-rep(sideLength,3)
+	jj
+}
+
+findGlobalScaling<-function(Brain=NULL,warplistfile=NULL,
+	gregxform=file.path(IGSRegToolsDir,"gregxform"),gregxoptions="-g"){
+	
+	if(is.null(warplistfile)){
+		# we haven't been supplied with a warp file try and find one
+		warplistfile=findWarpFileFromBrainName(Brain)
+	}
+	# bail out if we can't find the registration file
+	if(!isTRUE(file.exists(warplistfile))) {
+		warning(paste("Unable to find a find a registration file for Brain =",Brain))
+		return(NULL)
+	}
+
+	globalScaling=as.numeric(system(paste(gregxform,gregxoptions,warplistfile),intern=TRUE,ignore.stderr=FALSE))
+			
+	return(globalScaling)
+}		
+
+findWarpFileFromBrainName<-function(Brain){
+	foundBrain = pmatch(Brain,as.character(MNInfo$Brain))
+	
+	if(length(foundBrain)==1){
+		warpfile<-MNInfo$WarpFile[foundBrain]
+	} else {
+		# if not use traceinfo
+		if(!exists("TraceInfo")) {
+			warning("You must make sure that there is an entry in the MNInfo$WarpFile column")
+			return(NULL)
+		}			
+		warpfile=file.path(AllRegDir,TraceInfo$StudyList[TraceInfo$Brain==Brain])
+	}
+
+	# check the warpfile name
+	if(isTRUE(charmatch("registration",basename(warpfile))==1))	warpfile=dirname(warpfile)
+	if(!file.exists(warpfile)) {
+		warning(paste("unable to locate warpfile:",warpfile))
+		return(NULL)
+	}
+	return(warpfile)
+}
+
+findWarpFileFromBrainNames<-function(Brain){
+	# this depends on the TraceInfo dataframe, which I have so far not
+	# released.
+	rownames(TraceInfo)=as.character(TraceInfo$Brain)
+	filenames=TraceInfo[Brain,"Path.reg"]
+	filenames[!is.na(filenames)]=file.path(AllRegDir,filenames[!is.na(filenames)])
+	return (filenames)
+}
+
+findGlobalScaling.file<-function(filename){
+	if(isTRUE(grep("\\.gz$",filename)==1)){
+		warpfile=gzfile(filename)
+	} else warpfile=file(filename)
+	first20lines=readLines(warpfile,20)
+	close(warpfile)
+	scaleterms=unlist(strsplit(first20lines[17]," "))[2:4]
+	prod(as.numeric(scaleterms))
+}
+
+VolumeChange<-function(xyzs,...){
+	# find the vertices of tetrahedra centered on grid points
+	newxyzs=t(apply(xyzs,1,RegularTetrahedron))
+	dim(newxyzs)<-c(nrow(xyzs)*4,3)
+	# 
+	calcOriginalPos(xyzs=newxyzs,...)
+}
+
+makeGrid<-function(bounds="LH",type=c('centres','margins'),spacing=1.4) {
+	if(is.character(bounds)) bounds=getBounds(bounds)
+	if(inherits(bounds,"array")){
+		a=attributes(bounds)
+		grid=expand.grid(a$x,a$y,a$z)
+		colnames(grid)=c("X","Y","Z")
+		return(grid)
+	}
+	
+	corrn=spacing/2
+	type=match.arg(type)
+	if(type=="margins"){
+		grid=expand.grid(
+			seq(bounds[1],bounds[2],by=spacing),
+			seq(bounds[3],bounds[4],by=spacing),
+			seq(bounds[5],bounds[6],by=spacing) )
+	} else {
+		grid=expand.grid(
+			seq(bounds[1]+corrn,bounds[2]-corrn,by=spacing),
+			seq(bounds[3]+corrn,bounds[4]-corrn,by=spacing),
+			seq(bounds[5]+corrn,bounds[6]-corrn,by=spacing) )
+	}
+	grid=do.call(cbind,grid)
+	colnames(grid)=c("X","Y","Z")
+	return(grid)
+}
+
+
+makeXYZCube=function(d){
+	dims=dim(d)
+	ndims=length(dims)
+	if(ndims>=3) return(d)
+	# are there a cubic number of rows
+	sideLength=dims[1]^(1/3)
+	sideLength.int=round(sideLength)
+	cat(sideLength)
+	if(isTRUE(all.equal(sideLength,sideLength.int))){
+		if(is.data.frame(d)) d=data.matrix(d)
+		if(ndims==1){
+			dim(d)<-rep(sideLength.int,3)
+			return(d)
+		}
+		if(ndims==2){
+			dim(d)<-c(rep(sideLength.int,3),dims[2])
+			return(d)
+		} else {
+			stop("Can't handle dims>2")
+		}
+	} else {
+		warning("Unable to make cube")
+		return(d)
+	}
+}
+
+simple.ttest<-function(x,y){
+# 	float df = nValuesX + nValuesY - 2;
+# 	float svar=((nValuesX-1)*varianceX + (nValuesY-1)*varianceY) / df;
+# 	t = (avgX - avgY) / sqrt( svar * (1.0/nValuesX + 1.0/nValuesY));
+	nx=length(x);	ny=length(y)
+	df=nx+ny-2
+	svar=((nx-1)*var(x) + (ny-1)*var(y)) / df
+	(mean(x) - mean(y)) / sqrt( svar * (1.0/nx + 1.0/ny))
+}
+
+fast.ttest<-function(x,y){
+	# where x and y are matrices
+	# each row is an observation point and each column an individual
+	# nrow(x) and y must be equal
+	if( (nrows<-nrow(x)) != nrow(y)) stop ("Number of rows in x and y must be equal")
+	nx=ncol(x);	 ny=ncol(y)
+	df=nx+ny-2
+	varsx=rowMeans(x*x) - rowMeans(x)^2;  varsy=rowMeans(y*y) - rowMeans(y)^2
+	svars=(nx*varsx + ny*varsy) / df
+	rval=(rowMeans(x) - rowMeans(y)) / sqrt( svars * (1.0/nx + 1.0/ny))
+	return(rval)
+}
+
+fast.sd<-function(x,biased=FALSE) {
+	# use built-in sd except for matrices
+	if(!is.matrix(x)) return(sd(x))
+	# for matrices where 
+	# each row is an observation point and each column an individual
+	n=nrow(x); oneovernminusone=1/(n-1)
+	xbar=colMeans(x)
+	sqrt(  ( colSums(x*x) - n*(xbar*xbar) )*(oneovernminusone)  )
+}
+
+permtvals.simple=function(jacdata,males,females){
+	both=c(males,females)
+	males.perm=sample(both,length(males))
+	females.perm=setdiff(both,males.perm)
+	tvals=fast.ttest(jacdata[,males.perm],jacdata[,females.perm])
+	attr(tvals,"perm")<-list(males=males.perm,females=females.perm)
+	return(tvals)
+}	
+
+parallelpermtvals.simple=function(jacdata,males,females,n){
+	# Expects just one vector each of male and female data
+	# and a number of permutations to run
+	permdata=t(replicate(n,sample(jacdata)))
+	fast.ttest(permdata[,males],permdata[,females])
+#	attr(tvals,"perm")<-list(males=males.perm,females=females.perm)
+#	return(tvals)
+}
+permtvals=function(jacdata,males,females,mask,standardAttributes){
+	both=c(males,females)
+	males.perm=sample(both,length(males))
+	females.perm=setdiff(both,males.perm)
+	
+	
+	if(missing(mask) && missing(standardAttributes)){
+		standardAttributes=structure(list(dim = c(50, 50, 50), 
+			BoundingBox = c(95.7, 164.3, 60.7, 129.3, 0.7, 69.3),
+			x = seq(from=95.7,to=164.3,by=1.4),
+			y = seq(from=60.7,to=129.3,by=1.4),
+			z = seq(from=0.7,to=69.3,by=1.4)),
+		.Names = c("dim", "BoundingBox", "x", "y", "z"))
+	} else if( !missing(mask) && missing(standardAttributes) ) {
+		standardAttributes=attributes(mask)
+	} else if( missing(mask)  && !missing(standardAttributes) ){
+		mask=array(1,dim=standardAttributes$dim)
+	}
+	tvals=array(NA,dim=standardAttributes$dim)
+	tvals[mask==1]=fast.ttest(jacdata[,males.perm],jacdata[,females.perm])
+	
+	attributes(tvals)=standardAttributes
+	attr(tvals,"perm")<-list(males=males.perm,females=females.perm)
+	return(tvals)
+}
+
+
+# Read in the sex information from the PN2 FMPro database
+# and merge it with info from spreadsheet
+MergeSexInfo<-function(x){
+	d=read.csv(file.path(NotesDir,"PN2Slides.txt"))
+	d$SlideKey2 =factor(gsub("^A(.*)","\\1",as.character(d$SlideKey)))
+	x$SlideKey=gsub("([A-Z]{2,3})[0-9]{1,3}[LRTB]","\\1",as.character(x$Brain))
+	y=merge(x,d[,c("SlideKey2","Sex")],by.x="SlideKey",by.y="SlideKey2",all.x=TRUE,suffixes=c("",".db"))
+	# Clean up the factor levels (as.char allows easy addition of a new level)
+	y$Sex.db=as.character(y$Sex.db)
+	y$Sex.db[is.na(y$Sex.db)]=""
+	# Integrate the Sex data from FMPro database with that from spreadsheet
+	unknownSexInSpreadsheet=!y$Sex%in%c("M","F")
+	y$Sex=as.character(y$Sex)
+	y$Sex[unknownSexInSpreadsheet]=y$Sex.db[unknownSexInSpreadsheet]
+	y$Sex=factor(y$Sex)
+	if(is.factor(x$ID) && length(x$ID)==nlevels(x$ID)){
+		rownames(y)=as.character(y$ID)
+		y=y[x$ID,]
+	}
+	y[,setdiff(colnames(y),"Sex.db")]
+}
+
+
+# Function to calculate the "average" warping across the whole brain
+# This will use Chris' RegistrationSurfaceInside-labels.am
+
+AverageJacobianAcrossMaskedBrain<-function(brain,mask,grid){
+	# TODO - INCOMPLETE
+	
+	if(is.character(mask)) mask=Read3DDensityFromAmiraLattice(mask)
+	pmin(attr(lhdxyz[[1]],"BoundingBox"),attr(i$S,"BoundingBox"))[1:3]
+	#if(missing(grid)) 
+}
