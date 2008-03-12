@@ -153,3 +153,57 @@ InterpolateAlongNeuron<-function(ANeuron,stepSize=0.5){
 		
 		return(ANeuron)
 }
+
+DivideLineIntoNEqualSubLines<-function(xyz,n){
+	# Expects a matrix of p points with 3 columns and p rows
+	# giving the 3d position of a series of line segments
+	# NB a line consisting of 1 segment will have 2 points
+	
+	# this function will interpolate this into n segments of equal length (i.e. n+1 points)
+
+	xyz=data.matrix(xyz)
+	l=seglength(xyz)
+	
+	if(n<1){
+		warning("Can't divide a line into less than 1 segment")
+		return(null)
+	} else if(n==1){
+		# Just take the start and end points 
+		return(xyz[c(1,nrow(xyz)),])
+	}
+	# ... else there is more than 1 segment to consider
+	# new internal points, measured in length along segment
+	
+	stepSize=l/n
+	
+	internalPoints=seq(from=stepSize,by=stepSize,length.out=n-1)
+	nInternalPoints=length(internalPoints)
+	# if the last generated one is actually in exactly the same place 
+	# as the endpoint then discard it
+
+	# find lengths between each original point on the segment
+	diffs=diff(xyz)
+	indSegLens=sqrt(rowSums(diffs*diffs))
+	cs=c(0,cumsum(indSegLens))
+	
+	# find the indices of the old points that will contribute to the new sublines
+	idxs=rep(0,length(internalPoints))
+	for(j in seq(len=length(cs))){
+		idxs[idxs==0 & internalPoints<cs[j]]=j-1
+	}	
+	
+	# Make tha array to store the results
+	newPoints=matrix(0,ncol=3,nrow=n+1)
+	
+	# The first point is the same as the original first point 
+	newPoints[1,]= xyz[1,]
+	# and the last point is the same as the original last point  
+	newPoints[nrow(newPoints),]=xyz[nrow(xyz),]
+
+	# Now interpolate along the original sequence of sublines to find the positions of the new points
+	froms=xyz[idxs,]
+	deltas=diffs[idxs,]
+	fracs=(internalPoints-cs[idxs])/indSegLens[idxs]
+	newPoints[-c(1,nrow(newPoints)),]=froms+(deltas*fracs)
+	return(newPoints)
+}
