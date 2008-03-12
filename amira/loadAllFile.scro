@@ -119,10 +119,12 @@ $this proc removeAll {} {
 }
 
 $this proc myupdate {} {
+	# echo "entering myupdate"
 	set lvList [$this getVar lvList]
 	foreach lineView $lvList {
+		# echo "Iterating over $lineView"
 		set lvstatus [exists $lineView]
-		#echo "line view is $lineView and its status is $lvstatus"
+		# echo "line view is $lineView and its status is $lvstatus"
 		if {$lvstatus} {
 			$lineView setLineColor [$this red getValue] [$this green getValue] [$this blue getValue]
 			$lineView scaleFactor setValue [$this width getValue]
@@ -154,6 +156,10 @@ $this proc loadFiles {} {
 	#set hideNewModules 1	
 	set counter 0
 	foreach file $fileList {
+		set splitFile [file split $file]
+		set justfilename [lindex $splitFile [expr [llength $splitFile]-1]]
+		if { [file isfile $file] == 0 } { continue }
+		# echo "Loading file $file"
 		set newModule [load $file]
 		set lineView [create HxDisplayLineSet]
 		$newModule hideIcon
@@ -165,14 +171,15 @@ $this proc loadFiles {} {
 		$lineView shape setState values 1 6
 		$lineView scaleFactor setValue [$this width getValue]
 		$lineView fire
-		set splitFile [file split $file]
-		set justfilename [lindex $splitFile [expr [llength $splitFile]-1]]
 		$lineView setLabel "$justfilename.lv"
 		lappend lvList "$justfilename.lv"
+		# echo "adding $justfilename.lv to list"
 		incr counter
 	}
+	# echo "$lvList"
 	#set hideNewModules 0
 	$this setVar lvList $lvList
+	echo $this getVar lvList
 	$this numObjects setValue $counter
 	$this numDisplayedObjects setValue $counter
 
@@ -246,9 +253,10 @@ $this proc showLineViews { mask } {
 }
 
 $this proc showIcons { mask } {
-	#echo "entering showIcons with mask $mask"
+	# echo "entering showIcons with mask $mask"
 	set lvList [$this getVar lvList]
 	foreach lineView $lvList {
+
 		set lvstatus [exists $lineView]
 		if {$lvstatus && $mask == 1} {
 			$lineView showIcon
