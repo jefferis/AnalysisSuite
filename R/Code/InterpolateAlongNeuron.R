@@ -154,6 +154,93 @@ InterpolateAlongNeuron<-function(ANeuron,stepSize=0.5){
 		return(ANeuron)
 }
 
+NurbSmoothNeuron<-function(ANeuron, ... ){
+	# Will take a supplied neuron and do succesive smoothing splines for Y and Z coords
+	# ... will be passed to smooth.spline
+	d=matrix(unlist(ANeuron$d[,c("X","Y","Z")]),ncol=3)
+
+	# calculate seglengths if we haven't 
+	if(is.null(ANeuron$SegLengths)){
+			warning(paste("Calculating SegLengths for",ANeuron$NeuronName))
+			ANeuron$SegLengths=SegLengths(ANeuron)
+	}
+	segsWithMoreThan4Points=which(sapply(ANeuron$SegList,length)>3)
+	for(i in segsWithMoreThan4Points){
+		
+		l=d[ANeuron$SegList[[i]],]
+		l10=DivideLineIntoNEqualSubLines(l,10)
+		# Weights for points - set first and last to very high to keep the same
+
+		replacementMatrix=jgeom.nurbsInterpolate(l,seq(from=0,to=1,len=nrow(l)))
+		d[ANeuron$SegList[[i]],]=replacementMatrix
+	}
+	ANeuron$d[,c("X","Y","Z")]=d
+	ANeuron
+}
+
+
+SplineSmoothNeuron<-function(ANeuron, ... ){
+	# Will take a supplied neuron and do succesive smoothing splines for Y and Z coords
+	# ... will be passed to smooth.spline
+	d=matrix(unlist(ANeuron$d[,c("X","Y","Z")]),ncol=3)
+
+	# calculate seglengths if we haven't 
+	if(is.null(ANeuron$SegLengths)){
+			warning(paste("Calculating SegLengths for",ANeuron$NeuronName))
+			ANeuron$SegLengths=SegLengths(ANeuron)
+	}
+	segsWithMoreThan4Points=which(sapply(ANeuron$SegList,length)>3)
+	for(i in segsWithMoreThan4Points){
+		
+		l=d[ANeuron$SegList[[i]],]
+		l10=DivideLineIntoNEqualSubLines(l,10)
+		# Weights for points - set first and last to very high to keep the same
+		w=rep(1,nrow(l))
+		w[1]=1e6
+		w[length(w)]=w[1]
+		# for(j in seq(from=(n-1),len=nrow(newPoints)-(n-1))){
+		# 	pointsToAverage=oldPoints[seq(n)+j-1]
+		# 	newPoints[j,]
+		# }
+		# Sort the 3 axes according to which has the largest total vector length
+		# this helps prevent nasty spline behaviour
+		# axisOrders=order(colSums(sqrt(diff(ll)^2)),decreasing=TRUE)
+		# axisOrders=3:1
+		chosen=list()
+		chosen$combinedFitScore=Inf
+		for(currentAxis in 1:3){
+			otherAxes=(1:3)[-currentAxis]
+			t=try(lxy<-smooth.spline(l[,c(currentAxis,otherAxes[1])],w=w,...), silent=TRUE)
+			if(inherits(t,'try-error')) next
+			t=try(lxz<-smooth.spline(l[,c(currentAxis,otherAxes[2])],w=w,...), silent=TRUE)
+			if(inherits(t,'try-error')) next
+			
+			cat(i,":",lxy$crit,lxz$crit,"\n")
+			# str(l[,1]);str(lxy$y);str(lxz$y)
+			
+			# Assess goodness of fit
+			newMatrix=cbind(l10[,currentAxis],predict(lxy,l10[,currentAxis])$y,predict(lxz,l10[,currentAxis])$y)
+			axisOrders<-c(currentAxis,otherAxes)
+			combinedFitScore=sum(abs(newMatrix-l10[,axisOrders]))			
+			# combinedFitScore=sum(abs(c(lxy$crit,lxz$crit)))
+			cat("combinedFitScore =",combinedFitScore,"\n")
+			if(combinedFitScore<chosen$combinedFitScore){
+				chosen$combinedFitScore=combinedFitScore
+				chosen$lxy=lxy
+				chosen$lxz=lxz
+				chosen$currentAxis=currentAxis
+				chosen$otherAxes=otherAxes
+			}
+		}
+		if(is.null(chosen$otherAxes)) stop(paste("Unable to find axis suitable for interpolation in segment",i))
+		replacementMatrix<-with(chosen,cbind(l[,currentAxis],predict(lxy,l[,currentAxis])$y,predict(lxz,l[,currentAxis])$y))
+		axisOrders<-with(chosen,c(currentAxis,otherAxes))
+		d[ANeuron$SegList[[i]],axisOrders]=replacementMatrix
+	}
+	ANeuron$d[,c("X","Y","Z")]=d
+	ANeuron
+}
+
 DivideLineIntoNEqualSubLines<-function(xyz,n){
 	# Expects a matrix of p points with 3 columns and p rows
 	# giving the 3d position of a series of line segments
