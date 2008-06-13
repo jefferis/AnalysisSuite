@@ -272,22 +272,23 @@ MakeAffineFromReg<-function(fileName,Inverse=FALSE){
 	return(AffMat)
 }
 
-TransformPoints<-function(Points,AffMat){
+TransformPoints<-function(Points,AffMat,dim=3){
 	# function to Transform a set of points in which each point
-	# occupies 1 row (and 3 cols)
+	# occupies 1 row (and dim cols)
 	# using an affine transformation matrix
 
 	# convert points to homogeneous co-ords by appending 1 to all of them
 	# note that it is necessary to transpose to
 	# have points as column vectors
-	MyPoints=t(cbind(Points[,1:3],1))
+	if(is.vector(Points)) Points=matrix(Points,nrow=1)
+	MyPoints=t(cbind(Points[,1:dim,drop=F],1))
 	# apply transformation
 	# transpose back to get a list of points and
-	# drop the last column 1 to get a triple again for each 3d point
-	rval=t(AffMat%*%MyPoints)[,1:3]
-	# add back the other cols if there were more than 3 cols in
+	# drop the last column 1 to get dim numbers again for each dim-d point
+	rval=t(AffMat%*%MyPoints)[,1:dim,drop=F]
+	# add back the other cols if there were more than dim cols in
 	# the supplied points (eg width)
-	if(ncol(Points)>3) rval=cbind(rval,Points[,-(1:3)])
+	if(ncol(Points)>3) rval=cbind(rval,Points[,-(1:dim)])
 
 	return(rval)
 }
