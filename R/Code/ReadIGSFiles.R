@@ -50,7 +50,9 @@ ReadIGSRegistration <- function (filename){
 		if(is.na(filename)) 
 			stop(paste("Unable to read registration file in",dirname))
 	}
-	return(ReadIGSTypedStream(filename))
+	r=ReadIGSTypedStream(filename)
+	if(!is.null(r$registration)) return(r$registration)
+	else return(r)
 }
 
 ReadIGSTypedStream<-function(con){

@@ -258,7 +258,7 @@ MakeAffineFromReg<-function(fileName,Inverse=FALSE){
 	# Return the fully composed homogeneous affine transformation matrix
 	# based on the affine registration file
 	# Can return the inverse of the affine if Inverse=TRUE
-	reg=ReadIGSRegistration(fileName)$registration
+	reg=ReadIGSRegistration(fileName)
 	if(!is.null(reg$spline_warp)){
 		AffInstructions=reg$spline_warp$affine_xform
 		# a warp transformationm so get the second affine
