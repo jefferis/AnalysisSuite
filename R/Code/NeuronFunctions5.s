@@ -1105,7 +1105,8 @@ FirstnNeurons<-function(n=1){
 }
 
 NeuronNameFromFileName<-function(FileName){
-    # Get the name of the neuron NB strsplit returns a list
+	if(length(FileName)>1) return(sapply(FileName,NeuronNameFromFileName))
+    # Get the name of the neuron NB strsplit returns a list)
     MyNeuronName<-unlist(strsplit(basename(FileName),"[._]"))[1]
     # Check that a sensible name resulted
     if(length(MyNeuronName)==0) stop(paste("Invalid neuron name generated from file",FileName))
