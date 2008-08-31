@@ -77,10 +77,12 @@ BinDir=file.path(RootDir,"bin")
 # IGSRegToolsDir=file.path("path to directory containing gregxform binary")
 if(file.exists(file.path(BinDir,"gregxform"))) {
 	IGSRegToolsDir=BinDir
-} else if(file.exists(file.path("~/bin","gregxform"))) {
-	IGSRegToolsDir=file.path("~/bin")
 } else if(file.exists(file.path("/Applications","IGSRegistrationTools","bin","gregxform"))) {
 	IGSRegToolsDir=file.path("/Applications","IGSRegistrationTools","bin")
+} else if(file.exists(file.path("~/bin","gregxform"))) {
+	IGSRegToolsDir=file.path("~/bin")
+} else if(file.exists(file.path("/usr/local/bin","gregxform"))) {
+	IGSRegToolsDir="/usr/local/bin"
 } else cat("Unable to find IGSRegistrationTools binaries - you will not be able to transform neurons.  See Startup.R for details\n\n")
 
 AllRegDir=file.path(RootDir,"regfiles")

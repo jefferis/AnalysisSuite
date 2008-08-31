@@ -50,7 +50,9 @@ ReadIGSRegistration <- function (filename){
 		if(is.na(filename)) 
 			stop(paste("Unable to read registration file in",dirname))
 	}
-	return(ReadIGSTypedStream(filename))
+	r=ReadIGSTypedStream(filename)
+	if(!is.null(r$registration)) return(r$registration)
+	else return(r)
 }
 
 ReadIGSTypedStream<-function(con){
@@ -76,7 +78,7 @@ ReadIGSTypedStream<-function(con){
 	
 	checkLabel=function(label) 	{
 		if( any(names(l)==label)  ){
-			newlabel=make.unique(rep(label,2))[2]
+			newlabel=make.unique(c(names(l),label))[length(l)+1]
 			warning(paste("Duplicate item",label,"renamed",newlabel))
 			label=newlabel
 		}
