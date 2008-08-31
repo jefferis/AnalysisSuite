@@ -1170,8 +1170,10 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	headerLines=NULL		
 	while ( ( nextLine<-readLines(fc,1)) !="@1") {headerLines<-c(headerLines,nextLine)}
 	
+#	if(Verbose) cat("Header is\n",paste(headerLines,sep="","\n"),"------------\n",sep="")
+	
 	# Figure out if the file is in binary format or not
-	if(any(grep("^\\s*#\\s+amiramesh\\s+3d\\s+binary", headerLines[1],ignore.case=TRUE,perl=TRUE))){
+	if(any(grep("^\\s*#\\s+amiramesh(\\s+3d)?\\s+binary", headerLines[1],ignore.case=TRUE,perl=TRUE))){
 			binary = TRUE
 	} else binary=FALSE
 
