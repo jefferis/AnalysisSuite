@@ -64,7 +64,9 @@
 # source("Greg Data:AnalysingTraceFiles:R:NeuronFunctions5.s")
 # source(file.path(CodeDir,"NeuronFunctions5.s"))
 
-library(scatterplot3d)  # for plotneuron3d()
+if(!require(scatterplot3d) || !require(rgl)){
+	stop("Please install either rgl or scatterplot3d for 3d plotting")
+}   # for plotneuron3d()
 
 #------------------------------------------------------------------------#
 # Returns a neuron containing the segment orders for the ordered collection
