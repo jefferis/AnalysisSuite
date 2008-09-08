@@ -54,6 +54,9 @@ NeuronLongestSegmentDistance<-function(ANeuron,BNeuron,n=10){
 }
 
 GetLongestSegment<-function(ANeuron){
+	if(is.null(ANeuron$SegLengths)){
+		ANeuron$SegLengths<-SegLengths(ANeuron)
+	}
 	seg=which.max(ANeuron$SegLengths)
 	return(ANeuron$d[ANeuron$SegList[[seg]],c("X","Y","Z")])
 }
