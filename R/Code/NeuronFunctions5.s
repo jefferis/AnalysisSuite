@@ -694,7 +694,7 @@ plotneuron3d<-function(ANeuron,UseCurPalette=F,WithContours=T,WithScale=T,
 			if(WithText) # text labels for nodes
 			rgl.texts(Scl[1]*ANeuron$d$X[NodesOnly],
 				Scl[2]*ANeuron$d$Y[NodesOnly],
-				Scl[3]*ANeuron$d$Z[NodesOnly],NodesOnly,color=NodeCols,justify="right")
+				Scl[3]*ANeuron$d$Z[NodesOnly],NodesOnly,color=NodeCols,adj=c(0,0.5))
 			
 		}
 		
