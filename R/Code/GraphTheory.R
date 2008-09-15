@@ -288,18 +288,32 @@ Neuron2Graph<-function(x){
 }
 
 GetShortestPath.Neuron<-function(x,from,to){
+	# nb igraph is 0 indexed
 	g=Neuron2Graph(x)
-	p=get.shortest.paths(g,from=from,to=to)
+	p=get.shortest.paths(g,from=from-1,to=to-1)
 	if(length(p)!=1) stop("Unable to find unique shortest path between those points")
-	p[[1]]
+	p[[1]]+1
 }
 
-GetSubNeuron<-function(x,seglist){
+GetShortestPath.Neuron.ggm<-function(x,from,to){
+	# just for checking
+	require(ggm)
+	p=findPath(am,from,to)
+}
+
+GetSubNeuron<-function(x,seglist=NULL,from,to){
 	# Very simple function to extract a sub neuron from an original neuron
 	# basically leaves everything intact but changes the segment list
-	
-	if(!is.list(seglist)) 
-		seglist<-list(seglist)
+	if(missing(to) && missing(from)){
+		if(is.null(seglist)) stop("Must supply a seglist")
+		if(!is.list(seglist)) 
+			seglist<-list(seglist)		
+	} else{
+		if(missing(to)){
+			to=from
+			seglist=to
+		}
+	}
 	if(!all(unlist(seglist)%in%x$d$PointNo)) stop("Seglist addresses points outside of neuron")
 	xx=x
 	xx$SegList=seglist
