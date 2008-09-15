@@ -280,3 +280,28 @@ SingleFromDoubleEdgeList<-function(el){
 	apply(unique(t(apply(el,1,function(x) paste(sort(x))))),2,as.numeric)
 }
 
+Neuron2Graph<-function(x){
+	# returns an igraph graph object
+	require(igraph)
+	am=AdjacencyMatrixFromSegList(x$SegList)
+	graph.adjacency(am,mode='undirected')
+}
+
+GetShortestPath.Neuron<-function(x,from,to){
+	g=Neuron2Graph(x)
+	p=get.shortest.paths(g,from=from,to=to)
+	if(length(p)!=1) stop("Unable to find unique shortest path between those points")
+	p[[1]]
+}
+
+GetSubNeuron<-function(x,seglist){
+	# Very simple function to extract a sub neuron from an original neuron
+	# basically leaves everything intact but changes the segment list
+	
+	if(!is.list(seglist)) 
+		seglist<-list(seglist)
+	if(!all(unlist(seglist)%in%x$d$PointNo)) stop("Seglist addresses points outside of neuron")
+	xx=x
+	xx$SegList=seglist
+	xx
+}
