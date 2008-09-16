@@ -35,7 +35,7 @@
 #ENDMAINCOPYRIGHT
 
 # Started this after listening to Hermann Cuntz' talk
-# at the Hauesser lab meeting
+# at the Hausser lab meeting
 
 # Looks like there is some interesting stuff in the ggm package
 # according to their definitions, the adjacency matrix has
@@ -43,6 +43,9 @@
 # while the Edge Matrix has
 # (j,i)=1 if there is a connection from i to j
 # and also has 1s along the diagonal
+
+# the igraph package looks like it may be a more general purpose graph
+# package
 
 # Adjacency matrix
 AdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
@@ -311,7 +314,8 @@ GetSubNeuron<-function(x,seglist=NULL,from,to){
 	} else{
 		if(missing(to)){
 			to=from
-			seglist=to
+			from=seglist
+			seglist<-list(GetShortestPath.Neuron(x,from,to))
 		}
 	}
 	if(!all(unlist(seglist)%in%x$d$PointNo)) stop("Seglist addresses points outside of neuron")
