@@ -121,3 +121,19 @@ runScript<-function(d=ScriptDir){
 runFig<-function(...){
 		runScript(FigDir,...)
 }
+
+checkPackages<-function(required=NULL,suggested=NULL){
+	allpackages=.packages(all = TRUE)
+	missingreq=setdiff(required,allpackages)
+	missingsug=setdiff(suggested,allpackages)
+	if(length(missingreq)>0){
+		missingreq=deparse(missingreq)
+		stop(paste("Please install missing packages by running\n",sep="",
+			"install.packages(",missingreq,")\n and then rerunning this script"))
+	}
+	if(length(missingsug)>0){
+		missingsug=deparse(missingsug)
+		warning(paste("You are missing some suggested packages.  You can install them by running\n",sep="",
+			"install.packages(",missingsug,")\n and then rerunning this script"))
+	}
+}
