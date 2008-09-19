@@ -13,10 +13,15 @@
 # yy=.jnew('ini/trakem2/vector/VectorString3D',y$X,y$Y,y$Z,FALSE)
 # .jcall('ini/trakem2/vector/VectorString3D','D','distance',xx,integer(1),yy,integer(1))
 
-trakem2.init<-function(){
+trakem2.init<-function(ImageJ="/Applications/ImageJ"){
 	 library(rJava)
-	.jinit(classpath='/Applications/ImageJ/ij.jar',params='-Dplugins.dir=/Applications/ImageJ/')
-	.jaddClassPath("/Applications/ImageJ/plugins/jars/TrakEM2_.jar")	
+	.jinit(classpath=file.path(ImageJ,'ij.jar'),
+		params=paste('-Dplugins.dir=',ImageJ))
+	tem2=list.files(file.path(ImageJ,"plugins"),
+		recurs=T,patt=glob2rx("TrakEM2_.jar"),full=T)
+	if(length(tem2)==0) stop("Unable to find TrakEM2_.jar in ImageJ plugins dir")
+	if(length(tem2)>1) warning(paste("Found multiple copies of TrakEM2_.jar in ImageJ plugins dir.\nUsing:",tem2[1],"\n"))
+	.jaddClassPath(tem2[1])
 	testLib=try(.jcall('ini/trakem2/utils/Utils','S','d2s',10.3,as.integer(2)))
 	if(inherits(testLib,'try-error')) stop("Unable to load TrakEM2 java library")
 }
