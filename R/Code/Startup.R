@@ -113,7 +113,10 @@ cat("Type: load(\"MyNeurons.rda\")  to load in the main dataset\n")
 # have not yet included a selection of Scripts and Figures for release
 runScript<-function(d=ScriptDir){
 		possFiles=file.path(d,select.list(dir(d,patt="(R|s)$")))
-		if(length(possFiles)==1) invisible(source(possFiles))
+		if(length(possFiles)==1){
+			cat("source(",deparse(possFiles),")\n",sep="")
+			invisible(source(possFiles))
+		} 
 		if(length(possFiles)>1) invisible(sapply(possFiles,source))
 #		return(NULL)
 }
