@@ -714,7 +714,7 @@ plotneuron3d<-function(ANeuron,UseCurPalette=F,WithContours=T,WithScale=T,
 	    Scl[2]*ANeuron$d$Y[-NodesOnly],
 	    Scl[3]*ANeuron$d$Z[-NodesOnly],color='white',size=2)
     }
-    
+
     #Just neuron lines
 	if(WithLine){
 		if(is.null(ANeuron$SegTypes)) ANeuron$SegTypes=rep(1,ANeuron$NumSegs)
@@ -730,60 +730,65 @@ plotneuron3d<-function(ANeuron,UseCurPalette=F,WithContours=T,WithScale=T,
 			}  else {
 				# just 1 tree
 				pointIndexes=unlist(sapply(ANeuron$SegList,makerglline))
-				if(!is.numeric(Colour)){
+				if(!is.numeric(Colour) && !is.null(Colour)){
 					cols=Colour
 				} else {
 					cols= rep(ANeuron$SegTypes,sapply(ANeuron$SegList,function(x) ifelse(length(x)>2,2*length(x)-2,length(x))))
 					if(any(is.na(cols))) cols='red'
+					else cols=palette()[cols]
+					# note that if cols is passed as a number then rgl.lines
+					# flashes up a regular graphics window for some reason
 				}
 				rgl.lines(Scl[1]*ANeuron$d$X[pointIndexes],
 					Scl[2]*ANeuron$d$Y[pointIndexes],
 					Scl[3]*ANeuron$d$Z[pointIndexes],col=cols,...)
 			}
+
+		} else {
+			for (j in 1:ANeuron$NumSegs){
+				ThisSegPoints<-ANeuron$SegList[[j]]
+				if(UseRGL){
+					rgl.lines(makerglline(ANeuron$d$X[ThisSegPoints]),
+						makerglline(ANeuron$d$Y[ThisSegPoints]),
+						makerglline(ANeuron$d$Z[ThisSegPoints]),col=ifelse(is.numeric(Colour),ANeuron$SegTypes[j],Colour))
+				}
+				else if(!ToFile){
+					My3DPlot$points3d(Scl[1]*ANeuron$d$X[ThisSegPoints],
+						Scl[2]*ANeuron$d$Y[ThisSegPoints],
+						Scl[3]*ANeuron$d$Z[ThisSegPoints],col=ANeuron$SegTypes[j],type="l"
+					)
+				} else {
+					RotWrite(ThisSegPoints[1],ANeuron$SegTypes[j],RotMove)
+					RotWrite(ThisSegPoints[-1],ANeuron$SegTypes[j],RotLine)
+				}
+			}
 			
-		} else
-		for (j in 1:ANeuron$NumSegs){
-			ThisSegPoints<-ANeuron$SegList[[j]]
-			if(UseRGL){
-				rgl.lines(makerglline(ANeuron$d$X[ThisSegPoints]),
-					makerglline(ANeuron$d$Y[ThisSegPoints]),
-					makerglline(ANeuron$d$Z[ThisSegPoints]),col=ifelse(is.numeric(Colour),ANeuron$SegTypes[j],Colour))
-			}
-			else if(!ToFile){
-				My3DPlot$points3d(Scl[1]*ANeuron$d$X[ThisSegPoints],
-					Scl[2]*ANeuron$d$Y[ThisSegPoints],
-					Scl[3]*ANeuron$d$Z[ThisSegPoints],col=ANeuron$SegTypes[j],type="l"
-				)
-			} else {
-				RotWrite(ThisSegPoints[1],ANeuron$SegTypes[j],RotMove)
-				RotWrite(ThisSegPoints[-1],ANeuron$SegTypes[j],RotLine)
-			}
 		}
 	} # end of if(WithLine){
-	
+
     #Just Contours
     if(!UseRGL && WithContours){
 	# This little extra loop turns out to be a nice way to deal
 	# with the uncertainty of which type of contour information
 	# will be present
-	for(ContSet in list(ANeuron$c,ANeuron$LH,ANeuron$MB)){
-	    if(is.null(ContSet)) next  # Seems to be optional, but better safe
-	    for(j in unique(ContSet$d$ContourID)){
-		ThisContourPoints<-which(ContSet$d$ContourID==j)
-		# Just to join the circle
-		ThisContourPoints<-c(ThisContourPoints,ThisContourPoints[1])
-		if(!ToFile){
-		    My3DPlot$points3d(Scl[1]*ContSet$d$X[ThisContourPoints],
-			Scl[2]*ContSet$d$Y[ThisContourPoints],
-			Scl[3]*ContSet$d$Z[ThisContourPoints]
-			,type="l",lty="dotted")
-		} else {
-		    RotWrite(ThisContourPoints[1],'white',RotMove,Contours=T)
-		    RotWrite(ThisContourPoints[-1],'white',RotDot,Contours=T)
-		}
-	    }
+		for(ContSet in list(ANeuron$c,ANeuron$LH,ANeuron$MB)){
+		    if(is.null(ContSet)) next  # Seems to be optional, but better safe
+		    for(j in unique(ContSet$d$ContourID)){
+			ThisContourPoints<-which(ContSet$d$ContourID==j)
+			# Just to join the circle
+			ThisContourPoints<-c(ThisContourPoints,ThisContourPoints[1])
+			if(!ToFile){
+			    My3DPlot$points3d(Scl[1]*ContSet$d$X[ThisContourPoints],
+				Scl[2]*ContSet$d$Y[ThisContourPoints],
+				Scl[3]*ContSet$d$Z[ThisContourPoints]
+				,type="l",lty="dotted")
+			} else {
+			    RotWrite(ThisContourPoints[1],'white',RotMove,Contours=T)
+			    RotWrite(ThisContourPoints[-1],'white',RotDot,Contours=T)
+			}
+		    }
 	    
-	}# end for ContSet
+		}# end for ContSet
     }
     palette(OldPalette)
     invisible(T)
