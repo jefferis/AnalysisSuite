@@ -417,6 +417,13 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 			SWCData$SubTree=rep(-1,nrow(SWCData))
 			for(i in 1:length(SubTrees)){
 				SWCData$SubTree[SWCData$PointNo%in%unique(unlist(SubTrees[[i]]))]=i
+			}
+			# New (and more correct method for assigning parents)
+			SWCData$Parent=-1
+			for (tree in SubTrees){
+				for(s in tree){
+					SWCData$Parent[s[-1]]=s[-length(s)]
+				}				
 			}				
 		}
 # 		# Trim down to the chosen Tree
@@ -436,7 +443,14 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 		SegList=ParseEdgeList(Neighbours,RootPoint=StartPoint)
 	}
 	
-	SWCData$Parent=subset(Neighbours,!duplicated(CurPoint),sel=Neighbour)[,1]
+	# New (and more correct method for assigning parents)
+	# Check, since we may already have done this for multi subtree neurons
+	if(is.null(SWCData$Parent)){
+		SWCData$Parent=-1
+		for(s in SegList){
+			SWCData$Parent[s[-1]]=s[-length(s)]
+		}		
+	}
 	SWCData$Label=2
 	firstFields=c("PointNo","Label","X","Y","Z","W","Parent")
 	remainingFields=setdiff(names(SWCData),firstFields)
