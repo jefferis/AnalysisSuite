@@ -448,36 +448,33 @@ plotneuron3d<-function(ANeuron,UseCurPalette=F,WithContours=T,WithScale=T,
 	} 
 	
     if(UseRGL && ClearRGL) rgl.clear() # clear RGL buffer
-    OldPalette<-palette()
-    if(!is.null(Colour)){
-	# tricky thing is what to do if I just want colour to come out
-	# as a number 
-	if(!is.numeric(Colour)) {
-	    # plot everything in this colour
-	    palette(rep(Colour,5)) # nb palette expects >1 colour names
-	}
-	
+   	OldPalette<-palette()
+   	if(!is.null(Colour)){
+		# tricky thing is what to do if I just want colour to come out
+		# as a number 
+		if(!is.numeric(Colour)) {
+		    # plot everything in this colour
+		    palette(rep(Colour,5)) # nb palette expects >1 colour names
+		}
     } else if(!UseCurPalette){
-	# RGL background is black
-	if(UseRGL) palette(c("white",rainbow(6)))
-	else palette(c("black",rainbow(6)))
+		# RGL background is black
+		if(UseRGL) palette(c("white",rainbow(6)))
+		else palette(c("black",rainbow(6)))
     }
 
-    if (is.character(ANeuron)){
-	ANeuron<-NeuronList[[GetNeuronNum(ANeuron)]]
-    }
-    if (is.numeric(ANeuron)){
-	ANeuron<-NeuronList[[ANeuron]]
-    }
+    if (is.character(ANeuron))
+		ANeuron<-NeuronList[[GetNeuronNum(ANeuron)]]
+
+    if (is.numeric(ANeuron))
+		ANeuron<-NeuronList[[ANeuron]]
     
     if (!is.list(ANeuron)){
-	warning("Cannot understand passed neuron")
-	return(F)
+		warning("Cannot understand passed neuron")
+		return(F)
     }
     
-    if(any(AxisDirections!=1)){
-	ANeuron$d[,c("X","Y","Z")]=t(t(ANeuron$d[,c("X","Y","Z")])*AxisDirections)
-    }
+    if(any(AxisDirections!=1))
+		ANeuron$d[,c("X","Y","Z")]=t(t(ANeuron$d[,c("X","Y","Z")])*AxisDirections)
     
     
     # Check to see if we want to produce a rotater file
@@ -508,13 +505,13 @@ plotneuron3d<-function(ANeuron,UseCurPalette=F,WithContours=T,WithScale=T,
     
 	if (ScaleRotater){
 	    if(!is.null(ANeuron$Scl)){
-		ZeroPos<-unlist(ANeuron$c$GrandCent)
-		names(ZeroPos)<-c("X","Y","Z")
-		RotScl<-ANeuron$Scl
+			ZeroPos<-unlist(ANeuron$c$GrandCent)
+			names(ZeroPos)<-c("X","Y","Z")
+			RotScl<-ANeuron$Scl
 	    }
 	    else{
-		cat("Can't scale rotater output since",ANeuron$Name,"has no scale information")
-		stop("Try sourcing SpatialAnalysis.s to update MyNeurons")
+			cat("Can't scale rotater output since",ANeuron$Name,"has no scale information")
+			stop("Try sourcing SpatialAnalysis.s to update MyNeurons")
 	    }
 	}
 	
