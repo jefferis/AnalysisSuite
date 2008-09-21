@@ -321,5 +321,7 @@ GetSubNeuron<-function(x,seglist=NULL,from,to){
 	if(!all(unlist(seglist)%in%x$d$PointNo)) stop("Seglist addresses points outside of neuron")
 	xx=x
 	xx$SegList=seglist
+	# reset the start point
+	if(!(xx$StartPoint%in%seglist)) xx$StartPoint=seglist[[1]][1]
 	xx
 }

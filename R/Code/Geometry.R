@@ -197,15 +197,19 @@ IntersectNeuronWithPlane<-function(ANeuron,APlane){
 	# multiple lines
 
 	if(nrow(ANeuron$d)<2) stop("Need at least 2 points to define a line in Neuron")
-	PointMatrix=array(0,dim=c(2,3,nrow(ANeuron$d)-1))
+	d=ANeuron$d
+	points=unique(unlist(ANeuron$SegList))
+	
+	PointMatrix=array(0,dim=c(2,3,length(points)-1))
 	# set up the ends of the lines
-	PointMatrix[2,,]=t(as.matrix(ANeuron$d[-ANeuron$StartPoint,c("X","Y","Z")]))
+	PointMatrix[2,,]=t(as.matrix(d[points[-1],c("X","Y","Z")]))
 	# set up the starts of the lines
-	PointMatrix[1,,]=t(as.matrix(ANeuron$d[ANeuron$d$Parent[-ANeuron$StartPoint],c("X","Y","Z")]))
+	PointMatrix[1,,]=t(as.matrix(d[d$Parent[points[-1]],c("X","Y","Z")]))
 	rval=IntersectionLineSegmentAndPlane(PointMatrix,APlane)
 	# return any non NA rows
 	rval[!is.na(rval[,1])]
 }
+
 FindPlaneOrigin<-function(Plane){
 	# Not sure this is possible!
 }
