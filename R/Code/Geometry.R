@@ -166,32 +166,6 @@ MBEntryPlane=FindPlaneFromPointAndNormal(c(52,0,61),c(70,0,27))
 #z=v*(-80/26)+150
 
 IntersectNeuronWithPlane<-function(ANeuron,APlane){
-	# iterate over segments
-	# for each segment, find closest point
-	# then find neighbour on opposite side
-	# compute intersection
-	
-	DistancesToPlane=list()
-	for(i in 1:ANeuron$NumSegs){
-		DistancesToPlane=c(DistancesToPlane,list(cbind(ANeuron$d[ANeuron$SegList[[i]],"PointNo"],SideOfPlane(ANeuron$d[ANeuron$SegList[[i]],c("X","Y","Z")],APlane))))
-	}
-	IntersectionPoints=matrix(NA,nrow=0,ncol=3)
-	for(i in 1:ANeuron$NumSegs){
-		ZeroPoints=DistancesToPlane[[i]][,2]==0
-		if(any(ZeroPoints)) IntersectionPoints=rbind(IntersectionPoints,
-			ANeuron$d[DistancesToPlane[[i]][which(ZeroPoints)[1],1],c("X","Y","Z")])
-		else { 
-			if(any(DistancesToPlane[[i]][,2]>0) && any(DistancesToPlane[[i]][,2]<0)){
-				# there are both pos and neg distances.
-			}
-		}
-	}
-	
-	
-	return(DistancesToPlane)
-}
-
-IntersectNeuronWithPlane<-function(ANeuron,APlane){
 	# consider every line in neuron (ie each point and its parent)
 	# make a 3d matrix R,C,i Rows are point 1 and 2, cols are XYZ and i are
 	# multiple lines
@@ -222,19 +196,43 @@ DotProduct<-function(a,b){
 	sum(a*b)
 }
 
+.findPlaneUV<-function(Plane,seedvec=c(0,1,0),altseedvec=c(1,0,0)){
+	n=Plane[1:3] # normal vector of plane
+	n=n/(sqrt(sum(n*n))) # normalise
+	# there are infinitely many lines in plane, so need to start somewhere
+	# just make sure that seed vector is not parallel to normal
+	if(DotProduct(n,seedvec)>0.95) seedvec=altseedvec
+	v=CrossProduct(seedvec,n)
+	v=v/(sqrt(sum(v*v)))
+	u=CrossProduct(n,v)
+	return(rbind(u,v))
+}
 
-FindXYPosOnPlane<-function(Points,Plane,Origin=FindPlaneOrigin(Plane)){
+FindXYPosOnPlane<-function(Points,Plane,Origin=c(0,0,0)){
 	# find the XY coords of a set of points on the plane
 	# using the definition of the origin in the plane
-	# 
-	# UNFINISHED!
-	u=c(0,1,0) # y vector
-	n=Plane[1:3] # normal vector of plane
-	v=CrossProduct(u,n)
-	#normalise
-	v=v/sqrt(sum(v^2))
+	uv=.findPlaneUV(Plane)
+	Points=t(t(Points)-Origin)
+	cbind(apply(Points,1,DotProduct,uv[1,]),apply(Points,1,DotProduct,uv[2,]))
+}
+
+DrawPlane<-function(plane,origin,r=1,...){
+	require(rgl)
+	uv=.findPlaneUV(plane)
+	u=uv[1,]
+	v=uv[2,]
 	
-	cbind(apply(Points,1,DotProduct,u),apply(Points,1,DotProduct,v))
+	quad=rbind(origin+r*(u+v),origin+r*(u-v),origin+r*(-u-v),origin+r*(-u+v))
+	quads3d(quad,...)
+}
+
+DrawHull<-function(Points,Plane,Origin,...){
+	require(rgl)
+	xy=FindXYPosOnPlane(Points,Plane,Origin)
+	c=chull(xy)
+	for(p in seq(from=2,len=length(c)-1)){
+		rgl.triangles(rbind(Points[c[1],],Points[c[p],],Points[c[p+1],]),...)
+	}
 }
 
 Make3DBins<-function(d,n=10,dx=signif(diff(range(z$Y))/n,2),dy=dx,dz=dx){
