@@ -44,12 +44,22 @@
 transformedPoints=function(Brain=NULL,xyzs=NULL,warpfile=NULL,AllRegDir=AllRegDir,
 	gregxform=file.path(IGSRegToolsDir,"gregxform"),direction=c("inverse","forward"),
 	transforms=c("warp","affine"),gregxoptions="-b"){
+	if(file.access(gregxform,mode=1)<0 || file.info(gregxform)$isdir)
+		stop(paste("Unable to access gregxform executable at:",gregxform))
 	
 	if(any(grep("\\-b",gregxoptions))) binary=TRUE else binary=FALSE
 	gregxform=paste(gregxform,gregxoptions)
 	
 	transforms=match.arg(transforms,several.ok=TRUE)
 	direction=match.arg(direction) #nb inverse implies from sample to ref
+
+	# massage xyzs input to a 3 col matrix
+	if(is.data.frame(xyzs)) xyzs=data.matrix(xyzs)
+		if(ncol(xyzs)>3){
+		if(all(c("X","Y","Z")) %in% colnames(xyzs))
+		xyzs=xyzs[,c("X","Y","Z")]
+		else xyzs=xyzs[,1:3]
+	}
 
 	tmpfile=tempfile(); tmpfile2=tempfile()
 	
@@ -86,7 +96,7 @@ transformedPoints=function(Brain=NULL,xyzs=NULL,warpfile=NULL,AllRegDir=AllRegDi
 	if("affine"%in%transforms){
 		# afflistfile=sub(file.path("^(.*)","warp","(.*)_warp_.*\\.list"),file.path("\\1","affine","\\2_9dof.list"),warpfile)
 		# now use new affine switch of gregxform
-		system(paste(gregxform,"-i",warpfile,"< ",tmpfile,">",tmpfile2),
+		system(paste(gregxform,"--affine",warpfile,"< ",tmpfile,">",tmpfile2),
 			intern=FALSE,ignore.stderr=FALSE)
 		if(binary){
 			# cat("Reading Binary data\n")
