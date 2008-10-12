@@ -155,6 +155,7 @@ ReadIGSTypedStream<-function(con){
 	}		
 	return(l)
 }
+
 WriteIGSTypedStream<-function(l,filename,gzip=FALSE){
 	# Will take a list in the form returned by ReadIGSTypedStream and
 	# write it out to a text file
@@ -234,4 +235,25 @@ WriteIGSRegistrationFolder<-function(reglist,foldername){
 		source= studysublist,source=studysublist2)
 	
 	WriteIGSTypedStream(studylist, file.path(foldername,"studylist"))		
+}
+
+IGSLandmarkList<-function(xyzs){
+	# IGS Landmark lists are unpaired ie contain information for only 1 brain
+	xyzs=data.matrix(xyzs)
+	ns=rownames(xyzs)
+	ll=list()
+	for(i in 1:nrow(xyzs)){
+		ll[[i]]=list(name=paste("\"",ns[i],"\"",sep=""),location=xyzs[i,])		
+	}
+	names(ll)=rep('landmark',length(ll))
+	ll
+}
+
+WriteIGSLandmarkList<-function(xyzs,filename,replace=FALSE){
+	ll=IGSLandmarkList(xyzs)
+	if(file.exists(filename) && file.info(filename)$isdir) filename=file.path(filename,"landmarks")
+	if(file.exists(filename) && !replace) {
+		stop(paste(filename,"already exists, use replace=TRUE to replace"))
+	}
+	WriteIGSTypedStream(ll,filename)
 }
