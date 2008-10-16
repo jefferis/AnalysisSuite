@@ -55,7 +55,7 @@ ReadIGSRegistration <- function (filename){
 	else return(r)
 }
 
-ReadIGSTypedStream<-function(con){
+ReadIGSTypedStream<-function(con, CheckLabel=TRUE){
 #  Reads Torsten's IGS TypedStream format which is what he uses for:
 #  registration
 #  studylist
@@ -69,7 +69,7 @@ ReadIGSTypedStream<-function(con){
 			con=gzfile(filename,'rb')
 		} else con=file(con,'rb')
 
-		t=readLines(con,2)
+		t=readLines(con,1)
 		if( !any(grep("! TYPEDSTREAM",t[1],fixed=TRUE)) ) 
 			stop(paste("This doesn't appear to be an IGS TypedStream:",filename))
 	}
@@ -88,12 +88,18 @@ ReadIGSTypedStream<-function(con){
 	# in case we want to bail out sooner
 	while ( isTRUE(isOpen(con)) ){
 		thisLine<-readLines(con,1)
-		# empty line - ie end of file
+		# no lines returned - ie end of file
 		if(length(thisLine)==0) break
 
 		# trim and split it up by white space
 		thisLine=trim(thisLine)
+		
+		# skip if this is a blank line
+		if(nchar(thisLine)==0) next
+
 		items=strsplit(thisLine," ",extended=FALSE)[[1]]
+		
+		if(length(items)==0) next
 		# get the label and items
 		label=items[1]; items=items[-1]
 		#cat("\nlabel=",label)
@@ -107,7 +113,9 @@ ReadIGSTypedStream<-function(con){
 		if(items[1]=="{"){
 			# parse new subsection
 			#cat("new subsection -> recursion\n")
-			l[[checkLabel(label)]]=ReadIGSTypedStream(con)
+			# set the list element!
+			if(CheckLabel) label=checkLabel(label)
+			l[[label]]=ReadIGSTypedStream(con,CheckLabel=CheckLabel)
 			next
 		}
 		
@@ -145,7 +153,8 @@ ReadIGSTypedStream<-function(con){
 			# check if the list already has one of these
 			
 			# set the list element!
-			l[[checkLabel(label)]]=items
+			if(CheckLabel) label=checkLabel(label)
+			l[[label]]=items
 		}
 	}
 	# we should only get here once if we parse a valid hierarchy
