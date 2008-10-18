@@ -266,3 +266,10 @@ WriteIGSLandmarkList<-function(xyzs,filename,replace=FALSE){
 	}
 	WriteIGSTypedStream(ll,filename)
 }
+
+ReadIGSLandmarks<-function(...){
+	l=ReadIGSTypedStream(...)
+	x=t(sapply(l,function(x) x[["location"]]))
+	rownames(x)=sapply(l,function(x) paste(x[["name"]],collapse=" "))
+	x
+}
