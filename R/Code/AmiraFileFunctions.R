@@ -794,7 +794,7 @@ WritePointsToAM<-function(d,AMFile=NULL,suffix="am",Force=F,MakeDir=T){
 	cat("# Created by WritePointsToAM - ",format(Sys.time(),usetz=T),"\n\n",file=fc)	
 
 	nVertices=nrow(d)
-	cat("define Markers",nVertices,"Parameters {\nContentType \"LandmarkSet\",NumSets 1\n}\n",file=fc)
+	cat("define Markers",nVertices,"Parameters {\nContentType \"LandmarkSet\",nSets 1\n}\n",file=fc)
 # 	cat("Parameters {\n",file=fc)
 # 	cat("    ContentType \"HxLineSet\"\n",file=fc)
 # 	cat("}\n\n",file=fc)
@@ -1341,9 +1341,16 @@ ReadAmiraLandmarks<-function(filename){
 	dataLength=nMarkers*3
 # 	cat("nMarkers =",nMarkers,"dataLength =",dataLength)
 	
+	# get the number of landmark sets
+	NumSetLine=grep("nSets\\s+[0-9]{1,}",headerLines,value=TRUE)
+	if(length(NumSetLine)==0) stop(paste("Unable to establish number of amira landmarks sets in",filename))
+		nSets=as.numeric(sub(".*nSets\\s+([0-9]{1,}).*","\\1",NumSetLine))
+	
 	# get the number of data sections
 	nDataSections=length(grep("@[[:digit:]]+",headerLines))
-# 	cat("nDataSections =",nDataSections)
+	nSectionsPerSet=nDataSections/nSets
+	
+	# parse the data definitions
 	
 	if(nDataSections>1){
 		d=list()
