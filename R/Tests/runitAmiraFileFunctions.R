@@ -92,7 +92,7 @@ test.ParseEdgeList<-function(){
 	checkEquals(ParseEdgeList(DoubleFromSingleEdgeList(el)),
 		NonsequentialNumberingResult,msg="Nonsequential numbering")
 
-	
+
 }
 
 test.ReadWrite3DDensityAmiraBinary<-function(){
@@ -115,3 +115,23 @@ test.ReadWrite3DDensityAmiraText<-function(){
 	checkEquals(testData,testData.new,tol=1e-6)
 }
 
+test.ReadWriteAmiraLandmarksSingle<-function(){
+	testData=matrix(rnorm(15),ncol=3)
+	tmpfile=tempfile()
+	WriteAmiraLandmarks(tmpfile,testData)
+	testData.new=ReadAmiraLandmarks(tmpfile)
+	unlink(tmpfile)
+	names(testData.new)<-NULL
+	checkEquals(testData,testData.new,tol=1e-6)	
+}
+
+test.ReadWriteAmiraLandmarksPaired<-function(){
+	testData=replicate(2,matrix(rnorm(15),ncol=3),simplify=FALSE)
+	tmpfile=tempfile()
+
+	WriteAmiraLandmarks(tmpfile,testData)
+	testData.new=ReadAmiraLandmarks(tmpfile)
+	unlink(tmpfile)
+	names(testData.new)<-NULL
+	checkEquals(testData,testData.new,tol=1e-6)	
+}

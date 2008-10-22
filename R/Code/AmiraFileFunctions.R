@@ -57,7 +57,9 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=TRUE,AttachHead
 	binaryfile="binary"==tolower(sub(".*(ascii|binary).*","\\1",firstLine,ignore.case=TRUE))
 
 	con=if(binaryfile) file(filename,open='rb') else file(filename,open='rt')
-	parsedHeader=ReadAmiramesh.Header(con,Verbose=Verbose)
+	header=ReadAmiramesh.Header(con,Verbose=Verbose)
+	parsedHeader=header[[1]]
+	header=header[[2]]
 	
 	if(is.null(DataSectionsToRead)) DataSectionsToRead=parsedHeader$DataName
 	else DataSectionsToRead=intersect(parsedHeader$DataName,DataSectionsToRead)	
@@ -70,7 +72,10 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=TRUE,AttachHead
 		filedata=.ReadAmiramesh.ASCIIData(filename,parsedHeader,DataSectionsToRead,Verbose=Verbose)
 		#cat(length(filedata))
 	}
-	if(AttachHeader) attr(filedata,"header")=parsedHeader
+	if(AttachHeader) {
+		attr(filedata,"datadef")=parsedHeader
+		attr(filedata,"header")=header
+	}
 	filedata
 }
 
@@ -179,9 +184,12 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE){
 	
 	DataDefDF$SimpleDataLength=DataDefDF$DataLength*DataDefDF$SubLength
 	DataDefDF$nBytes=DataDefDF$SubLength*DataDefDF$Size*DataDefDF$DataLength
+	# FIXME Note that this assumes exactly one blank line in between each data section
+	# I'm not sure if this is a required property of the amira file format
+	# Fixing this would of course require reading/skipping each data section
 	DataDefDF$LineOffsets=nHeaderLines+c(0,cumsum(DataDefDF$DataLength+2)[-nrow(DataDefDF)])+1
 	
-	return(DataDefDF)
+	return(list(DataDefDF,headerLines))
 }
 
 	
@@ -1313,72 +1321,43 @@ ReadRLEBytes<-function(con,length,offset=0){
 	return(DecodeRLEBytes(ba))
 }
 
-ReadAmiraLandmarks<-function(filename){
-
-	fc=file(filename,'rb')
-	headerLines<<-NULL		
-	while ( ( nextLine<-readLines(fc,1)) !="@1") {headerLines<<-c(headerLines,nextLine)}
-	
-	# Figure out if the file is in binary format or not
-	if(any(grep("^\\s*#\\s+amiramesh\\s+3d\\s+binary", headerLines[1],ignore.case=TRUE,perl=TRUE))){
-			binary = TRUE
-	} else binary=FALSE
-
-	# Find the position of the header line defining the # of markers
-	MarkersDefLine=grep("define\\s+markers",headerLines,ignore.case=TRUE,perl=TRUE)
-	if(!any(MarkersDefLine)) return(-1)
-#		if(!any(LatticeBoundsLine)) return(-1)
-	
-	strtrim<-function(str){
-			str<-sub('\\s+$', '', str, perl = TRUE) ## Perl-style white space
-			sub('^\\s+', '', str, perl = TRUE) ## Perl-style white space
-	}
-
-	# fetch the number of markers
-	markerLineComponents=unlist(strsplit(headerLines[MarkersDefLine]," "))
-# 	cat("markerLineComponents=",markerLineComponents)
-# 	cat(markerLineComponents[length(markerLineComponents)])
-	nMarkers=as.numeric(markerLineComponents[length(markerLineComponents)])
-	dataLength=nMarkers*3
-# 	cat("nMarkers =",nMarkers,"dataLength =",dataLength)
+ReadAmiraLandmarks<-function(filename,Verbose=FALSE,CoordinatesOnly=TRUE){
+	r=ReadAmiramesh(filename,AttachHeader=TRUE,Verbose=Verbose)
+	headerLines=attr(r,"header")
+	datadef=attr(r,"datadef")
 	
 	# get the number of landmark sets
-	NumSetLine=grep("nSets\\s+[0-9]{1,}",headerLines,value=TRUE)
+	NumSetLine=grep("NumSets\\s+[0-9]{1,}",headerLines,value=TRUE)
 	if(length(NumSetLine)==0) stop(paste("Unable to establish number of amira landmarks sets in",filename))
-		nSets=as.numeric(sub(".*nSets\\s+([0-9]{1,}).*","\\1",NumSetLine))
+	nSets=as.numeric(sub(".*NumSets\\s+([0-9]{1,}).*","\\1",NumSetLine))
 	
 	# get the number of data sections
-	nDataSections=length(grep("@[[:digit:]]+",headerLines))
+	nDataSections=nrow(datadef)
 	nSectionsPerSet=nDataSections/nSets
+	if(round(nSectionsPerSet)!=nSectionsPerSet) stop(paste("Unable to parse amira landmarks sets",filename,":too many data sections!"))
 	
-	# parse the data definitions
-	
-	if(nDataSections>1){
-		d=list()
-		for(i in 1:nDataSections){
-			d[[i]]=matrix(scan(fc,what=numeric(),nmax=dataLength,quiet=TRUE),ncol=3,byrow=TRUE)
-			readLines(fc,n=2)
-		}
-	} else {
-		d=matrix(scan(fc,what=numeric(),nmax=dataLength,quiet=TRUE),ncol=3,byrow=TRUE)
-	}			
-	close(fc)
-	return(d)
+	if(CoordinatesOnly){
+		chosenSections=seq(from=1,by=nSectionsPerSet,length=nSets)
+		r=r[chosenSections]
+	}
+	if(length(r)==1) r[[1]]
+	else r
 }
 
-WriteAmiraLandmarkSet<-function(filename,d){
+WriteAmiraLandmarks<-function(filename,d){
 	if(is.list(d)) l=d
 	else l=list(d)
 	nSets=length(l)
 	nummarkers=sapply(l,nrow)
 	if(length(unique(nummarkers))!=1) stop("Must have just an equal number of markers in paired landmark sets")
 	nummarkers=nummarkers[1]
-	cat("# AmiraMesh 3D ASCII 2.0\n\ndefine Markers",nummarkers,"\n\nParameters {\n\tContentType \"LandmarkSet\",\n\tnSets",nSets,"\n}\n",file=filename)
+	cat("# AmiraMesh 3D ASCII 2.0\n\ndefine Markers",nummarkers,"\n\nParameters {\n\tContentType \"LandmarkSet\",\n\tNumSets",nSets,"\n}\n",file=filename)
 	for(i in 1:nSets){
 		cat("Markers { float[3] Coordinates",i," } @",i,sep="","\n",file=filename,append=T)
 	}
 	for(i in 1:nSets){
 		cat("@",i,sep="","\n",file=filename,append=T)
 		write.table(l[[i]],col.names=F,row.names=F,file=filename,append=TRUE)
+		cat("\n",file=filename,append=T)
 	}
 }
