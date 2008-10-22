@@ -1045,12 +1045,6 @@ ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inne
 	return(d)
 }
 
-WriteAmiraLandmarkSet=function(filename,d){
-	cat("# AmiraMesh ASCII 1.0\ndefine Markers",nrow(d),"Parameters {\nContentType \"LandmarkSet\",NumSets 1\n}\n",file=filename)
-	cat("Markers { float[3] Coordinates } = @1\n@1\n",file=filename,append=T)
-	write.table(d,col.names=F,row.names=F,file=filename,append=TRUE)
-}
-
 WriteHxSurface=function(filename,Vertices,Indices=NULL,
 		material=sub("^([^.]+)\\..*","\\1",basename(filename))){
 		
@@ -1362,4 +1356,21 @@ ReadAmiraLandmarks<-function(filename){
 	}			
 	close(fc)
 	return(d)
+}
+
+WriteAmiraLandmarkSet<-function(filename,d){
+	if(is.list(d)) l=d
+	else l=list(d)
+	nSets=length(l)
+	nummarkers=sapply(l,nrow)
+	if(length(unique(nummarkers))!=1) stop("Must have just an equal number of markers in paired landmark sets")
+	nummarkers=nummarkers[1]
+	cat("# AmiraMesh 3D ASCII 2.0\n\ndefine Markers",nummarkers,"\n\nParameters {\n\tContentType \"LandmarkSet\",\n\tnSets",nSets,"\n}\n",file=filename)
+	for(i in 1:nSets){
+		cat("Markers { float[3] Coordinates",i," } @",i,sep="","\n",file=filename,append=T)
+	}
+	for(i in 1:nSets){
+		cat("@",i,sep="","\n",file=filename,append=T)
+		write.table(l[[i]],col.names=F,row.names=F,file=filename,append=TRUE)
+	}
 }
