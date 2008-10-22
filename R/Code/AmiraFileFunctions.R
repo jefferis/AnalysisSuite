@@ -47,7 +47,7 @@ require(tools) # for md5sum
 #source(file.path(CodeDir,"SWCFunctions.s"))
 source(file.path(CodeDir,"GraphTheory.R"))
 
-ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=TRUE){
+ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=TRUE,AttachHeader=FALSE){
 	# attempt to write a generic amiramesh reader
 	firstLine=readLines(filename,n=1)
 	if(!any(grep("#\\s+amiramesh",firstLine,ignore.case=T))){
@@ -70,6 +70,7 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=TRUE){
 		filedata=.ReadAmiramesh.ASCIIData(filename,parsedHeader,DataSectionsToRead,Verbose=Verbose)
 		#cat(length(filedata))
 	}
+	if(AttachHeader) attr(filedata,"header")=parsedHeader
 	filedata
 }
 
