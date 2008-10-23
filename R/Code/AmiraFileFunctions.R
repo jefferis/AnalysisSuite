@@ -1353,7 +1353,8 @@ WriteAmiraLandmarks<-function(filename,d){
 	nummarkers=nummarkers[1]
 	cat("# AmiraMesh 3D ASCII 2.0\n\ndefine Markers",nummarkers,"\n\nParameters {\n\tContentType \"LandmarkSet\",\n\tNumSets",nSets,"\n}\n",file=filename)
 	for(i in 1:nSets){
-		cat("Markers { float[3] Coordinates",i," } @",i,sep="","\n",file=filename,append=T)
+		coordsuffix=ifelse(i==1,"",i)
+		cat("Markers { float[3] Coordinates",coordsuffix," } @",i,sep="","\n",file=filename,append=T)
 	}
 	for(i in 1:nSets){
 		cat("@",i,sep="","\n",file=filename,append=T)
