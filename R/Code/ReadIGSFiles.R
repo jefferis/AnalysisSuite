@@ -147,7 +147,10 @@ ReadIGSTypedStream<-function(con, CheckLabel=TRUE){
 				items=as.numeric(items)
 			} else if (firstItemFirstChar=="\""){
 				# dequote quoted string
-				items=gsub("(\"|\')","",items)
+				# can do this by using a textConnection
+				tc=textConnection(thisLine)
+				items=scan(tc,what="",quiet=TRUE)[-1]
+				close(tc)
 				attr(items,"quoted")=TRUE
 			}
 			# check if the list already has one of these
@@ -258,18 +261,22 @@ IGSLandmarkList<-function(xyzs){
 	ll
 }
 
-WriteIGSLandmarkList<-function(xyzs,filename,replace=FALSE){
+WriteIGSLandmarks<-function(xyzs,filename,Force=FALSE){
 	ll=IGSLandmarkList(xyzs)
 	if(file.exists(filename) && file.info(filename)$isdir) filename=file.path(filename,"landmarks")
-	if(file.exists(filename) && !replace) {
-		stop(paste(filename,"already exists, use replace=TRUE to replace"))
+	if(file.exists(filename) && !Force) {
+		stop(paste(filename,"already exists, use Force=TRUE to replace"))
 	}
 	WriteIGSTypedStream(ll,filename)
 }
 
 ReadIGSLandmarks<-function(...){
-	l=ReadIGSTypedStream(...)
+	l=ReadIGSTypedStream(...,CheckLabel=FALSE)
 	x=t(sapply(l,function(x) x[["location"]]))
-	rownames(x)=sapply(l,function(x) paste(x[["name"]],collapse=" "))
+	rn=sapply(l,function(x) x[["name"]])
+	# nb this is necessary to avoid the names having names 
+	# of the form landmarks.1, landmarks.1 ...
+	names(rn)<-NULL
+	rownames(x)=rn
 	x
 }
