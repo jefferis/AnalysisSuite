@@ -4,16 +4,16 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,
 	
 	require(rgl)
 	if(ClearRGL) rgl.clear()
-    if (is.character(ANeuron)){
-	ANeuron<-NeuronList[[GetNeuronNum(ANeuron)]]
-    }
-    if (is.numeric(ANeuron)){
-	ANeuron<-NeuronList[[ANeuron]]
+    
+	if ( is.character(ANeuron) || is.numeric(ANeuron) ){
+		if(length(ANeuron)>1) return(sapply(NeuronList[ANeuron],
+			plotneuron3d.simple, WithNodes=WithNodes,WithText=WithText,WithLine=WithLine,ClearRGL=FALSE,...))
+		else ANeuron<-NeuronList[[ANeuron]]
     }
     
     if (!is.list(ANeuron)){
-	warning("Cannot understand passed neuron")
-	return(F)
+		warning("Cannot understand passed neuron")
+		return(F)
     }
 	
 	NodesOnly<-c(ANeuron$BranchPoints,
