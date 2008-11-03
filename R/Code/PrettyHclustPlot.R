@@ -34,8 +34,10 @@
 #################
 #ENDMAINCOPYRIGHT
 # Addendum - see A2R R library for additional caopyright information
- 
-require(A2R)
+# Function copied from A2R library
+# by Romain Francois
+# available at
+# http://addictedtor.free.fr
 
 sensClassClust<-function(distmat,k=4,method='ward',...){
 	lhclust=hclust(distmat,method=method)

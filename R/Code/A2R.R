@@ -1,3 +1,11 @@
+# Functions copied from A2R library
+# by Romain Francois
+# available at
+# http://addictedtor.free.fr
+
+# minor modifications to A2Rplot.hclust Gregory Jefferis also released under
+# GPL v2
+
 "._a2r_hclu"       <- NULL # to receive an hclust object when 
                            # A2Rplot.hclust is called
 
@@ -35,6 +43,7 @@
   main     = paste("Colored Dendrogram (",k," groups)"),
   boxes    = TRUE,
   members,
+  labellen = 6,
   ...
 ){
 
@@ -76,19 +85,19 @@
   # prepare the layout
   matlayout <- matrix(c(2,4,6,1,3,5), nc=2, nr=3)
   widths    <- c(1,9)
-  heights   <- c(8,1,1)
+  heights   <- c(8,1, labellen/6)
   if(!show.labels){
       matlayout <- matrix(c(2,4,1,3), nc=2, nr=2)
       widths    <- c(1,9)
-      heights   <- c(9,1)
+      heights   <- c(9, labellen/6)
   }
   if(!missing(fact.sup) ) {
-    heights   <- c(8,1,1)
+    heights   <- c(8,1, labellen/6)
   }
   if(missing(criteria) & missing(fact.sup)){
     matlayout <- matrix(c(2,4,1,3), nc=2, nr=2)
       widths    <- c(1,9)
-      heights   <- c(9,1)
+      heights   <- c(9, labellen/6)
     
   }
   layout(matlayout, width=widths, height=heights)
@@ -145,10 +154,10 @@
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Name of the observations (3)
     par(mar=c(0,0,0,4))
     par(srt=90)
-    obs.labels <- toupper(substr(x$labels[x$order],1,6))
+    obs.labels <- toupper(substr(x$labels[x$order],1,labellen))
     if(is.null(members)) {
       plot(0,type="n",xlim=c(0.5,n.indiv+.5), ylim=c(0,1), xaxs="i", axes=FALSE, xlab="",ylab="") 
-      text(1:n.indiv            , 0, obs.labels, pos=4, col=col.down[groups.o])
+      text(1:n.indiv - 0.3 , 0, obs.labels, pos=4, col=col.down[groups.o])
     }
     else{
       plot(0,type="n",xlim=c(0.5,sum(members)+.5), ylim=c(0,1), xaxs="i", axes=FALSE, xlab="",ylab="") 
