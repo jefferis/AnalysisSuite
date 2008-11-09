@@ -114,8 +114,11 @@ ReadIGSTypedStream<-function(con, CheckLabel=TRUE){
 			# parse new subsection
 			#cat("new subsection -> recursion\n")
 			# set the list element!
-			if(CheckLabel) label=checkLabel(label)
-			l[[label]]=ReadIGSTypedStream(con,CheckLabel=CheckLabel)
+			if(CheckLabel)
+				label=checkLabel(label)
+
+			l[[length(l)+1]]=ReadIGSTypedStream(con,CheckLabel=CheckLabel)
+			names(l)[length(l)]<-label
 			next
 		}
 		
@@ -156,8 +159,11 @@ ReadIGSTypedStream<-function(con, CheckLabel=TRUE){
 			# check if the list already has one of these
 			
 			# set the list element!
-			if(CheckLabel) label=checkLabel(label)
-			l[[label]]=items
+			if(CheckLabel)
+				label=checkLabel(label)
+
+			l[[length(l)+1]]=items
+			names(l)[length(l)]<-label
 		}
 	}
 	# we should only get here once if we parse a valid hierarchy
