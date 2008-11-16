@@ -36,7 +36,7 @@
 
 # source(file.path(CodeDir,"DistanceFunctions.R"))
 
-plugindist.list=function (x, distfun, diag = FALSE, upper = FALSE, ...) 
+plugindist.list=function (x, distfun, diag = FALSE, upper = FALSE, ShowProgress=FALSE,...) 
 {
 	if(!is.list(x)) stop("plugindist.list expects a list of objects")
 	distfun=match.fun(distfun)
@@ -48,6 +48,7 @@ plugindist.list=function (x, distfun, diag = FALSE, upper = FALSE, ...)
 	for(c in 1:(N-1)){
 		for(r in (c+1):N){
 			if(c<=N)
+				if(ShowProgress) cat("Calculating RC position [",sep="",r,",",c,"]\n")
 				d=c(d,distfun(x[[c]],x[[r]],...))
 		}
 	}

@@ -228,7 +228,7 @@ restrictToBounds<-function(a,bounds){
 dotprod=function(a,b){
 # expects 2 matrices with n cols each
 	c=a*b
-	if(is.matrix(c)) 	rowSums(c)
+	if(length(dim(c))>1) 	rowSums(c)
 	else sum(c)
 }
 
@@ -249,7 +249,7 @@ rowbyrow<-function(X,Y,FUN="-",...){
 normbyrow=function(a){
 	# returns euclidean norm (by row if reqd)
 	c=a*a
-	if(is.matrix(c)) 	sqrt(rowSums(c))
+	if(length(dim(c))>1) 	sqrt(rowSums(c))
 	else sqrt(sum(c))
 }
 
