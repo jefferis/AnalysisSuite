@@ -44,12 +44,16 @@ plugindist.list=function (x, distfun, diag = FALSE, upper = FALSE, ShowProgress=
 		stop("inappropriate distance function")
 	N <- length(x)
 	# distance is given as columns of lower diagonal 
-	d=NULL
+	d=numeric((N^2-N)/2)
+	i=1
+
 	for(c in 1:(N-1)){
 		for(r in (c+1):N){
-			if(c<=N)
+			if(c<=N){
 				if(ShowProgress) cat("Calculating RC position [",sep="",r,",",c,"]\n")
-				d=c(d,distfun(x[[c]],x[[r]],...))
+				d[i]=distfun(x[[c]],x[[r]],...)
+				i=i+1
+			}
 		}
 	}
 	attr(d, "Size") <- N
