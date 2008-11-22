@@ -22,7 +22,7 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,
 		warning("Cannot understand passed neuron")
 		return(F)
     }
-	
+	rglreturnlist=list()
 	NodesOnly<-c(ANeuron$BranchPoints,
 	    ANeuron$EndPoints[-which(ANeuron$EndPoints==ANeuron$StartPoint)],
 	    ANeuron$StartPoint)
@@ -32,18 +32,19 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,
 	if(WithNodes){
 		Colour=col
 		if(!WithLine) NodeCols=rep(Colour,length(NodeCols))
-		points3d(ANeuron$d[NodesOnly,c("X","Y","Z")],color=NodeCols,size=3)
+		rglreturnlist[["points"]]=points3d(ANeuron$d[NodesOnly,c("X","Y","Z")],color=NodeCols,size=3)
 		if(WithText) # text labels for nodes
-		rgl.texts(ANeuron$d[NodesOnly,c("X","Y","Z")],NodesOnly,color=NodeCols,adj=c(0,0.5))		
+		rglreturnlist[["texts"]]=texts3d(ANeuron$d[NodesOnly,c("X","Y","Z")],text=NodesOnly,color=NodeCols,adj=c(0,0.5))
 	}
 	
 	d=data.matrix(ANeuron$d[,c("X","Y","Z")])
 	# xyzl=sapply(ANeuron$SegList,function(s) {rbind(d[s,],NA)})
 	# NAs are used to break line segments
 	xyzl<-do.call(rbind,sapply(ANeuron$SegList,function(s) {rbind(d[s,],NA)},simplify=FALSE))
-	lines3d(xyzl,col=col,...)
+	rglreturnlist[["lines"]]=lines3d(xyzl,col=col,...)
 	if(HighlightLongestSegment){
 		x=GetLongestSegment(ANeuron)
-		spheres3d(x,col=col,...)
+		rglreturnlist[["spheres"]]=spheres3d(x,col=col,...)
 	}
+	invisible(rglreturnlist)
 }
