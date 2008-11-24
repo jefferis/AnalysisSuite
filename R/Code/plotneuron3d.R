@@ -14,7 +14,7 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,
 			return(invisible(mapply(plotneuron3d.simple,
 			NeuronList[ANeuron],col=col,ClearRGL=FALSE,
 			WithNodes=WithNodes,WithText=WithText,WithLine=WithLine,
-			HighlightLongestSegment=HighlightLongestSegment)))
+			HighlightLongestSegment=HighlightLongestSegment,...)))
 		} else ANeuron<-NeuronList[[ANeuron]]
     }
     
