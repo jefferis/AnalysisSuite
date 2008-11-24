@@ -610,7 +610,7 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 }
 
 
-ParseEdgeList<-function(Nb,Silent=FALSE,Verbose=!Silent,RootPoint=1){
+ParseEdgeList<-function(Nb,Silent=TRUE,Verbose=!Silent,RootPoint=1){
 	# Takes an edge list from a Skeletonize file
 	# ie a listing of all edges bidirectionally (ie 2 edges for every pair 
 	# of linked points) and produces a SegList
@@ -677,7 +677,7 @@ ParseEdgeList<-function(Nb,Silent=FALSE,Verbose=!Silent,RootPoint=1){
 	
 	parseSegment(RootPoint)
 	
-	UnusedPoints=setdiff(unique(Nb$CurPoint),unique(unlist(SegList)))
+	UnusedPoints=setdiff(unique(Nb[,"CurPoint"]),unique(unlist(SegList)))
 	if(!Silent && any(UnusedPoints)){
 		cat("The following points were not used in the SegList:",UnusedPoints,"\n")
 		warning("")
@@ -1243,7 +1243,7 @@ Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text"),
 	BoundingBox=NULL
 	if(!is.null(attr(dens,"BoundingBox"))){
 		BoundingBox=attr(dens,"BoundingBox")
-	} else if(!is.null(d$eval.points)){
+	} else if(is.list(d) && !is.null(d$eval.points)){
 		BoundingBox=as.vector(apply(d$eval.points,2,range))
 	}
 	if(!is.null(BoundingBox)) cat("\t BoundingBox",BoundingBox,"\n",file=fc)
