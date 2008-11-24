@@ -47,7 +47,7 @@ require(tools) # for md5sum
 #source(file.path(CodeDir,"SWCFunctions.s"))
 source(file.path(CodeDir,"GraphTheory.R"))
 
-ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=TRUE,AttachHeader=FALSE){
+ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=TRUE,AttachFullHeader=FALSE){
 	# attempt to write a generic amiramesh reader
 	firstLine=readLines(filename,n=1)
 	if(!any(grep("#\\s+amiramesh",firstLine,ignore.case=T))){
@@ -57,9 +57,8 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=TRUE,AttachHead
 	binaryfile="binary"==tolower(sub(".*(ascii|binary).*","\\1",firstLine,ignore.case=TRUE))
 
 	con=if(binaryfile) file(filename,open='rb') else file(filename,open='rt')
-	header=ReadAmiramesh.Header(con,Verbose=Verbose)
-	parsedHeader=header[[1]]
-	header=header[[2]]
+	header=ReadAmiramesh.Header(con,Verbose=Verbose,CloseConnection=FALSE)
+	parsedHeader=header[["dataDef"]]
 	
 	if(is.null(DataSectionsToRead)) DataSectionsToRead=parsedHeader$DataName
 	else DataSectionsToRead=intersect(parsedHeader$DataName,DataSectionsToRead)	
@@ -72,11 +71,12 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=TRUE,AttachHead
 		filedata=.ReadAmiramesh.ASCIIData(filename,parsedHeader,DataSectionsToRead,Verbose=Verbose)
 		#cat(length(filedata))
 	}
-	if(AttachHeader) {
-		attr(filedata,"datadef")=parsedHeader
-		attr(filedata,"header")=header
-	}
-	filedata
+
+	if(!AttachFullHeader) header=header[setdiff(names(header),c("header","Parameters"))]	
+	for (n in names(header))
+		attr(filedata,n)=header[[n]]
+
+	return(filedata)
 }
 
 .ReadAmiramesh.BinaryData<-function(con,df,DataSectionsToRead,Verbose=TRUE){
@@ -132,17 +132,20 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=TRUE,AttachHead
 	return(l)		
 }
 
-
-ReadAmiramesh.Header<-function(con,Verbose=TRUE){
+ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 	headerLines=NULL
+	if(!inherits(con,"connection")) con<-file(con,open='rt')
+	if(CloseConnection) on.exit(close(con))
 	while( (t<-readLines(con,1))!="@1"){
 		headerLines=c(headerLines,t)
 	}
+	returnList<-list(header=headerLines)
+	
 	nHeaderLines=length(headerLines)
 	# trim comments and blanks & convert all white space to single spaces
-	headerLines=trim(sub("(.*)#.*","\\1",headerLines))
+	headerLines=trim(sub("(.*)#.*","\\1",headerLines,perl=TRUE))
 	headerLines=headerLines[headerLines!=""]
-	headerLines=gsub("[[:space:]]+"," ",headerLines)
+	headerLines=gsub("[[:space:]]+"," ",headerLines,perl=TRUE)
 	
 	#print(headerLines)
 	# parse location definitions
@@ -154,7 +157,30 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE){
 	names(Locations)=LocationNames
 	
 	# parse parameters
-	
+	ParameterStartLine=grep("^\\s*Parameters",headerLines,perl=TRUE)
+	if(length(ParameterStartLine)>0){
+		ParameterLines=headerLines[ParameterStartLine[1]:length(headerLines)]
+		returnList[["Parameters"]]<-.ParseAmirameshParameters(ParameterLines)$Parameters
+
+		if(!is.null(returnList[["Parameters"]]$Materials)){
+			# try and parse materials
+			te<-try(silent=TRUE,{
+				Ids=sapply(returnList[["Parameters"]]$Materials,'[[','Id')
+				Colors=sapply(returnList[["Parameters"]]$Materials,
+					function(x) ifelse(is.null(x$Color),
+						'black',rgb(x$Color[1],x$Color[2],x$Color[3])))
+				Materials=data.frame(id=Ids,col=I(Colors))
+				rownames(Materials)<-names(returnList[["Parameters"]]$Materials)
+			})
+			if(inherits(te,'try-error')) warning("Unable to parse Amiramesh materials table")
+			else returnList[["Materials"]]=Materials
+		}
+
+		if(!is.null(returnList[["Parameters"]]$BoundingBox)){
+			returnList[["BoundingBox"]]=returnList[["Parameters"]]$BoundingBox
+		}
+	}
+
 	# parse data definitions
 	DataDefLines=grep("^(\\w+).*@(\\d+)$",headerLines,perl=TRUE)
 	DataDefs=headerLines[DataDefLines];headerLines[-DataDefLines]
@@ -184,17 +210,101 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE){
 	
 	DataDefDF$SimpleDataLength=DataDefDF$DataLength*DataDefDF$SubLength
 	DataDefDF$nBytes=DataDefDF$SubLength*DataDefDF$Size*DataDefDF$DataLength
+	
 	# FIXME Note that this assumes exactly one blank line in between each data section
 	# I'm not sure if this is a required property of the amira file format
 	# Fixing this would of course require reading/skipping each data section
 	DataDefDF$LineOffsets=nHeaderLines+c(0,cumsum(DataDefDF$DataLength+2)[-nrow(DataDefDF)])+1
 	
-	return(list(DataDefDF,headerLines))
+	returnList[["dataDef"]]=DataDefDF
+	return(returnList)
 }
 
+.ParseAmirameshParameters<-function(textArray, CheckLabel=TRUE){
+#  Reads Torsten's IGS TypedStream format which is what he uses for:
+#  registration
+#  studylist
+#  images
+#  Note that there are special methods to handle the 
+#  coefficients and active members of a spline warp 
 	
+	if(is.character(textArray)) con=textConnection(textArray,open='r')
+	else con=textArray
+	
+	l=list()
+	
+	checkLabel=function(label) 	{
+		if( any(names(l)==label)  ){
+			newlabel=make.unique(c(names(l),label))[length(l)+1]
+			warning(paste("Duplicate item",label,"renamed",newlabel))
+			label=newlabel
+		}
+		label
+	}
+	# Should this check to see if the connection still exists?
+	# in case we want to bail out sooner
+	while ( {t<-try(isOpen(con),silent=TRUE);isTRUE(t) || !inherits(t,"try-error")} ){
+		thisLine<-readLines(con,1)
+		# no lines returned - ie end of file
+		if(length(thisLine)==0) break
 
-	
+		# trim and split it up by white space
+		thisLine=trim(thisLine)
+		
+		# skip if this is a blank line
+		if(nchar(thisLine)==0) next
+
+		items=strsplit(thisLine," ",extended=FALSE)[[1]]
+		
+		if(length(items)==0) next
+		# get the label and items
+		label=items[1]; items=items[-1]
+		#cat("\nlabel=",label)
+		#cat("; items=",items)
+
+		# return list if this is the end of a section
+		if(label=="}") {
+			#cat("end of section - leaving this recursion\n")
+			return (l)
+		}		
+		if(items[1]=="{"){
+			# parse new subsection
+			#cat("new subsection -> recursion\n")
+			# set the list element!
+			if(CheckLabel) label=checkLabel(label)
+			l[[length(l)+1]]=.ParseAmirameshParameters(con,CheckLabel=CheckLabel)
+			names(l)[length(l)]<-label
+			next
+		}
+		
+		# ordinary item
+		# Check first item
+		firstItemFirstChar=substr(items[1],1,1)		
+		if(any(firstItemFirstChar==c("-",as.character(0:9)) )){
+			# Get rid of any commas
+			items=chartr(","," ",items)
+			#items=gsub(",","",items,fixed=TRUE)
+			# convert to numeric if not a string
+			items=as.numeric(items)
+		} else if (firstItemFirstChar=="\""){
+			# dequote quoted string
+			# can do this by using a textConnection
+			tc=textConnection(thisLine)
+			items=scan(tc,what="",quiet=TRUE)[-1]
+			close(tc)
+			attr(items,"quoted")=TRUE
+		}		
+		# set the list element!
+		if(CheckLabel)
+			label=checkLabel(label)
+
+		l[[length(l)+1]]=items
+		names(l)[length(l)]<-label
+	}
+	# we should only get here once if we parse a valid hierarchy
+	try(close(con),silent=TRUE)
+	return(l)
+}
 	
 ReadAM3DData.Binary<-function(filename,OmitNAs=TRUE){
 	# function to read in the basic data from the 
@@ -1322,9 +1432,9 @@ ReadRLEBytes<-function(con,length,offset=0){
 }
 
 ReadAmiraLandmarks<-function(filename,Verbose=FALSE,CoordinatesOnly=TRUE){
-	r=ReadAmiramesh(filename,AttachHeader=TRUE,Verbose=Verbose)
+	r=ReadAmiramesh(filename,AttachFullHeader=TRUE,Verbose=Verbose)
 	headerLines=attr(r,"header")
-	datadef=attr(r,"datadef")
+	dataDef=attr(r,"dataDef")
 	
 	# get the number of landmark sets
 	NumSetLine=grep("NumSets\\s+[0-9]{1,}",headerLines,value=TRUE)
@@ -1332,7 +1442,7 @@ ReadAmiraLandmarks<-function(filename,Verbose=FALSE,CoordinatesOnly=TRUE){
 	nSets=as.numeric(sub(".*NumSets\\s+([0-9]{1,}).*","\\1",NumSetLine))
 	
 	# get the number of data sections
-	nDataSections=nrow(datadef)
+	nDataSections=nrow(dataDef)
 	nSectionsPerSet=nDataSections/nSets
 	if(round(nSectionsPerSet)!=nSectionsPerSet) stop(paste("Unable to parse amira landmarks sets",filename,":too many data sections!"))
 	
