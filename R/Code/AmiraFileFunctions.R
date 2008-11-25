@@ -50,13 +50,14 @@ source(file.path(CodeDir,"GraphTheory.R"))
 ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFullHeader=FALSE,Simplify=TRUE){
 	# attempt to write a generic amiramesh reader
 	firstLine=readLines(filename,n=1)
-	if(!any(grep("#\\s+amiramesh",firstLine,ignore.case=T))){
+	if(!any(grep("#\\s+(amira|hyper)mesh",firstLine,ignore.case=T))){
 		warning(paste(filename,"does not appear to be an AmiraMesh file"))
 		return(NULL)
 	}
 	binaryfile="binary"==tolower(sub(".*(ascii|binary).*","\\1",firstLine,ignore.case=TRUE))
 
 	con=if(binaryfile) file(filename,open='rb') else file(filename,open='rt')
+	on.exit(try(close(con),silent=TRUE))
 	header=ReadAmiramesh.Header(con,Verbose=Verbose,CloseConnection=FALSE)
 	parsedHeader=header[["dataDef"]]
 	
@@ -188,11 +189,12 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 	}
 
 	# parse data definitions
-	DataDefLines=grep("^(\\w+).*@(\\d+)$",headerLines,perl=TRUE)
+	DataDefLines=grep("^(\\w+).*@(\\d+)(\\(Hx[^)]+\\)){0,1}$",headerLines,perl=TRUE)
 	DataDefs=headerLines[DataDefLines];headerLines[-DataDefLines]
 	
 	# remove all extraneous chars altogether
 	DataDefs=gsub("(@|\\}|\\{|[[:space:]])+"," ",DataDefs)
+	if(Verbose) cat("DataDefs=",DataDefs,"\n")
 	# make a df with DataDef info
 	DataDefMatrix=matrix(unlist(strsplit(DataDefs," ")),ncol=4,byrow=T)
 	
@@ -282,20 +284,27 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 			names(l)[length(l)]<-label
 			next
 		}
-		
+		if(items[length(items)]=="}") {
+			returnAfterParsing=TRUE
+			items=items[-length(items)]
+		}
+		else returnAfterParsing=FALSE
 		# ordinary item
 		# Check first item
 		firstItemFirstChar=substr(items[1],1,1)		
 		if(any(firstItemFirstChar==c("-",as.character(0:9)) )){
 			# Get rid of any commas
 			items=chartr(","," ",items)
-			#items=gsub(",","",items,fixed=TRUE)
 			# convert to numeric if not a string
 			items=as.numeric(items)
 		} else if (firstItemFirstChar=="\""){
+
+			if(returnAfterParsing) thisLine=sub("\\}","",thisLine,fixed=TRUE)
+			
 			# dequote quoted string
 			# can do this by using a textConnection
 			tc=textConnection(thisLine)
+			
 			items=scan(tc,what="",quiet=TRUE)[-1]
 			close(tc)
 			attr(items,"quoted")=TRUE
@@ -306,6 +315,8 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 
 		l[[length(l)+1]]=items
 		names(l)[length(l)]<-label
+		
+		if(returnAfterParsing) return(l)
 	}
 	# we should only get here once if we parse a valid hierarchy
 	try(close(con),silent=TRUE)
@@ -1095,7 +1106,7 @@ ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inne
 	firstLine=readLines(filename,n=1)
 	if(!any(grep("#\\s+hypersurface\\s+[0-9.]+\\s+ascii",firstLine,ignore.case=T,perl=T))){
 		warning(paste(filename,"does not appear to be an Amira HyperSurface ASCII file"))
-		return(-1)
+		return(NULL)
 	}
 	
 	t=readLines(filename)
@@ -1136,7 +1147,7 @@ ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inne
 	for(i in 1:nPatches){
 		if(!any(TriangleDeflines[i])){
 			warning(paste("Unable to find Triangle number in patch",i,"in",filename,"\n"))
-			return (-1)
+			return (NULL)
 		}
 		if(Verbose) cat("TriangleDefline =",TriangleDeflines[i],"\n")
 		PatchHeader<<-remainingLines[PatchStarts[i]:TriangleDeflines[i]]

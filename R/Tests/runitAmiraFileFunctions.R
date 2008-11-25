@@ -7,6 +7,14 @@
 # runTestFile(file.path(CodeDir,"runitAmiraFileFunctions.R"))
 require(RUnit)
 
+AmiraTutorialDirectory=NULL
+if(file.exists("/Applications")){
+	# we're on a mac, find the latest version of amira
+	AmiraRootDirectory=rev(list.files("/Applications",patt="Amira*",full=TRUE))[1]
+	AmiraTutorialDirectory=file.path(AmiraRootDirectory,"/data/tutorials/")
+	if(!file.exists(AmiraTutorialDirectory)) AmiraTutorialDirectory=NULL
+}
+
 test.DoubleFromSingleEdgeList<-function(){
 	
 	el=rbind(c(1,2),c(2,3),c(2,4))
@@ -134,4 +142,32 @@ test.ReadWriteAmiraLandmarksPaired<-function(){
 	unlink(tmpfile)
 	names(testData.new)<-NULL
 	checkEquals(testData,testData.new,tol=1e-6)	
+}
+checkNonNullOutput<-function(expr,msg){
+	t<-try(eval(expr))
+	checkTrue(!inherits(t,'try-error') && !is.null(t),msg=msg)
+	t
+}
+
+if(!is.null(AmiraTutorialDirectory)){
+test.ReadAmiraTutorialLandmarks<-function(){
+	landmarks<-checkNonNullOutput(
+		ReadAmiraLandmarks(file.path(AmiraTutorialDirectory,"lobus.landmarks.am")),
+		"Failed to read lobus.landmarks.am")
+}
+test.ReadAmiraTutorialVolumeData<-function(){
+	lobus<-checkNonNullOutput(
+		ReadAmiramesh(file.path(AmiraTutorialDirectory,"lobus.am")),
+		"Failed to read lobus.landmarks.am")
+}
+test.ReadAmiraTutorialLabelsData<-function(){
+	lobus.labels<-checkNonNullOutput(
+		ReadAmiramesh(file.path(AmiraTutorialDirectory,"lobus.labels.am")),
+		"Failed to read lobus.labels.am")
+}
+test.ReadAmiraTutorialSurfaceData<-function(){
+	lobus.surf<-checkNonNullOutput(
+		ParseAMSurfToContourList(file.path(AmiraTutorialDirectory,"lobus.surf")),
+		"Failed to read lobus.surf")
+}
 }
