@@ -1438,7 +1438,7 @@ ReadRLEBytes<-function(con,length,offset=0){
 }
 
 ReadAmiraLandmarks<-function(filename,Verbose=FALSE,CoordinatesOnly=TRUE){
-	r=ReadAmiramesh(filename,AttachFullHeader=TRUE,Verbose=Verbose)
+	r=ReadAmiramesh(filename,AttachFullHeader=TRUE,Verbose=Verbose,Simplify=FALSE)
 	headerLines=attr(r,"header")
 	dataDef=attr(r,"dataDef")
 	
