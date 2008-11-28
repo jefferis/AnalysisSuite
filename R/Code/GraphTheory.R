@@ -52,6 +52,7 @@ AdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
 	#ps=sort(unique(unlist(SegList)))
 	#nps=length(ps)
 	nps=max(unlist(SegList))
+	if(is.na(nps) || nps<1) stop("No valid points in passed SegList")
 	A=matrix(0,ncol=nps,nrow=nps)
 	for (i in seq(len=length(SegList))){
 		s=SegList[[i]]
