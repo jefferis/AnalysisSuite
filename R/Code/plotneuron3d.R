@@ -48,3 +48,44 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,
 	}
 	invisible(rglreturnlist)
 }
+
+animate3d<-function(time=10,degrees=360){
+	degreesPersecond=degrees/time
+	start=proc.time()[3]
+	while ((i <- degreesPersecond*(proc.time()[3]-start)) < degrees) {
+		rot3d(y=i)
+	}	
+}
+
+set3d<-function(pos=c("front","left","back","right","ventral","dorsal"),zoom=.7,...){
+	pos=match.arg(pos)
+	m=diag(c(1,-1,-1,1)) # front
+
+	if(pos=="left") {
+		m=diag(c(0,-1,0,1))
+		m[1,3]=1;m[3,1]=1
+	}
+	if(pos=="back") {
+		m=diag(c(-1,-1,1,1))
+	}
+	if(pos=="right") {
+		m=diag(c(0,-1,0,1))
+		m[1,3]=m[3,1]=-1
+	}
+	view3d(userMatrix=m,zoom=zoom,...)
+}
+rot3d<-function(xangle=0,yangle=0,zangle=0,initialUserMatrix=get("r3dDefaults", envir=.GlobalEnv)$userMatrix){
+	angle=max(xangle,yangle,zangle)
+	if(angle!=0) {
+		x=xangle/angle
+		y=yangle/angle
+		z=zangle/angle
+	}	
+	m=initialUserMatrix%*%rotationMatrix(x=x,y=y,z=z,angle=angle*2*pi/360)
+	view3d(userMatrix=m)
+	invisible(m)
+}
+
+a3d=animate3d
+s3d=set3d
+r3d=rot3d
