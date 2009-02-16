@@ -39,15 +39,39 @@ ReadLongairTraceData<-function(f,Verbose=TRUE){
 
 ReadNeuronsFromLongairTraces<-function(f,...){
 	l=ReadLongairTraceData(f,...)
-	neuronList=list()
+	dflist=list()
 	for(i in seq(l)){
 		d=l[[i]]
 		df=data.frame(PointNo=1:nrow(d),Label=2)
 		df=cbind(df,d)
 		df$radius=1
 		df$Parent=df[,1]-1
-		df$Parent[0]=-1
-		neuronList[[i]]=ParseSWCTree(df,f)
+		pathAttributes=attr(l[[i]],"pathAttributes")
+		
+		if('startson'%in%names(pathAttributes)){
+			# this path is actually joined to another
+			# nb Mark's paths are 0 indexed (R is 1 indexed)
+			parentStartIndex=as.numeric(pathAttributes['startsindex'])+1
+			# set the parent of this new path to the point on parent path
+			df$Parent[1]=parentStartIndex
+			# adjust all other point ids to start by the number of rows
+			# in the parent path data frame
+			parentPathId=as.numeric(pathAttributes['startson'])+1			
+			df$Parent[-1]=df$Parent[-1]+nrow(dflist[[parentPathId]])
+			df$PointNo=df$PointNo+nrow(dflist[[parentPathId]])
+			# now add these data to the dataframe for the parent path
+			dflist[[parentPathId]]=rbind(dflist[[parentPathId]],df)
+			dflist[[i]]=NA
+		} else {
+			df$Parent[1]=-1
+			dflist[[i]]=df
+		}
+	}
+	# dflist
+	neuronList=list()
+	for(df in dflist){
+		if(!is.data.frame(df)) next
+		neuronList[[length(neuronList)+1]]=ParseSWCTree(df,f)
 	}
 	neuronList
 }
