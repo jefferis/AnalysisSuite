@@ -113,7 +113,7 @@ ReadBorstFile<-function(filename){
 		CreatedAt=Sys.time(),
 		NodeName=Sys.info()["nodename"],
 		InputFileStat=file.info(filename)[1,],
-		InputFileMD5=md5sum(filename),
+		InputFileMD5=md5sum(path.expand(filename)),
 		NumPoints=nrow(bdf),
 		StartPoint=1, # NB always 1 ?
 		BranchPoints=which(bdf$PointType=="B"),

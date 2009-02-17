@@ -604,7 +604,7 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 			CreatedAt=Sys.time(),
 			NodeName=Sys.info()["nodename"],
 			InputFileStat=file.info(filename)[1,],
-			InputFileMD5=md5sum(filename),
+			InputFileMD5=md5sum(path.expand(filename)),
 			NumPoints=nrow(SWCData),
 			StartPoint=StartPoint, # NB I am assuming that this is always 1
 			BranchPoints=BranchPoints$PointNo,

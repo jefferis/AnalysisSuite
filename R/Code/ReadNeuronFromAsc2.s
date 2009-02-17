@@ -610,7 +610,7 @@ ParseAxonData<-function(AxonData,AscFile){
 	    CreatedAt=Sys.time(),
 	    NodeName=Sys.info()["nodename"],
 	    InputFileStat=file.info(AscFile)[1,],
-	    InputFileMD5=md5sum(AscFile),
+	    InputFileMD5=md5sum(path.expand(AscFile)),
 	    NumPoints=NumPoints,
 	    StartPoint=RootPoint, # NB always 1 since coming Neurolucida
 	    BranchPoints=BranchPoints,
