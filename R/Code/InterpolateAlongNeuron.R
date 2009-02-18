@@ -154,9 +154,9 @@ InterpolateAlongNeuron<-function(ANeuron,stepSize=0.5){
 		return(ANeuron)
 }
 
-NurbSmoothNeuron<-function(ANeuron, ... ){
-	# Will take a supplied neuron and do succesive smoothing splines for Y and Z coords
-	# ... will be passed to smooth.spline
+NurbSmoothNeuron<-function(ANeuron, NurbKnots=10, NurbKnotSpacing=NA, ... ){
+
+	# use a smoothing nurbs curve to interpolate individual neurons
 	d=matrix(unlist(ANeuron$d[,c("X","Y","Z")]),ncol=3)
 
 	# calculate seglengths if we haven't 
@@ -165,13 +165,25 @@ NurbSmoothNeuron<-function(ANeuron, ... ){
 			ANeuron$SegLengths=SegLengths(ANeuron)
 	}
 	segsWithMoreThan4Points=which(sapply(ANeuron$SegList,length)>3)
+	if(!is.na(NurbKnotSpacing)){
+		# Linearly interpolate along neuron using new (coarser) spacing
+		interpNeuron=InterpolateAlongNeuron(ANeuron,stepSize=NurbKnotSpacing)
+		di=matrix(unlist(interpNeuron$d[,c("X","Y","Z")]),ncol=3)
+	}
 	for(i in segsWithMoreThan4Points){
-		
 		l=d[ANeuron$SegList[[i]],]
-		l10=DivideLineIntoNEqualSubLines(l,10)
-		# Weights for points - set first and last to very high to keep the same
-
-		replacementMatrix=jgeom.nurbsInterpolate(l,seq(from=0,to=1,len=nrow(l)))
+		if(is.na(NurbKnotSpacing)){
+			# Divide each segment into a fixed number of knots
+			linterp=DivideLineIntoNEqualSubLines(l,NurbKnots)
+		} else {
+			# just skip this segment if we can't get at least 3 knots in
+			if(ANeuron$SegLengths[i]<(NurbKnotSpacing*2)) next
+			linterp=di[interpNeuron$SegList[[i]],]
+			# drop any duplicated points (this can happen in Longair tracings)
+			linterp=linterp[!duplicated(linterp),]
+		}
+		# note first and last points will be the same
+		replacementMatrix=jgeom.nurbsInterpolate(linterp,seq(from=0,to=1,len=nrow(l)))
 		d[ANeuron$SegList[[i]],]=replacementMatrix
 	}
 	ANeuron$d[,c("X","Y","Z")]=d
