@@ -154,25 +154,25 @@ InterpolateAlongNeuron<-function(ANeuron,stepSize=0.5){
 		return(ANeuron)
 }
 
-NurbSmoothNeuron<-function(ANeuron, NurbKnots=10, NurbKnotSpacing=NA, ... ){
-
+NurbSmoothNeuron<-function(ANeuron, NurbKnotSpacing=5, NurbKnots=NA, ... ){
+	
 	# use a smoothing nurbs curve to interpolate individual neurons
-	d=matrix(unlist(ANeuron$d[,c("X","Y","Z")]),ncol=3)
+	d=do.call(cbind,ANeuron$d[,c("X","Y","Z")])
 
 	# calculate seglengths if we haven't 
 	if(is.null(ANeuron$SegLengths)){
-			warning(paste("Calculating SegLengths for",ANeuron$NeuronName))
-			ANeuron$SegLengths=SegLengths(ANeuron)
+		warning(paste("Calculating SegLengths for",ANeuron$NeuronName))
+		ANeuron$SegLengths=SegLengths(ANeuron)
 	}
 	segsWithMoreThan4Points=which(sapply(ANeuron$SegList,length)>3)
-	if(!is.na(NurbKnotSpacing)){
+	if(is.na(NurbKnots)){
 		# Linearly interpolate along neuron using new (coarser) spacing
 		interpNeuron=InterpolateAlongNeuron(ANeuron,stepSize=NurbKnotSpacing)
 		di=matrix(unlist(interpNeuron$d[,c("X","Y","Z")]),ncol=3)
 	}
 	for(i in segsWithMoreThan4Points){
 		l=d[ANeuron$SegList[[i]],]
-		if(is.na(NurbKnotSpacing)){
+		if(!is.na(NurbKnots)){
 			# Divide each segment into a fixed number of knots
 			linterp=DivideLineIntoNEqualSubLines(l,NurbKnots)
 		} else {
@@ -190,6 +190,40 @@ NurbSmoothNeuron<-function(ANeuron, NurbKnots=10, NurbKnotSpacing=NA, ... ){
 	ANeuron
 }
 
+MovingAverageSmoothNeuron<-function(ANeuron, filter=c(1/4,1/2,1/4)){
+	# do a weighted moving average smoothing
+
+	pointsToAverage=length(filter)
+	# normalise filter if required
+	if(sum(filter)!=1){
+#		warning("Normalising filter in MovingAverageSmoothNeuron")
+		filter=filter/sum(filter)
+	}
+	
+	d=do.call(cbind,ANeuron$d[,c("X","Y","Z")])
+
+	# calculate seglengths if we haven't 
+	if(is.null(ANeuron$SegLengths)){
+		warning(paste("Calculating SegLengths for",ANeuron$NeuronName))
+		ANeuron$SegLengths=SegLengths(ANeuron)
+	}
+	segsWithMoreThanNPoints=which(sapply(ANeuron$SegList,length)>pointsToAverage)
+
+	for(i in segsWithMoreThanNPoints){
+		l=d[ANeuron$SegList[[i]],]
+		nrowl=nrow(l)
+		
+		fxyz=apply(l,2,filter,filter=filter)
+		pointsToChange=!is.na(fxyz[,1])
+		
+		# note some of the first and last points will be kept
+		d[ANeuron$SegList[[i]][pointsToChange],]=fxyz[pointsToChange,]
+	}
+	ANeuron$d[,c("X","Y","Z")]=d
+	# recalculate seglenths (since these have now changed)
+	ANeuron$SegLengths=SegLengths(ANeuron)
+	ANeuron
+}
 
 SplineSmoothNeuron<-function(ANeuron, ... ){
 	# Will take a supplied neuron and do succesive smoothing splines for Y and Z coords
