@@ -32,64 +32,61 @@ ReadLongairTraceData<-function(f,Verbose=TRUE){
 		l[[i]]=t(l[[i]])
 		rownames(l[[i]])<-NULL
 		colnames(l[[i]])<-c("X","Y","Z")
-		attr(l[[i]],'pathAttributes')=xmlAttrs(tracings[[i]])
+		pathAttributes=xmlAttrs(tracings[[i]])
+		attr(l[[i]],'pathAttributes')=pathAttributes
+		# set the list item name to the tracing id 
+		# (a number, but not necessarily from a perfect 0 indexed sequence)
+		names(l)[i]=pathAttributes['id']
 	}
 	l
 }
 
 ReadNeuronsFromLongairTraces<-function(f,...){
 	l=ReadLongairTraceData(f,...)
-	dflist=list()
-	pointOffsets=rep(0,length(l))
+	dflist=as.list(rep(NA,length(l)))
 	MasterPath=seq(l)
-	# numPoints=rep(0,length(l))
-	for(i in seq(l)){
-		d=l[[i]]
+	pointOffsets=rep(0,length(l))
+	names(dflist)<-names(pointOffsets)<-names(MasterPath)<-names(l)	
+	
+	for(id in names(l)){
+		d=l[[id]]
 		df=data.frame(PointNo=1:nrow(d),Label=2)
 		df=cbind(df,d)
 		df$radius=1
 		df$Parent=df[,1]-1
-		pathAttributes=attr(l[[i]],"pathAttributes")
-		# set the name of this data frame to the path id
-		id=pathAttributes['id']
-		names(pointOffsets)[i]=id
-		names(MasterPath)[i]=id
-		# numPoints[i]=nrow(df)
+		pathAttributes=attr(l[[id]],"pathAttributes")
+
 		if('startson'%in%names(pathAttributes)){
-			# this path is actually joined to another
-			# nb Mark's paths are 0 indexed (R is 1 indexed)
-			
-			# find out which path this is joined to
+			# this path is joined to another, so find out which
 			parentPathId=pathAttributes['startson']
 			# now find the Master Path of that path
 			MasterPath[id]=MasterPath[parentPathId]
-			
-			# now find the index of the point in the parent path to which this path is corrected
-			parentStartIndex=as.numeric(pathAttributes['startsindex'])+1
-			# ... and correct this (in case that path was not path 0)
-			parentStartIndex=parentStartIndex+pointOffsets[parentPathId]
-			
-			# now set the parent of this new path to the point on parent path
-			df$Parent[1]=parentStartIndex
 						
 			# make a note of the number of points by which we have to offset
 			# points for this path
 			pointOffsets[id]=nrow(dflist[[MasterPath[id]]])
 			
-			# adjust all other point ids to start by the number of rows
+			# adjust all the point ids by the number of rows in the master data fram
 			# in the parent path data frame
-			df$Parent[-1]=df$Parent[-1]+pointOffsets[id]
-			df$PointNo=df$PointNo+pointOffsets[id]
-			# now add these data to the dataframe for the master path
+			df[,c("Parent","PointNo")]=df[,c("Parent","PointNo")]+pointOffsets[id]
+
+			# now find the index of the point in the parent path to which this path is corrected
+			# nb Mark's paths are 0 indexed (R is 1 indexed)
+			parentStartIndex=as.numeric(pathAttributes['startsindex'])+1
+			# ... and correct this (in case that path was not path 0)
+			parentStartIndex=parentStartIndex+pointOffsets[parentPathId]
+			# now set the parent of this new path to the point on the parent path
+			df$Parent[1]=parentStartIndex
+			
+			# finally add these data to the dataframe for the master path
 			dflist[[MasterPath[id]]]=rbind(dflist[[MasterPath[id]]],df)
-			dflist[[id]]=NA
 		} else {
-			df$Parent[1]=-1
+			df$Parent[1]=-1 # if this is a new path set root's parent to -1
 			dflist[[id]]=df
 		}
-		names(dflist)[i]=id
 	}
-	# dflist
+
+	# Actually make neurons from the dataframes of points
 	neuronList=list()
 	for(df in dflist){
 		if(!is.data.frame(df)) next
