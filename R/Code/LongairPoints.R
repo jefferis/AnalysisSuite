@@ -50,15 +50,19 @@ ReadNeuronsFromLongairTraces<-function(f,...){
 		df$radius=1
 		df$Parent=df[,1]-1
 		pathAttributes=attr(l[[i]],"pathAttributes")
+		# set the name of this data frame to the path id
+		id=pathAttributes['id']
+		names(pointOffsets)[i]=id
+		names(MasterPath)[i]=id
 		# numPoints[i]=nrow(df)
 		if('startson'%in%names(pathAttributes)){
 			# this path is actually joined to another
 			# nb Mark's paths are 0 indexed (R is 1 indexed)
 			
 			# find out which path this is joined to
-			parentPathId=as.numeric(pathAttributes['startson'])+1
+			parentPathId=pathAttributes['startson']
 			# now find the Master Path of that path
-			MasterPath[i]=MasterPath[parentPathId]
+			MasterPath[id]=MasterPath[parentPathId]
 			
 			# now find the index of the point in the parent path to which this path is corrected
 			parentStartIndex=as.numeric(pathAttributes['startsindex'])+1
@@ -70,19 +74,20 @@ ReadNeuronsFromLongairTraces<-function(f,...){
 						
 			# make a note of the number of points by which we have to offset
 			# points for this path
-			pointOffsets[i]=nrow(dflist[[MasterPath[i]]])
+			pointOffsets[id]=nrow(dflist[[MasterPath[id]]])
 			
 			# adjust all other point ids to start by the number of rows
 			# in the parent path data frame
-			df$Parent[-1]=df$Parent[-1]+pointOffsets[i]
-			df$PointNo=df$PointNo+pointOffsets[i]
+			df$Parent[-1]=df$Parent[-1]+pointOffsets[id]
+			df$PointNo=df$PointNo+pointOffsets[id]
 			# now add these data to the dataframe for the master path
-			dflist[[MasterPath[i]]]=rbind(dflist[[MasterPath[i]]],df)
-			dflist[[i]]=NA
+			dflist[[MasterPath[id]]]=rbind(dflist[[MasterPath[id]]],df)
+			dflist[[id]]=NA
 		} else {
 			df$Parent[1]=-1
-			dflist[[i]]=df
+			dflist[[id]]=df
 		}
+		names(dflist)[i]=id
 	}
 	# dflist
 	neuronList=list()
