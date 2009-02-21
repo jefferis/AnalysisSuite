@@ -22,6 +22,9 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,
 		warning("Cannot understand passed neuron")
 		return(F)
     }
+	# at this point we've only got one neuron, but we could still have col as a function
+	if(is.function(col)) col=col(1)
+	
 	rglreturnlist=list()
 	NodesOnly<-c(ANeuron$BranchPoints,
 	    ANeuron$EndPoints[-which(ANeuron$EndPoints==ANeuron$StartPoint)],
