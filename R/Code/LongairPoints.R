@@ -92,5 +92,6 @@ ReadNeuronsFromLongairTraces<-function(f,...){
 		if(!is.data.frame(df)) next
 		neuronList[[length(neuronList)+1]]=ParseSWCTree(df,f)
 	}
+	names(neuronList)=paste(sub("\\.[^\\.]+$","",basename(f)),sep="-",seq(neuronList))
 	neuronList
 }
