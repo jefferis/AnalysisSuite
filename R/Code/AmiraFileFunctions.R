@@ -333,15 +333,17 @@ ReadAM3DData.Binary<-function(filename,OmitNAs=TRUE){
 	while( (t<-readLines(con,1))!="@1"){
 		headerLines=c(headerLines,t)
 	}
-
+	if(length(grep("LITTLE.ENDIAN",headerLines,ignore.case=TRUE))>0) endian="little"
+	else endian='big'
+	
 	# first read the Coordinates
-	rval$Coordinates=matrix(readBin(con,what='numeric',n=nVertices*3,size=4,endian="big"),ncol=3,byrow=T)
+	rval$Coordinates=matrix(readBin(con,what='numeric',n=nVertices*3,size=4,endian=endian),ncol=3,byrow=T)
 	# next read the Neighbour Count
 	t=readLines(con,2);cat(t[2],"\n")
-	rval$NeighbourCount=readBin(con,what="integer",size=4,n=nVertices,endian="big")
+	rval$NeighbourCount=readBin(con,what="integer",size=4,n=nVertices,endian=endian)
 	t=readLines(con,2);cat(t[2],"\n")
-	rval$Radii=readBin(con,what='numeric',n=nVertices,size=4,endian="big")
-	rval$NeighbourList=readBin(con,what="integer",size=4,n=nEdges,endian="big")
+	rval$Radii=readBin(con,what='numeric',n=nVertices,size=4,endian=endian)
+	rval$NeighbourList=readBin(con,what="integer",size=4,n=nEdges,endian=endian)
 	rval$Origin=NULL
 	close(con)
 	return(rval)
@@ -354,12 +356,14 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 	
 	# 	# Check for header confirming file type
 	firstLine=readLines(filename,n=1)
-	if(!any(grep("#\\s+amiramesh\\s+3d",firstLine,ignore.case=T))){
+	if(!any(grep("#\\s+amiramesh",firstLine,ignore.case=T))){
 		warning(paste(filename,"does not appear to be an AmiraMesh 3D file"))
 		return(NULL)
 	}
 	filetype=ifelse(any(grep("binary",firstLine,ignore.case=T)),"binary","ascii")
-		
+	if(length(grep("LITTLE.ENDIAN",firstLine,ignore.case=TRUE))>0) endian="little"
+	else endian='big'
+	
 	# Read Header
 	headerLines=NULL
 	con=file(filename,open='rb')
@@ -386,20 +390,20 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 	OriginAt=sub("^.*@([0-9]+$)","\\1",headerLines[OriginDefLine])
 	
 	if(	filetype=="binary"){
-		d=matrix(readBin(con,what='numeric',n=nVertices*3,size=4,endian="big"),ncol=3,byrow=T)
+		d=matrix(readBin(con,what='numeric',n=nVertices*3,size=4,endian=endian),ncol=3,byrow=T)
 		d=data.frame(d)
 		colnames(d)=c("X","Y","Z")
 		# next read the Neighbour Count
 		cat(readLines(con,2)[2],"\n")
-		NeighbourCount=readBin(con,what="integer",size=4,n=nVertices,endian="big")
+		NeighbourCount=readBin(con,what="integer",size=4,n=nVertices,endian=endian)
 		cat(readLines(con,2)[2],"\n")
-		d$W=readBin(con,what='numeric',n=nVertices,size=4,endian="big")*2
+		d$W=readBin(con,what='numeric',n=nVertices,size=4,endian=endian)*2
 		cat(readLines(con,2)[2],"\n")
 		d$PointNo=seq(nrow(d))
 		d$NeighbourCount=NeighbourCount
 		# Note these numbers come in zero indexed, but I will want them 1-indexed
 		# so add 1
-		Neighbours=data.frame(Neighbour=readBin(con,what="integer",size=4,n=nEdges,endian="big")+1)
+		Neighbours=data.frame(Neighbour=readBin(con,what="integer",size=4,n=nEdges,endian=endian)+1)
 		cat(readLines(con,2)[2],"\n")
 		
 		Origin=NULL
