@@ -52,7 +52,7 @@ ReadNeuronsFromLongairTraces<-function(f,...){
 		d=l[[id]]
 		df=data.frame(PointNo=1:nrow(d),Label=2)
 		df=cbind(df,d)
-		df$radius=1
+		df$W=2 # diameter of neuron
 		df$Parent=df[,1]-1
 		pathAttributes=attr(l[[id]],"pathAttributes")
 
