@@ -997,7 +997,9 @@ WriteNeuronToAM3D<-function(ANeuron,AMFile=NULL,
 
 	cat("# Created by WriteNeuronToAM3D -",format(Sys.time(),usetz=T),"\n\n",file=fc)	
 	cat("nVertices", nVertices,"\nnEdges",nEdgeList,"\n",file=fc)
-	cat("define Origins 1\ndefine vertexTypeList 0\n\n",file=fc)
+
+	vertexTypeList=ifelse(WriteAllSubTrees,nVertices,0) 
+	cat("define Origins 1\ndefine vertexTypeList",vertexTypeList,"\n\n",file=fc)
 	
 	cat("Parameters {\n",file=fc)
 	cat("    ContentType \"SkeletonGraph\"\n",file=fc)
@@ -1293,10 +1295,16 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	
 #	if(Verbose) cat("Header is\n",paste(headerLines,sep="","\n"),"------------\n",sep="")
 	
+	endian='big'
+	binary=FALSE
 	# Figure out if the file is in binary format or not
-	if(any(grep("^\\s*#\\s+amiramesh(\\s+3d)?\\s+binary", headerLines[1],ignore.case=TRUE,perl=TRUE))){
-			binary = TRUE
-	} else binary=FALSE
+	if(length(grep("LITTLE.ENDIAN",headerLines[1],ignore.case=TRUE))>0){
+#		any(grep("^\\s*#\\s+amiramesh(\\s+3d)?\\s+binary", headerLines[1],ignore.case=TRUE,perl=TRUE))){
+		binary = TRUE
+		endian = 'little'
+	} else if(any(grep("^\\s*#\\s+amiramesh(\\s+3d)?\\s+binary", headerLines[1],ignore.case=TRUE,perl=TRUE))){
+		binary = TRUE
+	}
 
 	# Find the position of the header lines defining the lattice
 	# this clearly assumes that the relevant data is in position
@@ -1356,11 +1364,11 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	# note that  bytes are assumed to be unsigned
 	# shorts could be either but will assume signed - don't know how
 	# amiramesh specifies either way
-	dataTypes=data.frame(name=I(c("byte", "short", "int", "float", "double", "complex")),
-			size=c(1,2,4,4,8,NA),what=I(c(rep("integer",3),rep("numeric",2),NA)),
-			signed=rep(c(FALSE,TRUE),c(1,5)) )
+	dataTypes=data.frame(name=I(c("byte", "ushort", "short", "int", "float", "double", "complex")),
+			size=c(1,2,2,4,4,8,NA),what=I(c(rep("integer",4),rep("numeric",2),NA)),
+			signed=rep(c(FALSE,TRUE),c(2,5)) )
 	i=which(dataTypes$name==dataTypeName)
-	if(!any(i==1:6)){
+	if(!any(i==1:7)){
 		close(fc)
 		stop("Unrecognised data type")
 	}
@@ -1373,7 +1381,7 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 			d=DecodeRLEBytes(d)
 		} else if(dataEncoding==""){
 			d=readBin(fc,what=dataTypes$what[i],n=dataLength,size=dataTypes$size[i],
-				signed=dataTypes$signed[i],endian="big")
+				signed=dataTypes$signed[i],endian=endian)
 		} else {
 			stop("Unimplemented data encoding",dataEncoding,"in file",filename,"\n")
 		}
