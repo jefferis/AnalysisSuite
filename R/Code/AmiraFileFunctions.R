@@ -322,33 +322,6 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 	try(close(con),silent=TRUE)
 	return(l)
 }
-	
-ReadAM3DData.Binary<-function(filename,OmitNAs=TRUE){
-	# function to read in the basic data from the 
-	# files produced by the Amira Skeletonize plugin
- 	# Check for header confirming file type
-
-	headerLines=NULL
-	con=file(filename,open='rb')
-	while( (t<-readLines(con,1))!="@1"){
-		headerLines=c(headerLines,t)
-	}
-	if(length(grep("LITTLE.ENDIAN",headerLines,ignore.case=TRUE))>0) endian="little"
-	else endian='big'
-	
-	# first read the Coordinates
-	rval$Coordinates=matrix(readBin(con,what='numeric',n=nVertices*3,size=4,endian=endian),ncol=3,byrow=T)
-	# next read the Neighbour Count
-	t=readLines(con,2);cat(t[2],"\n")
-	rval$NeighbourCount=readBin(con,what="integer",size=4,n=nVertices,endian=endian)
-	t=readLines(con,2);cat(t[2],"\n")
-	rval$Radii=readBin(con,what='numeric',n=nVertices,size=4,endian=endian)
-	rval$NeighbourList=readBin(con,what="integer",size=4,n=nEdges,endian=endian)
-	rval$Origin=NULL
-	close(con)
-	return(rval)
-}
-
 
 ReadAM3DData<-function(filename,OmitNAs=TRUE){
 	# function to read in the basic data from the 
