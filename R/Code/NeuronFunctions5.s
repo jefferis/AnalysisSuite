@@ -73,7 +73,7 @@ if(!require(scatterplot3d) || !require(rgl)){
 # of segments, MyNeuron$SegList 
 # DON'T KNOW WHO STILL USES THIS!
 
-is.neuron<-function(n) return(inherits(n,"neuron") || (  is.list(n) && !is.null(n$NeuronName)  ))
+is.neuron<-function(n) return(inherits(n,"neuron") || (  is.list(n) && !is.null(n$SegList)  ))
 
 SegOrders<-function(MyNeuron){
     # This assumes that the segments are in the correct order from a tree
