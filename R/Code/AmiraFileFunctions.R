@@ -47,14 +47,19 @@ require(tools) # for md5sum
 #source(file.path(CodeDir,"SWCFunctions.s"))
 source(file.path(CodeDir,"GraphTheory.R"))
 
-ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFullHeader=FALSE,Simplify=TRUE){
+ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFullHeader=FALSE,Simplify=TRUE,endian){
 	# attempt to write a generic amiramesh reader
 	firstLine=readLines(filename,n=1)
-	if(!any(grep("#\\s+(amira|hyper)mesh",firstLine,ignore.case=T))){
+	if(!any(grep("#\\s+(amira|hyper)mesh",firstLine,ignore.case=TRUE))){
 		warning(paste(filename,"does not appear to be an AmiraMesh file"))
 		return(NULL)
 	}
 	binaryfile="binary"==tolower(sub(".*(ascii|binary).*","\\1",firstLine,ignore.case=TRUE))
+
+	if(binaryfile && missing(endian)){
+		if(length(grep("little",firstLine,ignore.case=TRUE))>0) endian='little'
+		else endian='big'
+	}
 
 	con=if(binaryfile) file(filename,open='rb') else file(filename,open='rt')
 	on.exit(try(close(con),silent=TRUE))
@@ -64,7 +69,7 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
 	if(is.null(DataSectionsToRead)) DataSectionsToRead=parsedHeader$DataName
 	else DataSectionsToRead=intersect(parsedHeader$DataName,DataSectionsToRead)	
 	if(binaryfile){
-		filedata=.ReadAmiramesh.BinaryData(con,parsedHeader,DataSectionsToRead,Verbose=Verbose)
+		filedata=.ReadAmiramesh.BinaryData(con,parsedHeader,DataSectionsToRead,Verbose=Verbose,endian=endian)
 		close(con)
 	} else {
 		close(con)
@@ -86,7 +91,7 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
 	return(filedata)
 }
 
-.ReadAmiramesh.BinaryData<-function(con,df,DataSectionsToRead,Verbose=TRUE){
+.ReadAmiramesh.BinaryData<-function(con,df,DataSectionsToRead,Verbose=TRUE,endian=endian){
 	#print(df)
 	l=list()
 	# TODO
@@ -100,7 +105,7 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
 		} else {
 			if(Verbose) cat("Reading data section",df$DataName[i],"\n")
 			if(df$RType[i]=="integer") whatval=integer(0) else whatval=numeric(0)
-			x=readBin(con,df$SimpleDataLength[i],size=df$Size[i],what=whatval,signed=df$Signed[i])
+			x=readBin(con,df$SimpleDataLength[i],size=df$Size[i],what=whatval,signed=df$Signed[i],endian=endian)
 			# note that first dim is moving fastest
 			dims=unlist(df$Dims[i])
 			# if the individual elements have subelements
@@ -193,7 +198,7 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 	DataDefs=headerLines[DataDefLines];headerLines[-DataDefLines]
 	
 	# remove all extraneous chars altogether
-	DataDefs=gsub("(@|\\}|\\{|[[:space:]])+"," ",DataDefs)
+	DataDefs=gsub("(=|@|\\}|\\{|[[:space:]])+"," ",DataDefs)
 	if(Verbose) cat("DataDefs=",DataDefs,"\n")
 	# make a df with DataDef info
 	DataDefMatrix=matrix(unlist(strsplit(DataDefs," ")),ncol=4,byrow=T)
@@ -210,8 +215,8 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 	DataDefDF$SubLength[is.na(DataDefDF$SubLength)]=1
 
 	# Find size of binary data (if required?)
-	TypeInfo=data.frame(SimpleType=I(c("float","byte", "short", "int", "double", "complex")),Size=c(4,1,2,4,8,8),
-		RType=I(c("numeric",rep("integer",3),rep("numeric",2))), Signed=c(TRUE,FALSE,rep(TRUE,4)) )
+	TypeInfo=data.frame(SimpleType=I(c("float","byte", "ushort","short", "int", "double", "complex")),Size=c(4,1,2,2,4,8,8),
+		RType=I(c("numeric",rep("integer",4),rep("numeric",2))), Signed=c(TRUE,FALSE,FALSE,rep(TRUE,4)) )
 	DataDefDF=merge(DataDefDF,TypeInfo,all.x=T)
 	# Sort (just in case)
 	DataDefDF= DataDefDF[order(DataDefDF$DataPos),]
