@@ -146,6 +146,54 @@ seglength=function(ThisSeg){
     sum(sqrt(rowSums(Squared.ds)))	
 }
 
+MergeUnconnectedPathsToSingleNeuron<-function(NeuronList){
+	# expects a list of neurons which will be joined together
+	# these are expected to be unconnected paths
+	# The first neuron in the list will be the 'master' neuron
+	
+	# $ NeuronName   : chr "JIA5Lskeleton2"
+	# $ InputFileName: chr "/GD/projects/PN2/tracings/tofixAmira/JIA5Lskeleton2.am"
+	# $ CreatedAt    : POSIXct[1:1], format: "2009-02-24 12:36:48"
+	# $ NodeName     : Named chr "psnl-jefferis-2.lmb.internal"
+	#  ..- attr(*, "names")= chr "nodename"
+	# $ InputFileStat:'data.frame':	1 obs. of  10 variables:
+	# $ InputFileMD5 : Named chr "5b0179528bbb4bdebb7729c5edc3e3b5"
+	#  ..- attr(*, "names")= chr "/GD/projects/PN2/tracings/tofixAmira/JIA5Lskeleton2.am"
+	# $ NumPoints    : int 4662
+	# $ StartPoint   : num 1
+	# $ BranchPoints : int [1:181] 84 106 234 354 378 379 473 479 481 490 ...
+	# $ EndPoints    : int [1:183] 1 450 526 574 612 633 649 658 677 678 ...
+	# $ NumSegs      : int 373
+	# $ SegList      :List of 373
+	# $ nTrees       : int 2
+	# $ d            :'data.frame':	4662 obs. of  9 variables:
+	# $ SubTrees     :List of 2
+	# $ OrientInfo   :List of 5
+
+ 	if(!is.list(NeuronList) || length(NeuronList)<2 ) stop("Expects a list of 2 or more neurons")
+	
+	MasterNeuron=NeuronList[[1]]
+	NeuronList=NeuronList[-1]
+	MasterNeuron$nTrees=1
+	MasterNeuron$SubTrees=list()
+	MasterNeuron$SubTrees[[1]]=MasterNeuron$SegList
+	MasterNeuron$d[,"SubTree"]=1
+	
+	for (n in NeuronList){
+		MasterNeuron$nTrees=MasterNeuron$nTrees+1
+		offset=nrow(MasterNeuron$d)
+		d=n$d
+		d[,"PointNo"]=d[,"PointNo"]+offset
+		d[d[,"Parent"]>0,"Parent"]=d[d[,"Parent"]>0,"Parent"]+offset
+		d[,"SubTree"]=MasterNeuron$nTrees
+		# only keep the columns that both neurons have in common
+		commonCols=intersect(colnames(MasterNeuron$d),colnames(d))
+		MasterNeuron$d=rbind(MasterNeuron$d[,commonCols],d[,commonCols])
+		MasterNeuron$SubTrees[[length(MasterNeuron$SubTrees)+1]]=lapply(n$SegList,'+',offset)
+	}
+	MasterNeuron$NumPoints=nrow(MasterNeuron$d)
+	MasterNeuron
+}
 
 ReadMyChullOutput<-function(FileName){
     LinesToSkip<-2
