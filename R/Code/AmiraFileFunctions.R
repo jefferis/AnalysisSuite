@@ -1209,25 +1209,27 @@ Write3DDensityToAmiraRectilinear<-function(filename,d){
 }
 
 Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text"),
-	dtype=c("float","byte", "short", "int", "double"),WriteNrrdHeader=FALSE){
+	dtype=c("float","byte", "short", "ushort", "int", "double"),WriteNrrdHeader=FALSE,endian=c('big','little')){
 	# Produces a lattice format file -
 	# that is one with a regular x,y,z grid
 	# Can also write a detached Nrrd header that points to the AmiraMesh
 	# data to allow it to be opened by a nrrd reader
 	ftype=match.arg(ftype)
+	endian=match.arg(endian)
 	if(ftype=='text') cat("# AmiraMesh ASCII 1.0\n\n",file=filename)
+	else if(endian=='little') cat("# AmiraMesh BINARY-LITTLE-ENDIAN 2.1\n\n",file=filename)
 	else cat("# AmiraMesh 3D BINARY 2.0\n\n",file=filename)
-		
+	
 	fc=file(filename,open="at") # ie append, text mode
 	cat("# Created by Write3DDensityToAmiraLattice - ",format(Sys.time(),usetz=T),"\n\n",file=fc)	
 
 	if(!is.list(dens)) d=dens else d=dens$estimate
 	# Find data type and size for amira
 	dtype=match.arg(dtype)	
-	dtypesize<-c(4,1,2,4,8)[which(dtype==c("float","byte", "short", "int", "double"))]
+	dtypesize<-c(4,1,2,2,4,8)[which(dtype==c("float","byte", "short","ushort", "int", "double"))]
 	# Set the data mode which will be used in the as.vector call at the
 	# moment that the binary data is written out.
-	if(dtype%in%c("byte","short","int")) dmode="integer"
+	if(dtype%in%c("byte","short","ushort","int")) dmode="integer"
 	if(dtype%in%c("float","double")) dmode="numeric"
 	
 	
@@ -1287,7 +1289,7 @@ Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text"),
 		write(as.vector(d,mode=dmode),ncol=1,file=filename,append=TRUE)
 	} else {
 		fc=file(filename,open="ab") # ie append, bin mode
-		writeBin(as.vector(d,mode=dmode),fc,size=dtypesize,endian='big')
+		writeBin(as.vector(d,mode=dmode),fc,size=dtypesize,endian=endian)
 		close(fc)
 	}
 }

@@ -364,8 +364,18 @@ test.ReadWrite3DDensityAmiraBinary<-function(){
 	
 	Write3DDensityToAmiraLattice(tmpfile,testData,ftype="binary",dtype='double')
 	testData.new=Read3DDensityFromAmiraLattice(tmpfile)
+	checkEquals(testData,testData.new,msg="Failed round trip read/write Amira binary data")
 	unlink(tmpfile)
-	checkEquals(testData,testData.new)
+
+	Write3DDensityToAmiraLattice(tmpfile,testData,ftype="binary",dtype='double',endian='big')
+	testData.new=Read3DDensityFromAmiraLattice(tmpfile)
+	checkEquals(testData,testData.new,msg="Failed round trip read/write Amira big endian data")
+	unlink(tmpfile)
+
+	Write3DDensityToAmiraLattice(tmpfile,testData,ftype="binary",dtype='double',endian='little')
+	testData.new=Read3DDensityFromAmiraLattice(tmpfile)
+	checkEquals(testData,testData.new,msg="Failed round trip read/write Amira big little data")
+	unlink(tmpfile)
 }
 
 test.ReadWrite3DDensityAmiraText<-function(){
