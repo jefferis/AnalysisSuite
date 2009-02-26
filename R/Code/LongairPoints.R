@@ -41,7 +41,7 @@ ReadLongairTraceData<-function(f,Verbose=TRUE){
 	l
 }
 
-ReadNeuronsFromLongairTraces<-function(f,...){
+ReadNeuronsFromLongairTraces<-function(f,MergePaths=FALSE,...){
 	l=ReadLongairTraceData(f,...)
 	dflist=as.list(rep(NA,length(l)))
 	MasterPath=seq(l)
@@ -93,5 +93,9 @@ ReadNeuronsFromLongairTraces<-function(f,...){
 		neuronList[[length(neuronList)+1]]=ParseSWCTree(df,f)
 	}
 	names(neuronList)=paste(sub("\\.[^\\.]+$","",basename(f)),sep="-",seq(neuronList))
-	neuronList
+	if(MergePaths) {
+		if(length(neuronList)==1) return(neuronList[[1]])
+		else MergeUnconnectedPathsToSingleNeuron(neuronList)
+	}
+	else neuronList
 }
