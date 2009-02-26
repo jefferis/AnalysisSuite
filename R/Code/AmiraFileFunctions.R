@@ -1481,3 +1481,24 @@ WriteAmiraLandmarks<-function(filename,d){
 		cat("\n",file=filename,append=T)
 	}
 }
+
+WriteAmiraColormap<-function(filename,rgba,A=1,minmax=c(0,255)){
+	if(is.vector(rgba)) rgba=t(col2rgb(rgba)/255)
+	
+	if(ncol(rgba)==3) {
+		rgba=cbind(rgba,A)
+	}
+	if(ncol(rgba)!=4) stop("Colormap must have 4 columns")
+	if(nrow(rgba)!=256) warning("Colormap should have 256 levels to be editable with colormap editor")
+	
+	cmaprange=range(rgba)
+	if(cmaprange[1]<0 || cmaprange[2]>1) stop ("Colormap values must be between 0 and 1")
+
+	cat("# # AmiraMesh ASCII 1.0\n\ndefine Lattice",nrow(rgba),
+	"\n\nParameters {\n\tContentType \"Colormap\",\n\tMinMax",minmax,"\n}\n",file=filename)
+	cat("Lattice { float[4] Data } = @1\n",file=filename,append=T)
+
+	cat("@1\n",file=filename,append=T)
+	write.table(rgba,col.names=F,row.names=F,file=filename,append=TRUE)
+	cat("\n",file=filename,append=T)
+}
