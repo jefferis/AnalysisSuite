@@ -39,6 +39,8 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,
 		if(WithText) # text labels for nodes
 		rglreturnlist[["texts"]]=texts3d(ANeuron$d[NodesOnly,c("X","Y","Z")],text=NodesOnly,color=NodeCols,adj=c(0,0.5))
 	}
+
+	if(PlotSubTrees && !is.null(ANeuron$SubTrees)) ANeuron$SegList=unlist(ANeuron$SubTrees,recursive=FALSE)
 	
 	d=data.matrix(ANeuron$d[,c("X","Y","Z")])
 	# xyzl=sapply(ANeuron$SegList,function(s) {rbind(d[s,],NA)})
