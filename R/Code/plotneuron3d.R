@@ -1,4 +1,4 @@
-plotneuron3d.simple<-function(ANeuron, WithLine=T,
+plotneuron3d.simple<-function(ANeuron, WithLine=T,NeuronNames=FALSE,
 	WithNodes=T,WithAllPoints=F,WithText=F,HighlightLongestSegment=FALSE,PlotSubTrees=T,ClearRGL=T,NeuronList=MyNeurons,col,...){
 	# rewrite of plotneuron3d using updated rgl calls
 	
@@ -9,10 +9,12 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,
 
 	if ( is.character(ANeuron) || is.numeric(ANeuron) ){
 		if(length(ANeuron)>1){
+			
 			if(is.function(col)) col=col(length(ANeuron))
 			if(is.factor(col)) col=rainbow(nlevels(col))[as.integer(col)]
+			if(is.logical(NeuronNames) && NeuronNames) NeuronNames=ANeuron
 			return(invisible(mapply(plotneuron3d.simple,
-			NeuronList[ANeuron],col=col,ClearRGL=FALSE,
+			NeuronList[ANeuron],col=col,ClearRGL=FALSE,NeuronNames=NeuronNames,
 			WithNodes=WithNodes,WithText=WithText,WithLine=WithLine,
 			HighlightLongestSegment=HighlightLongestSegment,PlotSubTrees=PlotSubTrees,...)))
 		} else ANeuron<-NeuronList[[ANeuron]]
@@ -51,6 +53,12 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,
 		x=GetLongestSegment(ANeuron)
 		rglreturnlist[["spheres"]]=spheres3d(x,col=col,...)
 	}
+	if(is.logical(NeuronNames) && NeuronNames) NeuronNames=ANeuron$NeuronName
+	if(!is.logical(NeuronNames)){
+		StartPoint=ifelse(is.null(ANeuron$StartPoint),1,ANeuron$StartPoint)
+		texts3d(d[StartPoint,],texts=NeuronNames,col=col)
+	}
+	
 	invisible(rglreturnlist)
 }
 
