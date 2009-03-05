@@ -286,27 +286,27 @@ VolumeChange<-function(xyzs,...){
 makeGrid<-function(bounds="LH",type=c('centres','margins'),spacing=1.4) {
 	if(is.character(bounds)) bounds=getBounds(bounds)
 	else if(inherits(bounds,"array")){
-		if(all(c("X","Y","Z") %in% names(attributes(bounds)))){
+		if(all(c("x","y","z") %in% names(attributes(bounds)))){
 			a=attributes(bounds)
 			grid=expand.grid(a$x,a$y,a$z)
 			colnames(grid)=c("X","Y","Z")
 			return(grid)			
 		}
-		else bounds=getBounds(bounds)
+		else if  bounds=getBounds(bounds)
 	}
-	
+	if(length(spacing)==1 && ncol(bounds)>1) spacing=rep(spacing,ncol(bounds))
 	corrn=spacing/2
 	type=match.arg(type)
 	if(type=="margins"){
 		grid=expand.grid(
-			seq(bounds[1],bounds[2],by=spacing),
-			seq(bounds[3],bounds[4],by=spacing),
-			seq(bounds[5],bounds[6],by=spacing) )
+			seq(bounds[1],bounds[2],by=spacing[1]),
+			seq(bounds[3],bounds[4],by=spacing[2]),
+			seq(bounds[5],bounds[6],by=spacing[3]) )
 	} else {
 		grid=expand.grid(
-			seq(bounds[1]+corrn,bounds[2]-corrn,by=spacing),
-			seq(bounds[3]+corrn,bounds[4]-corrn,by=spacing),
-			seq(bounds[5]+corrn,bounds[6]-corrn,by=spacing) )
+			seq(bounds[1]+corrn[1],bounds[2]-corrn[1],by=spacing[1]),
+			seq(bounds[3]+corrn[2],bounds[4]-corrn[2],by=spacing[2]),
+			seq(bounds[5]+corrn[3],bounds[6]-corrn[3],by=spacing[3]) )
 	}
 	grid=do.call(cbind,grid)
 	colnames(grid)=c("X","Y","Z")

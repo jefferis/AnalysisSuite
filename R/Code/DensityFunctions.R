@@ -76,7 +76,12 @@ expand.grid.gjdens<-function(d){
     
     dims=dim(d)
     orep <- prod(dims)
-    nargs=3; args=attributes(d)[c("x","y","z")]
+    nargs=3
+	
+	if(all(c("x","y","z") %in% names(attributes(d)))){
+		args=attributes(d)[c("x","y","z")]
+	} else args=dim(d)
+	
     rep.fac <- 1
     rval=matrix(nrow=orep,ncol=length(dims))
     for (i in 1:nargs) {
@@ -299,7 +304,11 @@ is.gjdens<-function(d){
 
 	
 voxdim.gjdens<-function(d){
-	originaldims=sapply(attributes(d)[c("x","y","z")],length)
+	if(all(c("x","y","z") %in% names(attributes(d)))){
+		originaldims=sapply(attributes(d)[c("x","y","z")],length)
+	} else {
+		originaldims=dim(d)
+	}
 	if (!is.null(attr(d,"bounds")))
 		# bounds = outer limit of voxels
 		return(diff(matrix(attr(d,"bounds"),nrow=2))/originaldims)
@@ -322,7 +331,9 @@ getBounds<-function(b){
 	} else if(!is.null(attr(b,"bounds"))) return(attr(b,"bounds"))
 	else if(!is.null(attr(b,"BoundingBox"))){
 		bounds<-matrix(attr(b,"BoundingBox"),nrow=2)
-		halfVoxelDims=apply(matrix(bounds,nrow=2),2,diff)/dim(b)/2
+		# nb if any of the dimensions are 1 then the voxel dimension
+		# cannot be calculated
+		halfVoxelDims=apply(matrix(bounds,nrow=2),2,diff)/(dim(b)-1)/2
 		bounds[1,]=bounds[1,]-halfVoxelDims
 		bounds[2,]=bounds[2,]+halfVoxelDims
 		# zap small gets rid of FP rounding errors
