@@ -322,7 +322,7 @@ getBounds<-function(b){
 	} else if(!is.null(attr(b,"bounds"))) return(attr(b,"bounds"))
 	else if(!is.null(attr(b,"BoundingBox"))){
 		bounds<-matrix(attr(b,"BoundingBox"),nrow=2)
-		halfVoxelDims=sapply(letters[24:26],function(l) diff(attr(b,l))[1])/2
+		halfVoxelDims=apply(matrix(bounds,nrow=2),2,diff)/dim(b)/2
 		bounds[1,]=bounds[1,]-halfVoxelDims
 		bounds[2,]=bounds[2,]+halfVoxelDims
 		# zap small gets rid of FP rounding errors
