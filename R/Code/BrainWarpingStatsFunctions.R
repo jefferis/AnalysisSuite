@@ -285,11 +285,14 @@ VolumeChange<-function(xyzs,...){
 
 makeGrid<-function(bounds="LH",type=c('centres','margins'),spacing=1.4) {
 	if(is.character(bounds)) bounds=getBounds(bounds)
-	if(inherits(bounds,"array")){
-		a=attributes(bounds)
-		grid=expand.grid(a$x,a$y,a$z)
-		colnames(grid)=c("X","Y","Z")
-		return(grid)
+	else if(inherits(bounds,"array")){
+		if(all(c("X","Y","Z") %in% names(attributes(bounds)))){
+			a=attributes(bounds)
+			grid=expand.grid(a$x,a$y,a$z)
+			colnames(grid)=c("X","Y","Z")
+			return(grid)			
+		}
+		else bounds=getBounds(bounds)
 	}
 	
 	corrn=spacing/2
