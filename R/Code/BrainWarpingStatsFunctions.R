@@ -292,7 +292,7 @@ makeGrid<-function(bounds="LH",type=c('centres','margins'),spacing=1.4) {
 			colnames(grid)=c("X","Y","Z")
 			return(grid)			
 		}
-		else if  bounds=getBounds(bounds)
+		else bounds=getBounds(bounds)
 	}
 	if(length(spacing)==1 && ncol(bounds)>1) spacing=rep(spacing,ncol(bounds))
 	corrn=spacing/2

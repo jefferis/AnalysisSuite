@@ -80,8 +80,13 @@ expand.grid.gjdens<-function(d){
 	
 	if(all(c("x","y","z") %in% names(attributes(d)))){
 		args=attributes(d)[c("x","y","z")]
-	} else args=dim(d)
-	
+	} else {
+		args=list()
+		boundingBox=matrix(getBoundingBox(d),nrow=2)
+		for(i in seq(dims)){
+			args[[i]]=seq(from=boundingBox[1,i],to=boundingBox[2,i],length=dims[i])
+		}
+	}
     rep.fac <- 1
     rval=matrix(nrow=orep,ncol=length(dims))
     for (i in 1:nargs) {
