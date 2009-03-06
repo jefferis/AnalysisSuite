@@ -62,11 +62,13 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,NeuronNames=FALSE,
 	invisible(rglreturnlist)
 }
 
-animate3d<-function(time=10,degrees=360){
+animate3d<-function(time=10,degrees=360,filestem=NULL){
 	degreesPersecond=degrees/time
 	start=proc.time()[3]
 	while ((i <- degreesPersecond*(proc.time()[3]-start)) < degrees) {
 		rot3d(y=i)
+		if(!is.null(filestem))
+			snapshot3d(paste(filestem,sep="",sprintf("%04.f",i),".png"))
 	}	
 }
 
