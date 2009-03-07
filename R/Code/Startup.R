@@ -112,18 +112,31 @@ cat("Type: load(\"MyNeurons.rda\")  to load in the main dataset\n")
 
 # GJ 
 # have not yet included a selection of Scripts and Figures for release
-runScript<-function(d=ScriptDir){
-		possFiles=file.path(d,select.list(dir(d,patt="(R|s)$")))
-		if(length(possFiles)==1){
-			cat("source(",deparse(possFiles),")\n",sep="")
-			invisible(source(possFiles))
-		} 
-		if(length(possFiles)>1) invisible(sapply(possFiles,source))
-#		return(NULL)
+runScript<-function(d,dirpattern="ScriptDir$"){
+	if(missing(d)){
+		PossScriptDirNames<-ls(patt=dirpattern,envir=.GlobalEnv)
+		if(length(PossScriptDirNames)==0) stop("Must supply a ScriptDir")
+		if(length(PossScriptDirNames)>1){
+			d=select.list(PossScriptDirNames)
+		} else d=get(PossScriptDirNames)
+	}
+	if(file.exists(d)) sourceFiles=dir(d,patt="(R|s)$")
+	else stop(paste("Directory",d,'not readable'))
+	possFiles=file.path(d,select.list(sourceFiles))
+	if(length(possFiles)==1){
+		cat("source(",deparse(possFiles),")\n",sep="")
+		invisible(source(possFiles))
+	} 
+	if(length(possFiles)>1) invisible(sapply(possFiles,source))
+#	return(NULL)
 }
 
-runFig<-function(...){
-		runScript(FigDir,...)
+runFig<-function(d,...){
+	if(!missing(d)){
+		runScript(d,...)
+	} else if(exists("FigDir")){
+		runScript(FigDir,...)		
+	} else runScript(dirpattern=".*FigDir$",...)
 }
 
 checkPackages<-function(required=NULL,suggested=NULL){
