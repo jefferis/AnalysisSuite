@@ -118,6 +118,7 @@ runScript<-function(d,dirpattern="ScriptDir$"){
 		if(length(PossScriptDirNames)==0) stop("Must supply a ScriptDir")
 		if(length(PossScriptDirNames)>1){
 			d=select.list(PossScriptDirNames)
+			d=get(d)
 		} else d=get(PossScriptDirNames)
 	}
 	if(file.exists(d)) sourceFiles=dir(d,patt="(R|s)$")
