@@ -141,6 +141,16 @@ TransformNeuronSimple<-function(neuron,transform=c("original","affine")){
 	}
 }
 
+MirrorNeuron<-function(n,xwidth,warpfunction,...){
+	# function to transform a neuron into contralateral hemisphere
+	# will require a warp that describes the transformation of a horizontally 
+	# flipped brain onto original image
+	n$d$X=xwidth-1*n$d$X
+	if(!missing(warpfunction))
+	warpfunction(n,...)
+	else n
+}
+
 CompareNeuronTransformations<-function(n,transforms=c("original","affine","warp"),...){
 	transforms=match.arg(transforms,several.ok=TRUE)
 	if(any(transforms=="original")) plotneuron3d(TransformNeuronSimple(n,"original"), Col='red',Clear=F)
