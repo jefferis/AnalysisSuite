@@ -91,6 +91,7 @@ ReadNeuronsFromLongairTraces<-function(f,MergePaths=FALSE,...){
 	for(df in dflist){
 		if(!is.data.frame(df)) next
 		neuronList[[length(neuronList)+1]]=ParseSWCTree(df,f)
+		neuronList[[length(neuronList)]]$InputFileMD5=md5sum(path.expand(f))
 	}
 	names(neuronList)=paste(sub("\\.[^\\.]+$","",basename(f)),sep="-",seq(neuronList))
 	if(MergePaths) {
