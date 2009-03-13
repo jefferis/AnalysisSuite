@@ -78,7 +78,7 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
 		#cat(length(filedata))
 	}
 
-	if(!AttachFullHeader) header=header[setdiff(names(header),c("header","Parameters"))]	
+	if(!AttachFullHeader) header=header[setdiff(names(header),c("header"))]	
 	for (n in names(header))
 		attr(filedata,n)=header[[n]]
 	
@@ -148,7 +148,7 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 	headerLines=NULL
 	if(!inherits(con,"connection")) con<-file(con,open='rt')
 	if(CloseConnection) on.exit(close(con))
-	while( (t<-readLines(con,1))!="@1"){
+	while( substring(t<-readLines(con,1),1,2)!="@1"){
 		headerLines=c(headerLines,t)
 	}
 	returnList<-list(header=headerLines)
@@ -1495,7 +1495,7 @@ WriteAmiraColormap<-function(filename,rgba,A=1,minmax=c(0,255)){
 	cmaprange=range(rgba)
 	if(cmaprange[1]<0 || cmaprange[2]>1) stop ("Colormap values must be between 0 and 1")
 
-	cat("# # AmiraMesh ASCII 1.0\n\ndefine Lattice",nrow(rgba),
+	cat("# AmiraMesh ASCII 1.0\n\ndefine Lattice",nrow(rgba),
 	"\n\nParameters {\n\tContentType \"Colormap\",\n\tMinMax",minmax,"\n}\n",file=filename)
 	cat("Lattice { float[4] Data } = @1\n",file=filename,append=T)
 
