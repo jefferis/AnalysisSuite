@@ -1012,7 +1012,7 @@ WriteNeuronToAM3D<-function(ANeuron,AMFile=NULL,
 
 	cat("Vertices { float[3] Coordinates } @1\n",file=fc)
 	cat("Vertices { int NeighbourCount } @2\n",file=fc)
-	cat("Vertices { float Radii } = @3\n",file=fc)
+	cat("Vertices { float Radii } @3\n",file=fc)
 	cat("EdgeData { int NeighbourList } @4\n",file=fc)
 	cat("Origins { int Origins } @5\n",file=fc)
 	cat("Vertices { int vertexTypeCounter } @6\n",file=fc)
@@ -1021,23 +1021,23 @@ WriteNeuronToAM3D<-function(ANeuron,AMFile=NULL,
 	# Write the 3D coords
 	cat("@1 # ",nVertices,"xyz coordinates\n",file=fc)
 	#write(t(ANeuron$d[,c("X","Y","Z")]),ncolumns=3,file=fc)
-	write.table(ANeuron$d[chosenVertices,c("X","Y","Z")],col.names=F,row.names=F,file=fc)
+	write.table(ANeuron$d[chosenVertices,c("X","Y","Z")],col.names=F,row.names=F,file=fc,sep="\t")
 	
 	# Write number of neighbours
 	cat("\n@2 #",nVertices,"numbers of neighbours \n",file=fc)
 	numNeighbours=integer(nVertices) # filled with 0s
 	numNeighbours[sort(unique(EdgeList$CurPoint))]=table(EdgeList$CurPoint)
-  write.table(numNeighbours,col.names=F,row.names=F,file=fc)
+	write.table(numNeighbours,col.names=F,row.names=F,file=fc,sep="\t")
 	
 	# Write the Radii
 	cat("\n@3 #",nVertices,"radii\n",file=fc)
 	# NB Divide width by 2
-	write.table(ANeuron$d$W[chosenVertices]/2,col.names=F,row.names=F,file=fc)
+	write.table(ANeuron$d$W[chosenVertices]/2,col.names=F,row.names=F,file=fc,sep="\t")
 
 	# Write the edgelist information
 	cat("\n@4 #",nEdgeList,"bidirectional edges\n",file=fc)
 	#NB -1 since Amira is 0 indexed
-	write.table(EdgeList$Neighbour-1,col.names=F,row.names=F,file=fc)
+	write.table(EdgeList$Neighbour-1,col.names=F,row.names=F,file=fc,sep="\t")
 
 	# Write the origin information NB -1 since 0 indexed
 	cat("\n@5 #n 1\n",file=fc)
@@ -1054,8 +1054,9 @@ WriteNeuronToAM3D<-function(ANeuron,AMFile=NULL,
 	if(WriteAllSubTrees) {
 		cat("\n@7 # subtrees\n",file=fc)
 		if(ScaleSubTreeNumsTo1) ANeuron$d$SubTree=ANeuron$d$SubTree/max(ANeuron$d$SubTree)
-		write.table(ANeuron$d$SubTree,col.names=F,row.names=F,file=fc)
+		write.table(ANeuron$d$SubTree,col.names=F,row.names=F,file=fc,sep="\t")
 	}
+	cat("\n",file=fc)
 	close(fc)
 }
 
