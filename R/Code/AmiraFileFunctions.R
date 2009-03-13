@@ -1503,3 +1503,32 @@ WriteAmiraColormap<-function(filename,rgba,A=1,minmax=c(0,255)){
 	write.table(rgba,col.names=F,row.names=F,file=filename,append=TRUE)
 	cat("\n",file=filename,append=T)
 }
+
+WriteGenericAmiramesh<-function(filename,d,ContentType){
+	dataDef=attr(d,"dataDef")
+	if(is.null(dataDef)) stop("Cannot write without data definition")
+	
+	cat("# AmiraMesh ASCII 1.0\n\n",file=filename)
+	# definitions of lengths
+	dimdefs=dataDef$Dims[unique(names(dataDef$Dims))]
+	cat(paste("define",names(dimdefs),dimdefs,collapse="\n"),file=filename,append=TRUE)
+
+	# Parameters - for now just handle content type
+	if(missing(ContentType)) ContentType=attr(d,'Parameters')$ContentType
+	if(!is.null(ContentType)){
+		cat("\nParameters {\n\tContentType \"",, "\"\n}\n\n",file=filename,append=T)
+	}
+
+	with(dataDef,
+		cat(paste(names(Dims)," { ",Type," ",DataName," } @",sep="",seq(nrow(dataDef)),collapse="\n"),
+			file=filename,append=TRUE))
+	
+	cat("\n\n",file=filename,append=TRUE)
+	if(!is.list(d)) d=list(d)
+	for(i in seq(length(d))){
+		if(length(d[[i]])==0) next 
+		cat("@",i,"\n",sep="",file=filename,append=TRUE)
+		write.table(d[[i]],row.names=FALSE,col.names=FALSE,sep="\t",file=filename,append=TRUE)
+		cat("\n",file=filename,append=TRUE)
+	}		
+}
