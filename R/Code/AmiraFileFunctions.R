@@ -1355,7 +1355,7 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	if(isTRUE(grep("\\(Hx.?*\\)",postAt)==1)){
 		postAt=sub(".?*\\(([^)]+)\\).?*","\\1",postAt)
 		dataEncoding=toupper(strsplit(postAt,",")[[1]][1])
-		dataLength=as.integer(strsplit(postAt,",")[[1]][2])
+		rleLength=as.integer(strsplit(postAt,",")[[1]][2])
 	}
 	
 #     Amira docs: The primitive data types must be
@@ -1384,9 +1384,9 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	if(Verbose) cat("dataLength =",dataLength,"dataType =",dataTypes$what[i],"size=",dataTypes$size[i],"\n")
 	if(binary){
 		if(dataEncoding=="HXBYTERLE"){
-#			d=readBin(fc,what=dataTypes$what[i],n=dataLength,size=dataTypes$size[i],endian='big',signed=T)
-			d=readBin(fc,what=integer(0),n=dataLength,size=1)
-			d=DecodeRLEBytes(d)
+			d=readBin(fc,what=raw(0),n=rleLength,size=1)
+			d=DecodeRLEBytes2(d,dataLength)
+			d=as.integer(d)
 		} else if(dataEncoding==""){
 			d=readBin(fc,what=dataTypes$what[i],n=dataLength,size=dataTypes$size[i],
 				signed=dataTypes$signed[i],endian=endian)
@@ -1415,29 +1415,54 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	return(d)
 }
 
-DecodeRLEBytes<-function(ba){
+DecodeRLEBytes<-function(d,lengthAfter){
+	# expects some raw data
+	# expects to be told how many bytes how many bytes this will turn into
+	
 	# Expects an integer array
 	# Structure is that every odd byte is a count
 	# and every even byte is the actual data
 	# So 127 0 127 0 127 0 12 0 12 1 0
 	# I think that it ends with a zero count
-	stopifnot(ba[length(ba)]==0)
-	m=ba[-length(ba)]
-	dim(m)=c(2,length(m)/2)
-	# for some reason a count of 1 is encoded as -127
-	m[1,m[1,]==-127]=as.integer(1)
-	#nBytes=sum(m[,1])
-	# Check that there are no remaining negative counts
-	stopifnot(sum(m[1,]<0)==0)
-	rval=rep(m[2,],times=m[1,])
-	return(rval)
+	# -----
+	# in fact the above is not quite right. If >=2 consecutive bytes are different
+	# then a control byte is written giving the length of the run of different bytes
+	# and then the whole run is written out
+	# data can therefore only be parsed by the trick of making 2 rows if there 
+	# are no control bytes in range -126 to -1
+	
+	rval=raw(lengthAfter)
+	bytesRead=0
+	filepos=1
+	while(bytesRead<lengthAfter){
+		x=d[filepos]
+		filepos=filepos+1
+		if(x==0)
+			stop(paste("byte at offset",seek(con),"is 0!"))
+		if(x>0x7f) {
+			# cat("x=",x,"\n")
+			x=as.integer(x)-128
+			# cat("now x=",x,"\n")
+			mybytes=d[filepos:(filepos+x-1)]
+			filepos=filepos+x
+			# that's the x that we've read
+		} else {
+			# x>0
+			mybytes=rep.int(d[filepos],x)
+			filepos=filepos+1
+		}
+		rval[(bytesRead+1):(bytesRead+length(mybytes))]=mybytes
+		bytesRead=bytesRead+length(mybytes)
+		# cat('bytesRead=',bytesRead,"filepos=",seek(con),"\n")
+	}
+	rval
 }
 
 ReadRLEBytes<-function(con,length,offset=0){
 	# Expects a connection + length/offset
 	if(!is.connection(con)) con=file(con,open='rb')
 	skip(con,offset)
-	ba=readBin(con,n=length,what=integer(),size=1,signed=T)
+	ba=readBin(con,n=length,what=raw(),size=1,signed=T)
 	return(DecodeRLEBytes(ba))
 }
 
