@@ -137,18 +137,18 @@ UpdateKeyPoints<-function(NeuronsToUpdate=NULL,NeuronTypes=c("iPN","mPN"),...){
 	}	
 }
 
-UpdateSegLengths<-function(NeuronsToUpdate=NULL){
-		if(is.null(NeuronsToUpdate)){
-			# First figure out which neurons do not have any key point data
-			NeuronsToUpdate=which(sapply(MyNeurons,function(x) is.null(x$SegLengths)))
-		} else if(NeuronsToUpdate=='all') NeuronsToUpdate=seq(MyNeurons)
+UpdateSegLengths<-function(NeuronsToUpdate=NULL,NeuronList=MyNeurons){
+	if(is.null(NeuronsToUpdate)){
+		# First figure out which neurons do not have any key point data
+		NeuronsToUpdate=which(sapply(NeuronList,function(x) is.null(x$SegLengths)))
+	} else if(NeuronsToUpdate=='all') NeuronsToUpdate=seq(NeuronList)
 
-	
-		for(i in NeuronsToUpdate){
-				MyNeurons[[i]]$SegLengths<<-SegLengths(MyNeurons[[i]])
-		}
+
+	for(i in NeuronsToUpdate){
+		NeuronList[[i]]$SegLengths<-SegLengths(NeuronList[[i]])
+	}
+	NeuronList
 }
-
 
 MergeNeuron<-function(src,dest,dryrun=FALSE,verbose=T){
 	# merge additional fields of src neuron into dest
@@ -180,4 +180,3 @@ UpdateG5<-function(filestem="MyNeurons",fileext=".rda"){
 		cat("Running:",cmd,"\n")
 		system(cmd)
 }
-
