@@ -1394,7 +1394,7 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	if(binary){
 		if(dataEncoding=="HXBYTERLE"){
 			d=readBin(fc,what=raw(0),n=rleLength,size=1)
-			d=DecodeRLEBytes2(d,dataLength)
+			d=DecodeRLEBytes(d,dataLength)
 			d=as.integer(d)
 		} else if(dataEncoding==""){
 			d=readBin(fc,what=dataTypes$what[i],n=dataLength,size=dataTypes$size[i],
