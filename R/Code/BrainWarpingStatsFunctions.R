@@ -276,6 +276,14 @@ findWarpFileFromBrainNames<-function(Brain){
 }
 
 findGlobalScaling.file<-function(filename){
+	if(file.info(filename)$isdir){
+		# this is a directory, so see if we can find the registration
+		dirname=filename
+		filename=dir(dirname,patt="^registration(\\.gz){0,1}",full.names=T)[1]
+		if(is.na(filename)) 
+			stop(paste("Unable to read registration file in",dirname))
+	}
+
 	if(isTRUE(grep("\\.gz$",filename)==1)){
 		warpfile=gzfile(filename)
 	} else warpfile=file(filename)
