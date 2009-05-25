@@ -289,7 +289,11 @@ findGlobalScaling.file<-function(filename){
 	} else warpfile=file(filename)
 	first20lines=readLines(warpfile,20)
 	close(warpfile)
-	scaleterms=unlist(strsplit(first20lines[17]," "))[2:4]
+	scalelines=grep('^[\\t\\s]*scale',first20lines,perl=T)
+	if(length(scalelines)>1) scaleline=17
+	else if(length(scalelines)==1) scaleline=scalelines[1]
+	else return (NA)
+	scaleterms=unlist(strsplit(first20lines[scaleline]," "))[2:4]
 	prod(as.numeric(scaleterms))
 }
 
