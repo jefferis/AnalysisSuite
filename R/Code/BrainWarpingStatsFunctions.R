@@ -141,11 +141,12 @@ TransformNeuronSimple<-function(neuron,transform=c("original","affine")){
 	}
 }
 
-MirrorNeuron<-function(n,xwidth,warpfunction,...){
+MirrorNeuron<-function(n,mirrorAxisSize,mirrorAxis=c("X","Y","Z"),warpfunction,...){
+	mirrorAxis=match.arg(mirrorAxis)
 	# function to transform a neuron into contralateral hemisphere
 	# will require a warp that describes the transformation of a horizontally 
 	# flipped brain onto original image
-	n$d$X=xwidth-1*n$d$X
+	n$d[,mirrorAxis]=mirrorAxisSize-1*n$d[,mirrorAxis]
 	if(!missing(warpfunction))
 	warpfunction(n,...)
 	else n
