@@ -62,20 +62,31 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,NeuronNames=FALSE,
 	invisible(rglreturnlist)
 }
 
-IdentifyNeuronsMatchingRegion<-function(neurons,select3dfunc,EndPointsOnly=TRUE,...){
+IdentifyNeuronsMatchingRegion<-function(neurons,select3dfunc,EndPointsOnly=TRUE,Verbose=FALSE,...){
 	## use a qeury function from rgl's select3d to outline a query region
 	## in current rgl scene and see if any neurons are inside
 	if(missing(select3dfunc)) {
 		cat("Please choose a region using the left mouse button\n")
 		select3dfunc=select3d(...)
 	}
+	l=list()
 	for (n in neurons){
 		if(EndPointsOnly)
 			querypoints=n$d[n$EndPoints,c("X","Y","Z")]
 		else querypoints=n$d[,c("X","Y","Z")]
 		
-		if(any(select3dfunc(querypoints))) cat("neuron",n$NeuronName,"matches the selection region\n")
+		if(any(result<-select3dfunc(querypoints))){
+			if(EndPointsOnly) positiveids=n$EndPoints[result]
+			else positiveids=which(result)
+			l[[n$NeuronName]]=positiveids
+			if(Verbose){
+				cat("neuron",n$NeuronName,"matches the selection region\n")
+				cat("matching points =",positiveids,"\n");
+			}
+		}
 	}
+	if(length(l)==0) l=NULL
+	invisible(l)
 }
 
 animate3d<-function(time=10,degrees=360,filestem=NULL){
