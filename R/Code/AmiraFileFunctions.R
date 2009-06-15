@@ -929,7 +929,7 @@ WritePointsToAM<-function(d,AMFile=NULL,suffix="am",Force=F,MakeDir=T){
 }
 
 WriteNeuronToAM3D<-function(ANeuron,AMFile=NULL,
-	suffix="am3",Force=F,MakeDir=T,WriteAllSubTrees=TRUE,ScaleSubTreeNumsTo1=TRUE,sep=" "){
+	suffix="am3",Force=F,MakeDir=T,WriteAllSubTrees=TRUE,ScaleSubTreeNumsTo1=TRUE,sep=NULL){
 	# write out a neuron in the specialised skeletonize AM3D format 
 	# (as opposed to the basic AmiraMesh format which is the native format
 	# of amira for linesets)
@@ -1020,9 +1020,7 @@ WriteNeuronToAM3D<-function(ANeuron,AMFile=NULL,
 	# Write the 3D coords
 	cat("@1 # ",nVertices,"xyz coordinates\n",file=fc)
 	#write(t(ANeuron$d[,c("X","Y","Z")]),ncolumns=3,file=fc)
-	if(sep=="\t"){
-		write.table(ANeuron$d[chosenVertices,c("X","Y","Z")],col.names=F,row.names=F,file=fc,sep=sep)		
-	} else{
+	if(is.null(sep)){
 		# Amira seems fussy about having nicely aligned columns
 		# using format with trim = FALSE (the default actually) 
 		# and after getting rid of names results in a nicely justified table
@@ -1030,23 +1028,26 @@ WriteNeuronToAM3D<-function(ANeuron,AMFile=NULL,
 		rownames(Coords)<-colnames(Coords)<-NULL
 		write.table(format(Coords,trim=FALSE,scientific=FALSE),
 			quote=F,row.names=FALSE,col.names=FALSE,file=fc)
+	} else {
+		# sep was explicitly specified, so use that
+		write.table(ANeuron$d[chosenVertices,c("X","Y","Z")],col.names=F,row.names=F,file=fc,sep=sep)
 	}
 	
 	# Write number of neighbours
 	cat("\n@2 #",nVertices,"numbers of neighbours \n",file=fc)
 	numNeighbours=integer(nVertices) # filled with 0s
 	numNeighbours[sort(unique(EdgeList$CurPoint))]=table(EdgeList$CurPoint)
-	write.table(numNeighbours,col.names=F,row.names=F,file=fc,sep=sep)
+	write.table(numNeighbours,col.names=F,row.names=F,file=fc)
 	
 	# Write the Radii
 	cat("\n@3 #",nVertices,"radii\n",file=fc)
 	# NB Divide width by 2
-	write.table(ANeuron$d$W[chosenVertices]/2,col.names=F,row.names=F,file=fc,sep=sep)
+	write.table(ANeuron$d$W[chosenVertices]/2,col.names=F,row.names=F,file=fc)
 
 	# Write the edgelist information
 	cat("\n@4 #",nEdgeList,"bidirectional edges\n",file=fc)
 	#NB -1 since Amira is 0 indexed
-	write.table(EdgeList$Neighbour-1,col.names=F,row.names=F,file=fc,sep=sep)
+	write.table(EdgeList$Neighbour-1,col.names=F,row.names=F,file=fc)
 
 	# Write the origin information NB -1 since 0 indexed
 	cat("\n@5 #n 1\n",file=fc)
@@ -1063,7 +1064,7 @@ WriteNeuronToAM3D<-function(ANeuron,AMFile=NULL,
 	if(WriteAllSubTrees) {
 		cat("\n@7 # subtrees\n",file=fc)
 		if(ScaleSubTreeNumsTo1) ANeuron$d$SubTree=ANeuron$d$SubTree/max(ANeuron$d$SubTree)
-		write.table(ANeuron$d$SubTree,col.names=F,row.names=F,file=fc,sep=sep)
+		write.table(ANeuron$d$SubTree,col.names=F,row.names=F,file=fc)
 	}
 	cat("\n",file=fc)
 	close(fc)
