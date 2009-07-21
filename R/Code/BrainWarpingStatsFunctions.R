@@ -462,32 +462,27 @@ MergeSexInfo<-function(x){
 	y[,setdiff(colnames(y),"Sex.db")]
 }
 
-deformationField=function(Brain=NULL,xs=seq(0,168.78,len=16),ys=seq(0,168.78,len=16),zs=c(40,77),
-	gregxform=file.path("/GD/Programming/igs/macosx/apps/gregxform2"),direction="inverse",
-	request=c("warp","affine")){
-
+deformationField=function(warplistfile,xs=seq(0,168.78,len=16),ys=seq(0,168.78,len=16),zs=c(40,77),
+	gregxform="gregxform",direction=c("inverse","forward"), request=c("warp","affine"),opts=NULL){
+	
+	direction=match.arg(direction)
 	#nb inverse implies from sample to ref
 
 	tmpfile=tempfile()
 	tmpfile2=tempfile()
 	xyzs=expand.grid(X=xs,Y=ys,Z=zs)
 	write.table(xyzs,col.names=F,row.names=F,file=tmpfile)
-	gregxform=file.path("/GD/Programming/igs/macosx/apps/gregxform2")
-	if(!is.na(pmatch(direction,"forwards"))) gregxform=paste(gregxform,"--forward")
 
-	warplistfile=file.path(RootDir,"allreg",TraceInfo$StudyList[TraceInfo$Brain==Brain])
-	afflistfile=sub(file.path("^(.*)","warp","(.*)_warp_.*\\.list"),file.path("\\1","affine","\\2_9dof.list"),warplistfile)
-
-	#warplistfile=file.path(RootDir,"allreg/warp/DL1/average-goodbrains_EBG2R101_warp_m0g40c4e1e-1x16r3.list")
-	#afflistfile=file.path(RootDir,"allreg/affine/DL1/average-goodbrains_EBG2R101_9dof.list")
-
+	if(direction=="forward") gregxform=paste(gregxform,"--forward")
+	if(!is.null(opts)) gregxform=paste(gregxform,opts)
+	
 	l=list(pre=xyzs)
 	if("affine"%in%request){
-		system(paste(gregxform,afflistfile,"< ",tmpfile,">",tmpfile2),
+		system(paste(gregxform,"--affine",warplistfile,"< ",tmpfile,">",tmpfile2),
 			intern=FALSE,ignore.stderr=FALSE)
 		l$aff=read.table(tmpfile2,col.names=c("X","Y","Z"))
 	}
-
+	
 	if("warp"%in%request){
 		system(paste(gregxform,warplistfile,"< ",tmpfile,">",tmpfile2),
 			intern=FALSE,ignore.stderr=TRUE)
