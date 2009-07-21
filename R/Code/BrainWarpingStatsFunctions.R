@@ -462,6 +462,89 @@ MergeSexInfo<-function(x){
 	y[,setdiff(colnames(y),"Sex.db")]
 }
 
+deformationField=function(Brain=NULL,xs=seq(0,168.78,len=16),ys=seq(0,168.78,len=16),zs=c(40,77),
+	gregxform=file.path("/GD/Programming/igs/macosx/apps/gregxform2"),direction="inverse",
+	request=c("warp","affine")){
+
+	#nb inverse implies from sample to ref
+
+	tmpfile=tempfile()
+	tmpfile2=tempfile()
+	xyzs=expand.grid(X=xs,Y=ys,Z=zs)
+	write.table(xyzs,col.names=F,row.names=F,file=tmpfile)
+	gregxform=file.path("/GD/Programming/igs/macosx/apps/gregxform2")
+	if(!is.na(pmatch(direction,"forwards"))) gregxform=paste(gregxform,"--forward")
+
+	warplistfile=file.path(RootDir,"allreg",TraceInfo$StudyList[TraceInfo$Brain==Brain])
+	afflistfile=sub(file.path("^(.*)","warp","(.*)_warp_.*\\.list"),file.path("\\1","affine","\\2_9dof.list"),warplistfile)
+
+	#warplistfile=file.path(RootDir,"allreg/warp/DL1/average-goodbrains_EBG2R101_warp_m0g40c4e1e-1x16r3.list")
+	#afflistfile=file.path(RootDir,"allreg/affine/DL1/average-goodbrains_EBG2R101_9dof.list")
+
+	l=list(pre=xyzs)
+	if("affine"%in%request){
+		system(paste(gregxform,afflistfile,"< ",tmpfile,">",tmpfile2),
+			intern=FALSE,ignore.stderr=FALSE)
+		l$aff=read.table(tmpfile2,col.names=c("X","Y","Z"))
+	}
+
+	if("warp"%in%request){
+		system(paste(gregxform,warplistfile,"< ",tmpfile,">",tmpfile2),
+			intern=FALSE,ignore.stderr=TRUE)
+		l$warp=read.table(tmpfile2,na.strings="ERR",col.names=c("X","Y","Z"))
+	}
+	unlink(c(tmpfile,tmpfile2))
+	return(l)
+}
+
+plotFieldComparison<-function(l,compare=c("aff","warp"),
+	scl=c(1,1,1),ylim=c(168.78,0),xlim=c(0,168.78),withPlot=TRUE,axes=F,
+	withPoints=FALSE,withArrows=TRUE,withGrid=FALSE,
+	zfunc=min,margins=FALSE,pcol='blue',gcol='green',acol='red'){
+
+	pre=subset(l[[compare[1]]],l$pre$Z==zfunc(l$pre$Z))
+	post=subset(l[[compare[2]]],l$pre$Z==zfunc(l$pre$Z))
+
+	#cat(length(scl))
+	if(length(scl)==1) scl=rep(scl,2)
+	if(length(scl)==2) scl=c(scl,1)
+	ylim=ylim*scl[2]
+	pre=as.data.frame(t(t(pre)*scl))
+	post=as.data.frame(t(t(post)*scl))
+
+	if(!withPlot){
+		pre$Y=ylim[1]-pre$Y
+		post$Y=ylim[1]-post$Y
+	}
+
+	# plot points at initial pos by default
+	if(is.character(withPoints) && withPoints=="post") ps=post else ps=pre
+	if(is.character(withPoints)) withPoints=TRUE
+
+	if(!margins) par(mar=rep(0,4))
+	if(withPlot && withPoints) plot(ps$X,ps$Y,pch=20,cex=.75,
+		col=pcol,ylim=ylim,xlim=xlim,xaxs='i',yaxs='i',axes=axes)
+	if(withPlot && !withPoints) plot(ps$X,ps$Y,type='n',
+		ylim=ylim,xlim=xlim,xaxs='i',yaxs='i',axes=axes)
+
+	if(!withPlot && withPoints) points(ps$X,ps$Y,pch=20,cex=.75,col=pcol)
+	if(withArrows) arrows(pre$X,pre$Y,post$X,post$Y,col=acol,len=0.05)
+
+	box()
+	#abline(h=ylim[1]);abline(h=ylim[0])
+	#abline(v=xlim[1]);abline(v=xlim[0])
+
+	if(is.character(withGrid)){
+		if(withGrid=="pre") pgs=pre
+		if(withGrid=="post") pgs=post
+		withGrid=TRUE
+	} else pgs=post
+
+	if(withGrid==TRUE){
+		z=by(pgs,l$pre$Y[l$pre$Z==zfunc(l$pre$Z)],function(x) lines(x$X,x$Y,col=gcol))
+		z=by(pgs,l$pre$X[l$pre$Z==zfunc(l$pre$Z)],function(x) lines(x$X,x$Y,col=gcol))
+	}
+}
 
 # Function to calculate the "average" warping across the whole brain
 # This will use Chris' RegistrationSurfaceInside-labels.am
@@ -473,3 +556,4 @@ AverageJacobianAcrossMaskedBrain<-function(brain,mask,grid){
 	pmin(attr(lhdxyz[[1]],"BoundingBox"),attr(i$S,"BoundingBox"))[1:3]
 	#if(missing(grid)) 
 }
+
