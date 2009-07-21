@@ -462,7 +462,7 @@ MergeSexInfo<-function(x){
 	y[,setdiff(colnames(y),"Sex.db")]
 }
 
-deformationField=function(warplistfile,xs=seq(0,168.78,len=16),ys=seq(0,168.78,len=16),zs=c(40,77),
+deformationField=function(warplistfile,xyzs,xs=seq(0,168.78,len=16),ys=seq(0,168.78,len=16),zs=c(40,77),
 	gregxform="gregxform",direction=c("inverse","forward"), request=c("warp","affine"),opts=NULL){
 	
 	direction=match.arg(direction)
@@ -470,7 +470,8 @@ deformationField=function(warplistfile,xs=seq(0,168.78,len=16),ys=seq(0,168.78,l
 
 	tmpfile=tempfile()
 	tmpfile2=tempfile()
-	xyzs=expand.grid(X=xs,Y=ys,Z=zs)
+	if(missing(xyzs))
+		xyzs=expand.grid(X=xs,Y=ys,Z=zs)
 	write.table(xyzs,col.names=F,row.names=F,file=tmpfile)
 
 	if(direction=="forward") gregxform=paste(gregxform,"--forward")
@@ -495,10 +496,15 @@ deformationField=function(warplistfile,xs=seq(0,168.78,len=16),ys=seq(0,168.78,l
 plotFieldComparison<-function(l,compare=c("aff","warp"),
 	scl=c(1,1,1),ylim=c(168.78,0),xlim=c(0,168.78),withPlot=TRUE,axes=F,
 	withPoints=FALSE,withArrows=TRUE,withGrid=FALSE,
-	zfunc=min,margins=FALSE,pcol='blue',gcol='green',acol='red'){
+	zfunc='all',margins=FALSE,pcol='blue',gcol='green',acol='red'){
 
-	pre=subset(l[[compare[1]]],l$pre$Z==zfunc(l$pre$Z))
-	post=subset(l[[compare[2]]],l$pre$Z==zfunc(l$pre$Z))
+	if(is.function(zfunc)){
+		pre=subset(l[[compare[1]]],l$pre$Z==zfunc(l$pre$Z))
+		post=subset(l[[compare[2]]],l$pre$Z==zfunc(l$pre$Z))		
+	} else{
+		pre=subset(l[[compare[1]]])
+		post=subset(l[[compare[2]]])		
+	}
 
 	#cat(length(scl))
 	if(length(scl)==1) scl=rep(scl,2)
