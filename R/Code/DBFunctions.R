@@ -1,7 +1,7 @@
-# DBFunctions.R 
+# DBFunctions.R
 # Utility functions for database queries
 
-TidyDBResult<-function(df,maxFactorLength=12,keepAsChar){
+TidyDBResult<-function(df,maxFactorLength=30,minUniqueFracToKeepChar=1.0,keepAsChar){
 	# Function to tidy up data frame returned by a db query
 	charCols=colnames(df)[sapply(df,is.character)]
 	if(!missing(keepAsChar)) charCols=setdiff(charCols,keepAsChar)
@@ -26,8 +26,13 @@ TidyDBResult<-function(df,maxFactorLength=12,keepAsChar){
 				df[[c]]=(toupper(df[[c]])=="T")
 			else
 				df[[c]]=factor(df[[c]])
-		} else if(maxstrlen<=maxFactorLength) {
-			df[[c]]=factor(df[[c]])
+		} else if(length(unique(df[[c]]))/length(df[[c]]) < minUniqueFracToKeepChar){
+			# we will have less than minUniqueFracToKeepChar factor levels
+			# so go ahead and convert
+			# (idea is that if there would be as many levels as rows we probably
+			# don't want to make a factor)
+			if(maxstrlen<=maxFactorLength)
+				df[[c]]=factor(df[[c]])
 		}
 	}
 	df
