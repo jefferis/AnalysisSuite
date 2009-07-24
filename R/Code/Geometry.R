@@ -165,7 +165,7 @@ MBEntryPlane=FindPlaneFromPointAndNormal(c(52,0,61),c(70,0,27))
 #y=u*1.5
 #z=v*(-80/26)+150
 
-IntersectNeuronWithPlane<-function(ANeuron,APlane){
+IntersectNeuronWithPlane<-function(ANeuron,APlane,ClosestPoint){
 	# consider every line in neuron (ie each point and its parent)
 	# make a 3d matrix R,C,i Rows are point 1 and 2, cols are XYZ and i are
 	# multiple lines
@@ -181,7 +181,13 @@ IntersectNeuronWithPlane<-function(ANeuron,APlane){
 	PointMatrix[1,,]=t(as.matrix(d[d$Parent[points[-1]],c("X","Y","Z")]))
 	rval=IntersectionLineSegmentAndPlane(PointMatrix,APlane)
 	# return any non NA rows
-	rval[!is.na(rval[,1])]
+	rval=rval[!is.na(rval[,1]),]
+	if(is.matrix(rval) && nrow(rval)>1 && !missing(ClosestPoint)){
+		# find the closest intersection point
+		squaredist=colSums((t(rval)-ClosestPoint)^2)
+		rval=rval[which.min(squaredist),]
+	}
+	rval
 }
 
 FindPlaneOrigin<-function(Plane){
