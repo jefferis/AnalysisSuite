@@ -1,7 +1,7 @@
 # DBFunctions.R
 # Utility functions for database queries
 
-TidyDBResult<-function(df,maxFactorLength=30,minUniqueFracToKeepChar=1.0,keepAsChar){
+TidyDBResult<-function(df,maxFactorLength=60,minUniqueFracToKeepChar=1.0,keepAsChar){
 	# Function to tidy up data frame returned by a db query
 	charCols=colnames(df)[sapply(df,is.character)]
 	if(!missing(keepAsChar)) charCols=setdiff(charCols,keepAsChar)
