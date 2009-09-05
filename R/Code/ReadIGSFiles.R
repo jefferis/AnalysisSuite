@@ -313,8 +313,15 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 			fieldval=substring(l,hingepos+2,nchar(l))
 			
 			if(substring(fieldval,1,1)=="("){
-				# this is a vector and needs special processing
-				warning("don't know how to process vectors")
+				# this is a vector, first remove all spaces
+				fieldval=gsub(" ","",fieldval)
+				# then remove first and last brackets
+				fieldval=substring(fieldval,2,nchar(fieldval)-1)
+				vectorstring=unlist(strsplit(fieldval,")(",fixed=TRUE))
+				tc=textConnection(vectorstring)
+				fieldval=scan(tc,sep=",",quiet=TRUE)
+				if(length(vectorstring)>1)
+				fieldval=matrix(fieldval,byrow=TRUE,nrow=length(vectorstring))
 			} else if(!fieldname%in%c("type")){
 				if (length(grep("^[\\-+]{0,1}[0-9.]+",fieldval,perl=T))>0) what=0
 				else what=""
