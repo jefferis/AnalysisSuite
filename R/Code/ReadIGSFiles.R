@@ -286,3 +286,53 @@ ReadIGSLandmarks<-function(...){
 	rownames(x)=rn
 	x
 }
+
+ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
+	if(!inherits(filename,"connection")) con<-file(filename,open='rt')
+	else con=filename
+	if(CloseConnection) on.exit(close(con))
+	# Look for empty line signifying end of header
+	headerLines=readLines(con,1)
+	NRRDMAGIC="NRRD000"
+	if(substring(headerLines,1,nchar(NRRDMAGIC))!=NRRDMAGIC)
+		stop("This does not appear to be a NRRD file: bad magic")
+	nrrdspec=list()
+	nrrdkeyvals=vector('character')
+	while( (l<-readLines(con,1))!=""){
+		headerLines=c(headerLines,l)
+		if(substring(l,1,1)=="#") next
+		
+		if(length(grep(": ",l))>0){
+			# field
+			hingepos=regexpr(": ",l,fixed=TRUE)
+			fieldname=substring(l,1,hingepos-1)
+			# make canonical name by removing spaces if required
+			if(!fieldname%in%c("space dimension","space units","space origin","space directions","measurement frame"))
+			fieldname=gsub(" ","",fieldname,fixed=TRUE)
+			
+			fieldval=substring(l,hingepos+2,nchar(l))
+			
+			if(substring(fieldval,1,1)=="("){
+				# this is a vector and needs special processing
+				warning("don't know how to process vectors")
+			} else if(!fieldname%in%c("type")){
+				if (length(grep("^[\\-+]{0,1}[0-9.]+",fieldval,perl=T))>0) what=0
+				else what=""
+				tc=textConnection(fieldval)
+				fieldval=scan(tc,quiet=TRUE,what=what)
+				close(tc)
+			}
+			nrrdspec[[fieldname]]=fieldval
+			
+		} else if(length(grep(":=",l))>0){
+			# key val
+			hingepos=regexpr(":=",l,fixed=TRUE)
+			nrrdkeyvals[substring(l,1,hingepos-1)]=substring(l,hingepos+2,nchar(l))
+		} else {
+			warning("Skipping malformed line #",length(headerLines)," in NRRD header\n")
+		}
+	}
+	attr(nrrdspec,'headertext')=headerLines
+	attr(nrrdspec,'keyvals')=nrrdkeyvals
+	nrrdspec
+}
