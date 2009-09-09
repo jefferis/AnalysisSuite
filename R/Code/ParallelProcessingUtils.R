@@ -20,7 +20,7 @@ makelock<-function(lockfile,lockmsg,CreateDirectories=TRUE){
 }
 
 removelock<-function(lockfile){
-	if(unlink(lockfile)!=1) {
+	if(unlink(lockfile)!=0) {
 		warning("Unable to remove ",lockfile)
 		return (FALSE)
 	}
