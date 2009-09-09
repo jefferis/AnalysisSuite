@@ -415,7 +415,7 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 		Neighbours$CurPoint=rep(seq(nVertices),d$NeighbourCount)
 		
 		Origin=NULL
-		if(any(OriginStart)) Origin=1+scan(filename,what=integer(1),skip=OriginStart-1,nlines=1,quiet=TRUE)
+		if(length(OriginStart)>0) Origin=1+scan(filename,what=integer(1),skip=OriginStart-1,nlines=1,quiet=TRUE)
 	}
 
 
