@@ -59,6 +59,7 @@ ReadSWCFile<-function(FileName,...){
 		strip.white = TRUE, blank.lines.skip = TRUE,comment.char = "#",...)
 	# ... so multiply by 2 to get diam which is what I work with internally
 	d$W=d$W*2
+	d
 }
 
 WriteSWCFile<-function(ANeuron,
