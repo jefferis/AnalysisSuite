@@ -359,7 +359,7 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 	return(NULL)
 }
 
-Read3DDensityFromNrrd<-function(filename,Verbose=FALSE){
+Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,origin){
 
 	fc=file(filename,'rb')
 	h=ReadNrrdHeader(fc,CloseConnection=FALSE)
@@ -408,7 +408,9 @@ Read3DDensityFromNrrd<-function(filename,Verbose=FALSE){
 		return(d)
 	}
 	latticeBounds=rbind(c(0,0,0),h$sizes*voxdims)
-	if('space origin'%in%names(h)){
+	if(!missing(origin)){
+		latticeBounds=t(origin+t(latticeBounds))
+	} else if('space origin'%in%names(h)){
 		latticeBounds=t(h[['space origin']]+t(latticeBounds))
 	}
 	attr(d,"BoundingBox")<-latticeBounds
