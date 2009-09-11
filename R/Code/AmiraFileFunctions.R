@@ -1280,6 +1280,7 @@ Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text"),
 		
 		cat("encoding:", ifelse(ftype=="text","text","raw"),"\n",file=fc)
 		cat("type: ",nrrdType,"\n",sep="",file=fc)
+		cat("endian: ",endian,"\n",sep="",file=fc)
 		# Important - this sets the offset in the amiramesh file from which
 		# to start reading data
 		cat("byte skip:",file.info(filename)$size,"\n",file=fc)
