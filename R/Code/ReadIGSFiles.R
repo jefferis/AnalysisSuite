@@ -241,7 +241,7 @@ WriteIGSRegistrationFolder<-function(reglist,foldername){
 	# So in order to use such a transformation as an initial affine with
 	# the registration command the switch --initial-inverse must be used
 	# specifying the folder name created by this function.
-	dir.create(foldername)
+	dir.create(foldername,showWarnings=FALSE,recursive=TRUE)
 	if(!is.list(reglist)) reglist=IGSParamsToIGSRegistration(reglist)
 	WriteIGSTypedStream(reglist,file.path(foldername,"registration"))
 	
