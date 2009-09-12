@@ -1,9 +1,11 @@
+
 plotneuron3d.simple<-function(ANeuron, WithLine=T,NeuronNames=FALSE,
 	WithNodes=T,WithAllPoints=F,WithText=F,HighlightLongestSegment=FALSE,PlotSubTrees=T,ClearRGL=T,NeuronList=MyNeurons,col,...){
 	# rewrite of plotneuron3d using updated rgl calls
 	
 	require(rgl)
-	if(ClearRGL) rgl.clear()
+	r3dDefaults$bg<-'grey'
+	if(ClearRGL) clear3d()
     
 	if(missing(col)) col='green'
 
