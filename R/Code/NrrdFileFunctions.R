@@ -131,3 +131,12 @@ Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,origin){
 
 	return(d)
 }
+
+NrrdMinMax<-function(filename,...){
+	minmax=.callunu("minmax",shQuote(filename),...)
+	minmax=sub("^.*")
+}
+
+.callunu<-function(cmd,args,unu="unu",...){
+	system(paste(unu,cmd,paste(args,collapse=" ")),intern=TRUE,...)
+}
