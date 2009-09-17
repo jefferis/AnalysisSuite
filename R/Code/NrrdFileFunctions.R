@@ -70,7 +70,7 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 	return(NULL)
 }
 
-Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,origin){
+Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,AttachFullHeader=FALSE,origin){
 
 	fc=file(filename,'rb')
 	h=ReadNrrdHeader(fc,CloseConnection=FALSE)
@@ -108,12 +108,13 @@ Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,origin){
 		unlink(tf)
 	} else if(enc%in%c("ascii","txt","text")){
 		if(dataTypes$what[i]=='integer') whatVal=integer(0) else whatVal=double(0)
-		d=scan(fc,what=whatVal,nmax=dataLength)
+		d=scan(fc,what=whatVal,nmax=dataLength,quiet=TRUE)
 		close(fc)
 	} else {
 		stop("nrrd encoding ",enc," is not implemented")
 	}
 	dim(d)<-h$sizes
+	if(AttachFullHeader) attr(d,"header")=h
 	
 	if('space directions'%in%names(h)){
 		voxdims=rowSums(sqrt(h[['space directions']]^2))
