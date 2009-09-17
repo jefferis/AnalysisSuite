@@ -89,11 +89,12 @@ Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,origin){
 	dataLength=prod(h$sizes)
 	endian=ifelse(is.null(h$endian),.Platform$endian,h$endian)
 	if(Verbose) cat("dataLength =",dataLength,"dataType =",dataTypes$what[i],"size=",dataTypes$size[i],"\n")
-	if(h$encoding=="raw"){
+	enc=tolower(h$encoding)
+	if(enc=="raw"){
 		d=readBin(fc,what=dataTypes$what[i],n=dataLength,size=dataTypes$size[i],
 			signed=dataTypes$signed[i],endian=endian)
 		close(fc)
-	} else if(h$encoding%in%c("gz","gzip")) {
+	} else if(enc%in%c("gz","gzip")) {
 		# unfortunately gzcon seems to reset the connection 
 		# rather than starting to read from the current location
 		headerlength=seek(fc)
@@ -105,8 +106,12 @@ Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,origin){
 			signed=dataTypes$signed[i],endian=endian)
 		close(gzf)
 		unlink(tf)
+	} else if(enc%in%c("ascii","txt","text")){
+		if(dataTypes$what[i]=='integer') whatVal=integer(0) else whatVal=double(0)
+		d=scan(fc,what=whatVal,nmax=dataLength)
+		close(fc)
 	} else {
-		stop("nrrd encoding ",h$encoding," is not implemented")
+		stop("nrrd encoding ",enc," is not implemented")
 	}
 	dim(d)<-h$sizes
 	
