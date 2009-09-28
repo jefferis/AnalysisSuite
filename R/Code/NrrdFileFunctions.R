@@ -143,6 +143,14 @@ NrrdMinMax<-function(filename,...){
 	minmax=sub("^.*")
 }
 
+NrrdResample<-function(infile,outfile,size,otherargs=NULL,...){
+	if(is.integer(size)) size=paste("--size",paste(size,collapse=" "))
+	else size=paste("--size",paste("x",size,sep="",collapse=" "))
+	 
+	.callunu("resample",paste(size, paste(otherargs,collapse=" "),
+	 	"-i",shQuote(infile),"-o",shQuote(outfile)),...)
+}
+
 .callunu<-function(cmd,args,unu="unu",...){
 	system(paste(unu,cmd,paste(args,collapse=" ")),intern=TRUE,...)
 }
