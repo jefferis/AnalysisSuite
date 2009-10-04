@@ -138,6 +138,33 @@ Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,AttachFullHeader=FALSE,or
 	return(d)
 }
 
+ReadHistogramFromNrrd<-function(filename,...){
+	d=Read3DDensityFromNrrd(filename,AttachFullHeader=TRUE,...)
+	h=attr(d, "header")
+	# clear the header attributes
+	attributes(d)<-NULL
+	if(is.na(pmatch("histo",h$content)) || h$dimension!=1) {
+		warning ("This does not appear to be a 1d nrrd histogram")
+		return(d)
+	}
+	breaks=seq(from=h$axismins,to=h$axismax,len=h$sizes+1)
+	density=d/sum(d)
+	
+	halfwidth=(h$axismaxs-h$axismins)/h$sizes/2
+
+	# return it as an R histogram	
+	structure(list(
+		breaks = breaks, 
+		counts = d, 
+	intensities = density, 
+	density = density, 
+	mids = seq(h$axismins+halfwidth,h$axismaxs-halfwidth,len=h$sizes), 
+	xname = h$content, 
+	    equidist = TRUE), 
+	.Names = c("breaks", "counts", "intensities", 
+	"density", "mids", "xname", "equidist"), class = "histogram")
+}
+
 NrrdMinMax<-function(filename,...){
 	minmax=.callunu("minmax",shQuote(filename),...)
 	minmax=sub("^.*")
