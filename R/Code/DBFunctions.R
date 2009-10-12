@@ -1,8 +1,18 @@
 # DBFunctions.R
 # Utility functions for database queries
 
-TidyDBResult<-function(df,maxFactorLength=60,minUniqueFracToKeepChar=1.0,keepAsChar){
+TidyDBResult<-function(df,maxFactorLength=60,minUniqueFracToKeepChar=1.0,convNAColsTOLogical=TRUE,keepAsChar){
 	# Function to tidy up data frame returned by a db query
+	if(nrow(df)==0) return(df)
+	# some db functions convert cols that are all NA to logical
+	# although this may not make a lot of sense, for consistency it is easier
+	# to convert everybody 
+	if(convNAColsTOLogical){
+		for(c in colnames(df)){
+			if( sum(is.na(df[[c]])) == nrow(df) ) df[[c]]=as.logical(df[[c]])
+		}		
+	}
+
 	charCols=colnames(df)[sapply(df,is.character)]
 	if(!missing(keepAsChar)) charCols=setdiff(charCols,keepAsChar)
 	for (c in charCols){
