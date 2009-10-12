@@ -1,12 +1,13 @@
 # Some miscellaneous functions related to image analysis
 
+erf <- function(x) 2 * pnorm(x * sqrt(2)) - 1
 cumnorm<-function(x,mu=0,sigma=1) 1/2 * ( 1 + erf((x - mu) / (sigma * sqrt(2))) )
 
 FitCumulativeGaussian<-function(x,cumfreq,muest,sigmaest,...){
 	# use est of median
-	if(missing(muest)) muest=x[which.min(abs(y-0.5))]
+	if(missing(muest)) muest=x[which.min(abs(cumfreq-0.5))]
 	# see IQR {stats}
-	if(missing(sigmaest)) sigmaest=( x[which.min(abs(y - 0.75))] - x[which.min(abs(y - 0.25))] ) / 1.349
+	if(missing(sigmaest)) sigmaest=( x[which.min(abs(cumfreq - 0.75))] - x[which.min(abs(cumfreq - 0.25))] ) / 1.349
 	coeffs<-nls(cumfreq~cumnorm(x,mu,sigma),start=list (mu=muest,sigma=sigmaest), ...)
 	return(coeffs$m$getPars())	
 }
