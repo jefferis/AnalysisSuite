@@ -439,6 +439,27 @@ permtvals=function(jacdata,males,females,mask,standardAttributes){
 	return(tvals)
 }
 
+ExtremeTvals<-function(jacdata,males,females,perms){
+	# Try to make null distributions of test statistics for
+	# Deformation-Based Morphometry data
+	# perms is either the number of permutations
+	# or a matrix of permutations with nMales+nFemale cols
+	# and nPerms rows
+	findPerm<-function(males,females){
+		both=c(males,females)
+		males.perm=sample(both,length(males))
+		females.perm=setdiff(both,males.perm)
+		c(males.perm,females.perm)
+	}
+	
+	if(length(perms)==1) perms=t(replicate(perms,findPerm(males,females)))
+	n=nrow(perms)
+	maleIdxs=seq(males);femaleIdxs=seq(females)+length(males)
+	
+	evdtvals=t(apply(perms,1,function(x) range(fast.ttest(jacdata[,x[maleIdxs]],jacdata[,x[femaleIdxs]]))))
+	attr(evdtvals,'perms')=perms
+	return(evdtvals)
+}
 
 # Read in the sex information from the PN2 FMPro database
 # and merge it with info from spreadsheet
