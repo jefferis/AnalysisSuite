@@ -439,7 +439,7 @@ permtvals=function(jacdata,males,females,mask,standardAttributes){
 	return(tvals)
 }
 
-ExtremeTvals<-function(jacdata,males,females,perms,quantiles=c(0,0.001,0.1,0.05,0.1,0.5,0.9,0.95,0.99,0.999,1)){
+ExtremeTvals<-function(jacdata,males,females,perms,quantiles=c(0,0.001,0.01,0.05,0.1,0.5,0.9,0.95,0.99,0.999,1)){
 	# Try to make null distributions of test statistics for
 	# Deformation-Based Morphometry data
 	# perms is either the number of permutations
