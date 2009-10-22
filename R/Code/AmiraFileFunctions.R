@@ -196,6 +196,11 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 	# parse data definitions
 	DataDefLines=grep("^(\\w+).*@(\\d+)(\\(Hx[^)]+\\)){0,1}$",headerLines,perl=TRUE)
 	DataDefs=headerLines[DataDefLines];headerLines[-DataDefLines]
+	HxTypes=rep("raw",length(DataDefs))
+	HxLengths=rep(NA,length(DataDefs))
+	LinesWithHXType=grep("(HxByteRLE|HxZip)",DataDefs)
+	HxTypes[LinesWithHXType]=sub(".*(HxByteRLE|HxZip).*","\\1",DataDefs[LinesWithHXType])
+	HxLengths[LinesWithHXType]=sub(".*(HxByteRLE|HxZip),([0-9]+).*","\\2",DataDefs[LinesWithHXType])
 	
 	# remove all extraneous chars altogether
 	DataDefs=gsub("(=|@|\\}|\\{|[[:space:]])+"," ",DataDefs)
@@ -223,6 +228,8 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 	
 	DataDefDF$SimpleDataLength=DataDefDF$DataLength*DataDefDF$SubLength
 	DataDefDF$nBytes=DataDefDF$SubLength*DataDefDF$Size*DataDefDF$DataLength
+	DataDefDF$HxType=HxTypes
+	DataDefDF$HxLength=HxLengths
 	
 	# FIXME Note that this assumes exactly one blank line in between each data section
 	# I'm not sure if this is a required property of the amira file format
