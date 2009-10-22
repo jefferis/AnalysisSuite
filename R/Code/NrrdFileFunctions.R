@@ -138,6 +138,27 @@ Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,AttachFullHeader=FALSE,or
 	return(d)
 }
 
+WriteNrrdHeaderForAmirameshFile<-function(amfile,outfile=paste(amfile,sep=".","nhdr")){
+	h=ReadAmiramesh.Header(amfile)
+	hd=h$dataDef
+	if(nrow(hd)==0) return(NULL)
+	if(nrow(hd)>1) warning("Can only use first data block of Amira File")
+	hd=hd[1,]
+	if(hd$HxType!="raw") stop("Unable to make a nrrd header for compressed Amiramesh files")
+	
+	nrrdEncodings=structure(c("raw",NA,NA),names=c("byte","HxByteRLE","HxZip"))
+	nrrdDataTypes=structure(c("uint8","uint16","int16","int32","float","double",NA),
+		names=c("byte", "ushort", "short", "int", "float", "double", "complex"))
+	nrrdDataType=nrrdDataTypes[hd$SimpleType]
+	if(is.na(nrrdDataType)) stop("Unable to write nrrd header for data type: ",hd$SimpleType)
+		
+	cat("NRRD0004\n",file=outfile)
+	cat("encoding: raw\ntype: ",nrrdDataType,"\n",sep="",append=TRUE,file=outfile)
+	dims=unlist(hd$Dims)
+	cat("dimension: ",length(dims),"\nsizes: ",paste(dims,collapse=" "),"\n",sep="",append=TRUE,file=outfile)
+	invisible(outfile)
+}
+
 ReadHistogramFromNrrd<-function(filename,...){
 	d=Read3DDensityFromNrrd(filename,AttachFullHeader=TRUE,...)
 	h=attr(d, "header")
