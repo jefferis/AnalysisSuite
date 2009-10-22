@@ -207,6 +207,8 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 	if(Verbose) cat("DataDefs=",DataDefs,"\n")
 	# make a df with DataDef info
 	DataDefMatrix=matrix(unlist(strsplit(DataDefs," ")),ncol=4,byrow=T)
+	# remove HxLength definitions from 4th column if required
+	DataDefMatrix[HxTypes!="raw",4]=sub("^([0-9]+).*","\\1",DataDefMatrix[HxTypes!="raw",4])
 	
 	DataDefDF=data.frame(DataName=I(DataDefMatrix[,3]),DataPos=as.numeric(DataDefMatrix[,4]))
 
