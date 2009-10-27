@@ -178,9 +178,13 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 			# try and parse materials
 			te<-try(silent=TRUE,{
 				Ids=sapply(returnList[["Parameters"]]$Materials,'[[','Id')
+				# Replace any NULLs with NAs
+				Ids=sapply(Ids,function(x) ifelse(is.null(x),NA,x))
+				# Note we have to unquote and split any quoted colours
 				Colors=sapply(returnList[["Parameters"]]$Materials,
-					function(x) ifelse(is.null(x$Color),
-						'black',rgb(x$Color[1],x$Color[2],x$Color[3])))
+					function(x) {if(is.null(x$Color)) return ('black')
+						if(is.character(x$Color)) x$Color=unlist(strsplit(x$Color," "))
+						return(rgb(x$Color[1],x$Color[2],x$Color[3]))})
 				Materials=data.frame(id=Ids,col=I(Colors))
 				rownames(Materials)<-names(returnList[["Parameters"]]$Materials)
 			})
