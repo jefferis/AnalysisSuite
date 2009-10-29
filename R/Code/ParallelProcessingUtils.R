@@ -26,3 +26,25 @@ removelock<-function(lockfile){
 	}
 	return (TRUE)
 }
+
+RunCmdForNewerInput<-function(cmd,infiles,outfile,Verbose=FALSE,...){
+	if(!file.exists(outfile)){
+		# do nothing just fall through to end
+		if(Verbose) cat("outfile: ",outfile,"missing\n")
+	} else if(!all(file.exists(infiles))){
+		if(Verbose) cat("some input files missing: ",infiles[!file.exists(infiles)],"\n")
+		return (FALSE)		
+	} else if(max(file.info(infiles)$mtime) < file.info(outfile)$mtime){
+		# check times
+		if(Verbose) cat("Skipping",outfile,"because input files are older; use OverWrite=\"yes\" to force\n")
+		return(FALSE)	
+	} else {
+		if(Verbose){
+			cat("Overwriting",outfile,"because 1 or more input files are newer\n")
+			cat("Newest input mtime:",max(file.info(infiles)$mtime),
+				"Output mtime:",file.info(outfile)$mtime,"\n")
+		} 
+	}
+	if(!is.null(cmd)) system(cmd,...)
+	return(TRUE)
+}
