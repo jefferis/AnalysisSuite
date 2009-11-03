@@ -179,8 +179,6 @@ Write3DDensityToNrrd<-function(filename,dens,enc=c("raw","text","gzip"),
 	cat("dimension: ",length(dim(dens)),"\nsizes: ",paste(dim(dens),collapse=" "),"\n",sep="",append=TRUE,file=filename)
 	voxdims=voxdim.gjdens(dens)
 	if(!is.null(voxdims)) cat("spacings:",voxdims,"\n",file=filename,append=TRUE)
-	# Single blank line terminates header
-	cat("\n",file=filename,append=TRUE)
 
 	if(!is.list(dens)) d=dens else d=dens$estimate
 	# Find data type and size for amira
@@ -190,6 +188,10 @@ Write3DDensityToNrrd<-function(filename,dens,enc=c("raw","text","gzip"),
 	# moment that the binary data is written out.
 	if(dtype%in%c("byte","short","ushort","int")) dmode="integer"
 	if(dtype%in%c("float","double")) dmode="numeric"
+	# record byte ordering if necessary
+	if(enc!='text' && dtypesize>1) cat("endian: ",endian,"\n",sep="",file=filename,append=TRUE)
+	# Single blank line terminates header
+	cat("\n",file=filename,append=TRUE)
 	
 	if(enc=='text'){
 		write(as.vector(d,mode=dmode),ncol=1,file=filename,append=TRUE)
