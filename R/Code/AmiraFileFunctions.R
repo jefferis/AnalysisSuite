@@ -1322,10 +1322,10 @@ Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text"),
 Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 
 	fc=file(filename,'rb')
-	headerLines=NULL		
+	headerLines<-readLines(fc,1)
+	if(length(grep("amiramesh",headerLines,ignore.case=T))!=1)
+		stop("This is not an amiramesh file")
 	while ( ( nextLine<-readLines(fc,1)) !="@1") {headerLines<-c(headerLines,nextLine)}
-	
-#	if(Verbose) cat("Header is\n",paste(headerLines,sep="","\n"),"------------\n",sep="")
 	
 	endian='big'
 	binary=FALSE
