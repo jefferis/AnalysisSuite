@@ -203,6 +203,99 @@ Write3DDensityToNrrd<-function(filename,dens,enc=c("raw","text","gzip"),
 	}
 }
 
+Write3DDensityToHanchuanRaw<-function(filename,dens,dtype=c("float","byte","ushort"),
+	endian=c('little',"big"),WriteNrrdHeader=FALSE){
+	endian=match.arg(endian)
+	dtype=match.arg(dtype)
+	hanchuanDataTypes=structure(c(1,2,4),
+		names=c("byte", "ushort", "float"))
+	hanchuanDataType=hanchuanDataTypes[dtype]
+	hanchuanMagic="raw_image_stack_by_hpeng"
+	
+	if(dtype%in%c("byte","ushort")) dmode="integer"
+	if(dtype=="float") dmode="numeric"
+	cat(hanchuanMagic,file=filename)
+	cat(toupper(substring(endian,1,1)),file=filename,append=T)
+
+	con=file(filename,open='ab')
+	
+	# Write data type
+	writeBin(as.integer(hanchuanDataType),con,2,endian=endian)
+
+	# Write dimensions
+	dimstowrite=dim(dens)
+	# make sure that there are 4 dimensions (0 padding as required)
+	dimstowrite=as.integer(c(dimstowrite,rep(1,4-length(dimstowrite))))
+	writeBin(dimstowrite,con,4,endian=endian)
+	
+	# Write data
+	writeBin(as.vector(dens,mode=dmode),con,size=hanchuanDataType,endian=endian)
+	
+	headerLength=nchar(hanchuanMagic)+1+2+4*4
+	close(con)
+	# Write a Nrrd header to accompany the amira file if desired
+	# see http://teem.sourceforge.net/nrrd/
+	if(WriteNrrdHeader) {
+		nrrdFilename=paste(filename,sep=".","nhdr")
+		cat("NRRD0004\n",file=nrrdFilename)
+		fc=file(nrrdFilename,open="at") # ie append, text mode
+		nrrdType=ifelse(dtype=="byte","uint8",dtype)
+		
+		cat("encoding: raw","\n",file=fc)
+		cat("type: ",nrrdType,"\n",sep="",file=fc)
+		cat("endian: ",endian,"\n",sep="",file=fc)
+		# Important - this sets the offset in the amiramesh file from which
+		# to start reading data
+		cat("byte skip: ",headerLength,"\n",sep="",file=fc)
+		cat("dimension: ",length(dim(dens)),"\n",sep="",file=fc)
+		cat("sizes:",dim(dens),"\n",file=fc)
+		voxdims=voxdim.gjdens(dens)
+		if(!is.null(voxdims)) cat("spacings:",voxdims,"\n",file=fc)
+		BoundingBox=getBoundingBox(dens)
+		if(!is.null(BoundingBox)){
+			cat("axis mins:",matrix(BoundingBox,nrow=2)[1,],"\n",file=fc)
+			cat("axis maxs:",matrix(BoundingBox,nrow=2)[2,],"\n",file=fc)
+		}
+		cat("data file: ",basename(filename),"\n",sep="",file=fc)
+		cat("\n",file=fc)
+		close(fc)
+	}
+}
+
+ConvertNrrdToAmira<-function(infile,outfile=sub("\\.nrrd$",".am",infile),dtype,
+	TypeConversion=c("scale","cast")){
+	TypeConversion=match.arg(TypeConversion)
+	d=Read3DDensityFromNrrd(infile,AttachFullHeader=T)
+	h=attr(d,"header")
+	
+	nrrdDataTypes=structure(names=c("uint8","uint16","int16","int32","float","double"),
+		c("byte", "ushort", "short", "int", "float", "double"))
+	nrrdType=.standardNrrdType(h$type)
+	oldtype=nrrdDataTypes[nrrdType]
+
+	if(missing(dtype)) {
+		dtype=oldtype
+	} else if(TypeConversion=="scale") {
+		# we may need to rescale, just do this for int types
+		saveattrs=attributes(d)
+		if(oldtype=="ushort" && dtype=="byte") {
+			d=as.integer(d/257)
+			attributes(d)<-saveattr
+		} else if(oldtype=="float") {
+			r=range(d)
+			if(dtype=="byte"){
+				d=as.integer((d-r[1])/(r[2]/255))
+				attributes(d)<-saveattr
+			} else if(dtype=="ushort"){
+				d=as.integer((d-r[1])/(r[2]/65535))
+				attributes(d)<-saveattrs
+			} else stop("Don't yet know how to convert ",oldtype," to ",dtype)
+		}
+		else stop("Don't yet know how to convert ",oldtype," to ",dtype)
+	}
+	Write3DDensityToAmiraLattice(outfile,d,dtype=dtype)
+}
+
 ReadHistogramFromNrrd<-function(filename,...){
 	d=Read3DDensityFromNrrd(filename,AttachFullHeader=TRUE,...)
 	h=attr(d, "header")
