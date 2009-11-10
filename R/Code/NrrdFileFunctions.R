@@ -6,7 +6,7 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 	headerLines=readLines(con,1)
 	NRRDMAGIC="NRRD000"
 	if(substring(headerLines,1,nchar(NRRDMAGIC))!=NRRDMAGIC)
-		stop("This does not appear to be a NRRD file: bad magic")
+		stop("This does not appear to be a NRRD file: ",summary(con)$description)
 	nrrdspec=list()
 	nrrdkeyvals=vector('character')
 	while( (l<-readLines(con,1))!=""){
