@@ -11,7 +11,8 @@ makelock<-function(lockfile,lockmsg,CreateDirectories=TRUE){
 	} 
 	if(missing(lockmsg)) lockmsg=paste(system('hostname',intern=TRUE),Sys.getenv("R_SESSION_TMPDIR"))
 	if (file.exists(lockfile)) return (FALSE)
-	cat(lockmsg,"\n",file=lockfile,append=TRUE,sep="")
+	# note the use of paste makes the message writing atomic
+	cat(paste(lockmsg,"\n"),file=lockfile,append=TRUE,sep="")
 	firstline=readLines(lockfile,n=1)
 	if(firstline!=lockmsg){
 		# somebody else got there first

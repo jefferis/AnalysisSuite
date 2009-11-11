@@ -6,7 +6,7 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 	headerLines=readLines(con,1)
 	NRRDMAGIC="NRRD000"
 	if(substring(headerLines,1,nchar(NRRDMAGIC))!=NRRDMAGIC)
-		stop("This does not appear to be a NRRD file: bad magic")
+		stop("This does not appear to be a NRRD file: ",summary(con)$description)
 	nrrdspec=list()
 	nrrdkeyvals=vector('character')
 	while( (l<-readLines(con,1))!=""){
@@ -321,6 +321,22 @@ ReadHistogramFromNrrd<-function(filename,...){
 	    equidist = TRUE), 
 	.Names = c("breaks", "counts", "intensities", 
 	"density", "mids", "xname", "equidist"), class = "histogram")
+}
+
+Nrrd2op<-function(infiles,outfile,unu2opfun=c("max","min","+", "-", "x", "/"),CreateDirs=TRUE,Verbose=TRUE,Force=FALSE){
+	if(length(infiles)<1) return(NULL)
+	# Do nothing if inputs are older than output unless Force=T
+	if(!Force && !RunCmdForNewerInput(NULL,infiles,outfile)) return (NULL)
+	if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile))
+	file.copy(infiles[1],outfile)
+	if(length(infiles)==1) return(1)
+	unu2opfun=match.arg(unu2opfun)
+	for (f1 in infiles[-1]){
+		cmd=paste("unu 2op",unu2opfun,
+			shQuote(f1),shQuote(outfile),"-o",shQuote(outfile))
+		system(cmd)
+		if(Verbose) cat(".")
+	}
 }
 
 NrrdMinMax<-function(filename,...){
