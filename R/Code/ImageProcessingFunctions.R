@@ -2,7 +2,7 @@
 # distinct from ImageAnalyisFunctions which are more statistical in nature
 # this is really about munging files
 
-ResampleAndFlipMasks<-function(masks,outdir,HorizontalBridgingReg,flipAxis=c("X","Y","Z"),targetspec){
+ResampleAndFlipMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),targetspec){
 	flipAxis=match.arg(flipAxis)
 	if(!file.exists(outdir)) dir.create(outdir)
 	for (infile in masks){
@@ -25,7 +25,7 @@ ResampleAndFlipMasks<-function(masks,outdir,HorizontalBridgingReg,flipAxis=c("X"
 			horizontalFlipReg=WriteHorizontalFlipRegistration(resampledfile,axis=flipAxis)
 		# and flip all masks, applying the horiz bridging registration
 		ReformatImage(resampledfile,target=resampledfile,
-			registrations=c(HorizontalBridgingReg,horizontalFlipReg),
+			registrations=c(FlipBridgingReg,horizontalFlipReg),
 			filesToIgnoreModTimes=horizontalFlipReg, OverWrite='update', Verbose=T,
 			output=flippedresampledfile,reformatoptions="-v --pad-out 0 --nn",dryrun=FALSE)
 		# and OR ing those results
