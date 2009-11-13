@@ -99,7 +99,7 @@ ReformatImage<-function(floating,target,registrations,output,
 			# check modification times
 			filesToCheck=setdiff(allinputs,filesToIgnoreModTimes)
 		} else if(Verbose) cat("Overwriting",output,"because OverWrite=\"yes\"\n")
-	}
+	} else OverWrite="yes" # just for the purpose of the runtime checks below 
 		
 	cmd=paste(shQuote(reformatxPath), reformatoptions,
 		"-o",shQuote(output),"--floating",shQuote(floating),targetspec,
