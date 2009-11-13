@@ -33,3 +33,90 @@ ResampleAndFlipMasks<-function(masks,outdir,HorizontalBridgingReg,flipAxis=c("X"
 	}
 	unlink(horizontalFlipReg)
 }
+
+ReformatImage<-function(floating,target,registrations,output, 
+	dryrun=FALSE, Verbose=TRUE, MakeLock=TRUE, OverWrite=c("no","update","yes"),
+	filesToIgnoreModTimes=NULL,
+	reformatxPath="/usr/local/bin/reformatx",reformatoptions="-v --pad-out 0",...){
+		# TODO improve default ouput file name
+	if(missing(output)){
+		output=file.path(dirname(floating),paste(basename(target),"-",basename(floating),'.nrrd',sep=""))
+	} else if(isTRUE(file.info(output)$isdir)){
+		output=file.path(output,paste(basename(target),"-",basename(floating),'.nrrd',sep=""))
+	}
+	if(is.logical(OverWrite)) OverWrite=ifelse(OverWrite,"yes","no")
+	else OverWrite=match.arg(OverWrite)
+	
+	allinputs=c(floating,registrations)
+	if(is.character(target)){
+		allinputs=c(allinputs,target)
+		target=shQuote(target)
+	} else if(is.vector(target)){
+		# specify a target range c(Nx,Ny,Nz,dX,dY,dZ,[Ox,Oy,Oz])
+		if(length(target)==9) {
+			target=paste("--target-grid",
+				paste(paste(target[1:3],collapse=","),paste(target[4:6],collapse=","),
+				paste(target[7:9],collapse=","),sep=":"))
+		} else if(length(target)==6) {
+			target=paste("--target-grid",
+				paste(paste(target[1:3],collapse=","),paste(target[4:6],collapse=","),sep=":"))
+		} else stop("Incorrect target specification: ",target)
+	} else {
+		# can also give a density object
+		# --target-grid
+		#           Define target grid for reformating as Nx,Ny,Nz:dX,dY,dZ[:Ox,Oy,Oz]
+		#           (dims:pixel:origin)
+		# TODO: Double check definition of origin
+		dims=dim(target)
+		bb=getBoundingBox(target)
+		vd=voxdim.gjdens(target)
+		target=paste("--target-grid",shQuote(
+			paste(paste(dims,collapse=","),paste(vd,collapse=","),paste(bb[c(1,3,5)],collapse=","),sep=":")
+			))
+		
+	}
+	inputsExist=file.exists(allinputs)
+	if(!all(inputsExist)){
+		cat("Missing input files",basename(allinputs)[!inputsExist],"\n")
+		return(FALSE)
+	}
+	if( file.exists(output) ){
+		# output exists
+		if(OverWrite=="no"){
+			if(Verbose) cat("Output",output,"already exists; use OverWrite=\"yes\"\n")
+			return(FALSE)
+		} else if(OverWrite=="update"){
+			# check modification times
+			filesToCheck=setdiff(allinputs,filesToIgnoreModTimes)
+		} else if(Verbose) cat("Overwriting",output,"because OverWrite=\"yes\"\n")
+	}
+		
+	cmd=paste(shQuote(reformatxPath), reformatoptions,
+		"-o",shQuote(output),"--floating",shQuote(floating),target,
+		paste(shQuote(registrations),collapse=" "))
+	lockfile=paste(output,".lock",sep="")
+	PrintCommand<-FALSE
+	if(dryrun) PrintCommand<-TRUE
+	if(!dryrun) {
+		if(!MakeLock) system(cmd,...)
+		else if(makelock(lockfile)){
+			if(OverWrite=="update")
+				PrintCommand<-RunCmdForNewerInput(cmd,filesToCheck,output,Verbose=Verbose,...)
+			else {
+				PrintCommand<-TRUE;system(cmd,...)
+			}
+			removelock(lockfile)
+		} else if(Verbose) cat("Unable to make lockfile:",lockfile,"\n")
+	}
+	if(PrintCommand) cat("cmd:\n",cmd,"\n") 
+	return(TRUE)
+}
+
+WriteIdentityRegistration<-function(regfolder=file.path(tempdir(),"identityreg.list"),...){
+	ireg=structure(c(0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0), 
+		.Dim = c(5L, 3L), .Dimnames = list(c("xlate", "rotate", "scale", "shear", "center"),
+		 c("X", "Y", "Z")))
+	WriteIGSRegistrationFolder(ireg,regfolder)
+	return(regfolder)
+}
+
