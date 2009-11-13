@@ -112,6 +112,28 @@ ReformatImage<-function(floating,target,registrations,output,
 	return(TRUE)
 }
 
+WriteFlipRegistration<-function(examplenrrd=nrrdfile,
+	regfolder=file.path(tempdir(),"hflip.list"),axis=c("X","Y","Z"),...){
+	axis=match.arg(axis)
+	h=ReadNrrdHeader(examplenrrd)
+	if(any(names(h)=='space directions'))
+	voxdims=sqrt(rowSums(h[['space directions']]^2))
+	else voxdims=h$spacings
+	boundingBox=voxdims * (h$sizes - 1)
+	if(length(boundingBox)!=3 || any(is.na(boundingBox)))
+		stop("Unable to extract sensible bounding box")
+	names(boundingBox)=c("X","Y","Z")
+
+	hflipreg=structure(c(0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0), 
+	.Dim = c(5L, 3L), .Dimnames = list(c("xlate", "rotate", "scale", "shear", "center"),
+	 c("X", "Y", "Z")))
+	hflipreg['scale',axis]=-1
+	hflipreg['xlate',axis]=boundingBox[axis]
+
+	WriteIGSRegistrationFolder(hflipreg,regfolder)
+	return(regfolder)
+}
+
 WriteIdentityRegistration<-function(regfolder=file.path(tempdir(),"identityreg.list"),...){
 	ireg=structure(c(0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0), 
 		.Dim = c(5L, 3L), .Dimnames = list(c("xlate", "rotate", "scale", "shear", "center"),
