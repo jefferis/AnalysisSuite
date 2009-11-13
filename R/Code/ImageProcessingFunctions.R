@@ -34,22 +34,12 @@ ResampleAndFlipMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","
 	unlink(horizontalFlipReg)
 }
 
-ReformatImage<-function(floating,target,registrations,output, 
-	dryrun=FALSE, Verbose=TRUE, MakeLock=TRUE, OverWrite=c("no","update","yes"),
-	filesToIgnoreModTimes=NULL,
-	reformatxPath="/usr/local/bin/reformatx",reformatoptions="-v --pad-out 0",...){
-		# TODO improve default ouput file name
-	if(missing(output)){
-		output=file.path(dirname(floating),paste(basename(target),"-",basename(floating),'.nrrd',sep=""))
-	} else if(isTRUE(file.info(output)$isdir)){
-		output=file.path(output,paste(basename(target),"-",basename(floating),'.nrrd',sep=""))
-	}
-	if(is.logical(OverWrite)) OverWrite=ifelse(OverWrite,"yes","no")
-	else OverWrite=match.arg(OverWrite)
-	
-	allinputs=c(floating,registrations)
+.makeReformatxTargetSpecification<-function(target){
+	# a little function to make a target volume specification that 
+	# CMTK's reformatx can understand
 	if(is.character(target)){
-		allinputs=c(allinputs,target)
+		# assume this is a file
+		# TODO: Intercept Amiramesh files and extract bounding box
 		target=shQuote(target)
 	} else if(is.vector(target)){
 		# specify a target range c(Nx,Ny,Nz,dX,dY,dZ,[Ox,Oy,Oz])
@@ -73,8 +63,28 @@ ReformatImage<-function(floating,target,registrations,output,
 		target=paste("--target-grid",shQuote(
 			paste(paste(dims,collapse=","),paste(vd,collapse=","),paste(bb[c(1,3,5)],collapse=","),sep=":")
 			))
-		
 	}
+	target
+}
+
+ReformatImage<-function(floating,target,registrations,output, 
+	dryrun=FALSE, Verbose=TRUE, MakeLock=TRUE, OverWrite=c("no","update","yes"),
+	filesToIgnoreModTimes=NULL,
+	reformatxPath="/usr/local/bin/reformatx",reformatoptions="-v --pad-out 0",...){
+		# TODO improve default ouput file name
+	if(missing(output)){
+		output=file.path(dirname(floating),paste(basename(target),"-",basename(floating),'.nrrd',sep=""))
+	} else if(isTRUE(file.info(output)$isdir)){
+		output=file.path(output,paste(basename(target),"-",basename(floating),'.nrrd',sep=""))
+	}
+	if(is.logical(OverWrite)) OverWrite=ifelse(OverWrite,"yes","no")
+	else OverWrite=match.arg(OverWrite)
+	
+	target=.makeReformatxTargetSpecification(target)
+	allinputs=c(floating,registrations)
+	# if the target was a plain file add it to the inputs
+	if(substring(target,1,2)!="--") allinputs=c(allinputs,target)
+	
 	inputsExist=file.exists(allinputs)
 	if(!all(inputsExist)){
 		cat("Missing input files",basename(allinputs)[!inputsExist],"\n")
