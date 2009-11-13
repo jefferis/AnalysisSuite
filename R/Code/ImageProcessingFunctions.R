@@ -80,10 +80,10 @@ ReformatImage<-function(floating,target,registrations,output,
 	if(is.logical(OverWrite)) OverWrite=ifelse(OverWrite,"yes","no")
 	else OverWrite=match.arg(OverWrite)
 	
-	target=.makeReformatxTargetSpecification(target)
+	targetspec=.makeReformatxTargetSpecification(target)
 	allinputs=c(floating,registrations)
 	# if the target was a plain file add it to the inputs
-	if(substring(target,1,2)!="--") allinputs=c(allinputs,target)
+	if(substring(targetspec,1,2)!="--") allinputs=c(allinputs,target)
 	
 	inputsExist=file.exists(allinputs)
 	if(!all(inputsExist)){
@@ -102,7 +102,7 @@ ReformatImage<-function(floating,target,registrations,output,
 	}
 		
 	cmd=paste(shQuote(reformatxPath), reformatoptions,
-		"-o",shQuote(output),"--floating",shQuote(floating),target,
+		"-o",shQuote(output),"--floating",shQuote(floating),targetspec,
 		paste(shQuote(registrations),collapse=" "))
 	lockfile=paste(output,".lock",sep="")
 	PrintCommand<-FALSE
