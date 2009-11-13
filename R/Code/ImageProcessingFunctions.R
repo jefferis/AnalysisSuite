@@ -22,7 +22,7 @@ ResampleAndFlipMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","
 
 		# make flipping registration
 		if(!exists("horizontalFlipReg") || !file.exists(horizontalFlipReg))
-			horizontalFlipReg=WriteHorizontalFlipRegistration(resampledfile,axis=flipAxis)
+			horizontalFlipReg=WriteFlipRegistration(resampledfile,axis=flipAxis)
 		# and flip all masks, applying the horiz bridging registration
 		ReformatImage(resampledfile,target=resampledfile,
 			registrations=c(FlipBridgingReg,horizontalFlipReg),
