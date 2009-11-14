@@ -57,7 +57,7 @@ $this proc compute { } {
 	if { [ $this Action isNew  ] && [$this Action getValue]==0 } {
 		$this makeFileListFromDir
 		$this loadFiles
-		$this updateNumObjects
+		# $this updateNumObjects
 	}
 	if { [ $this Action isNew  ] && [$this Action getValue]==2} {
 		#$this myupdate
