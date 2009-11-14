@@ -66,7 +66,7 @@ $this proc compute { } {
 		} elseif {[ $this Action getLabel 3]=="HideAll" } {
 			$this showLineViews 0
 		}
-		$this updateNumDisplayedObjects
+		# $this updateNumDisplayedObjects
 	}
 	if { [ $this Action isNew  ] && [$this Action getValue]==4} {
 		if { [ $this Action getLabel 4]=="ShowIcons" } {
@@ -76,7 +76,7 @@ $this proc compute { } {
 		}
 	}
 	if { [ $this ScoreThreshold isNew ] } {
-		$this updateLafObjectsThreshold
+		# $this updateLafObjectsThreshold
 		$this updateNumDisplayedObjects
 	}
 	if { [ $this red isNew ] || [ $this green isNew ] || [ $this blue isNew ] || [ $this width isNew ]} {
@@ -90,7 +90,7 @@ $this proc compute { } {
 			if {[exists $obj]} {
 				#echo "obj $obj exists"
 				if {[ $this $glomTog isNew ]} {
-					$obj showLineViews [$this $glomTog getValue $i]
+					# $obj showLineViews [$this $glomTog getValue $i]
 				}
 				if {[$this $glomTog getValue $i]} {
 					lappend glomActive [$this $glomTog getLabel $i]
@@ -138,14 +138,14 @@ $this proc updateNumDisplayedObjects {} {
 
 
 
-$this proc updateLafObjectsThreshold {} {
-	foreach glom [$this getVar glomActive] {
-		if {[exists $glom]} {
-			$glom ScoreThreshold setValue [$this ScoreThreshold getValue]
-			$glom fire
-		}
-	} 
-}
+# $this proc updateLafObjectsThreshold {} {
+# 	foreach glom [$this getVar glomActive] {
+# 		if {[exists $glom]} {
+# 			$glom ScoreThreshold setValue [$this ScoreThreshold getValue]
+# 			$glom fire
+# 		}
+# 	} 
+# }
 
 $this proc updateLafObjectsColor {} {
 	foreach glom [$this getVar glomActive] {
@@ -157,7 +157,7 @@ $this proc updateLafObjectsColor {} {
 			#if{[$this blue isNew]} 
 			$glom blue setValue [$this blue getValue]
 			#if{[$this width isNew]} 
-			$glom width setValue [$this width getValue]
+			# $glom width setValue [$this width getValue]
 			$glom fire
 		}
 	} 
@@ -197,23 +197,34 @@ $this proc loadFiles {} {
 	#echo $fileList
 	foreach file $fileList {
 		if {[file size $file] > 0} {
-			set newModule [load [$this getVar lafScriptFile]]
-			# set the correct file list name for the new object
-			$newModule fileListName setValue $file
-			# tell the new module to load in the file list
-			$newModule Action setValue 4
-			$newModule width setValue [$this width getValue]
-			$newModule ScoreThreshold setValue [$this ScoreThreshold getValue]
-			$newModule fire
-			
-			#$newModule hideIcon
 			set splitFile [file split $file]
 			set justfilename [lindex $splitFile [expr [llength $splitFile]-1]]
+			if { [file isfile $file] == 0 } { continue }
+			set newModule [load $file]
+			# set the correct file list name for the new object
+			# $newModule fileListName setValue $file
+			# tell the new module to load in the file list
+			
+			# $newModule Action setValue 4
+			# $newModule width setValue [$this width getValue]
+			# $newModule ScoreThreshold setValue [$this ScoreThreshold getValue]
 			set glom [lindex [split $justfilename _] 0]
 			$newModule setLabel $glom
+			$newModule fire
+			
+			set lineView [create HxVoltex]
+			$lineView data connect $newModule
+			Voltex range setValue 0 15
+			Voltex range setValue 0 255
+			$lineView colormap setDefaultColor [$this red getValue] [$this green getValue] [$this blue getValue]
+			$lineView colormap setDefaultAlpha 0.500000
+			$lineView setLabel "$justfilename.lv"
+			$lineView fire
+			
+			#$newModule hideIcon
 			lappend lafObjectList $glom
-			lappend widths [$this width getValue]
-			lappend thresholds [$this ScoreThreshold getValue]
+			# lappend widths [$this width getValue]
+			# lappend thresholds [$this ScoreThreshold getValue]
 		}
 	}
 	#set hideNewModules 0
