@@ -215,11 +215,23 @@ $this proc loadFiles {} {
 			
 			set lineView [create HxVoltex]
 			$lineView data connect $newModule
+			# this removes the volume rendering type colour map (which is always attached)
+			$lineView colormap disconnect
+			$lineView doIt hit
+			$lineView fire
+			# this sets the constant colour settings (in the absence of attached colormap)
 			Voltex range setValue 0 15
 			Voltex range setValue 1 255
 			$lineView colormap setDefaultColor [$this red getValue] [$this green getValue] [$this blue getValue]
 			$lineView colormap setDefaultAlpha 0.500000
+			# his is required to update the Voltex
+			$lineView doIt hit
 			$lineView fire
+			$lineView slices setValue 256
+			$lineView colormap disconnect
+			$lineView doIt hit
+			$lineView fire
+			
 			$newModule setLabel $glom
 			$lineView setLabel "$glom.lv"
 			
