@@ -208,18 +208,18 @@ $this proc loadFiles {} {
 			# $newModule Action setValue 4
 			# $newModule width setValue [$this width getValue]
 			# $newModule ScoreThreshold setValue [$this ScoreThreshold getValue]
-			set glom [lindex [split $justfilename _] 0]
-			$newModule setLabel $glom
+			set glom [lindex [split $justfilename .] 0]
 			$newModule fire
 			
 			set lineView [create HxVoltex]
 			$lineView data connect $newModule
 			Voltex range setValue 0 15
-			Voltex range setValue 0 255
+			Voltex range setValue 1 255
 			$lineView colormap setDefaultColor [$this red getValue] [$this green getValue] [$this blue getValue]
 			$lineView colormap setDefaultAlpha 0.500000
-			$lineView setLabel "$justfilename.lv"
 			$lineView fire
+			$newModule setLabel $glom
+			$lineView setLabel "$glom.lv"
 			
 			#$newModule hideIcon
 			lappend lafObjectList $glom
