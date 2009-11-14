@@ -44,8 +44,8 @@ $this proc constructor { } {
 	$this setVar thresholds ""
 	$this setVar widths ""
 	
-	$this newPortInfo numDisplayedObjects
-	$this updateNumDisplayedObjects
+	$this newPortInfo numObjects
+	$this updateNumObjects
 
 	# Now define this based on script location - much cleaner
 	$this setVar lafScriptFile ${myScriptDir}/loadAllFile.scro
@@ -57,7 +57,7 @@ $this proc compute { } {
 	if { [ $this Action isNew  ] && [$this Action getValue]==0 } {
 		$this makeFileListFromDir
 		$this loadFiles
-		$this updateNumDisplayedObjects
+		$this updateNumObjects
 	}
 	if { [ $this Action isNew  ] && [$this Action getValue]==2} {
 		#$this myupdate
@@ -68,7 +68,7 @@ $this proc compute { } {
 		} elseif {[ $this Action getLabel 3]=="HideAll" } {
 			$this showLineViews 0
 		}
-		# $this updateNumDisplayedObjects
+		# $this updateNumObjects
 	}
 	if { [ $this Action isNew  ] && [$this Action getValue]==4} {
 		if { [ $this Action getLabel 4]=="ShowIcons" } {
@@ -79,7 +79,7 @@ $this proc compute { } {
 	}
 	if { [ $this ScoreThreshold isNew ] } {
 		# $this updateLafObjectsThreshold
-		$this updateNumDisplayedObjects
+		$this updateNumObjects
 	}
 	if { [ $this red isNew ] || [ $this green isNew ] || [ $this blue isNew ] || [ $this width isNew ]} {
 		$this updateLafObjectsColor
@@ -128,14 +128,14 @@ $this proc showLineViews {mask} {
 	if {$mask == 1} { $this Action setLabel 3 HideAll}
 }
 
-$this proc updateNumDisplayedObjects {} {
-	set numDisplayedObjects 0
+$this proc updateNumObjects {} {
+	set numObjects 0
 	foreach lafObject [$this getVar lafObjectList] {
 		if {[exists $lafObject]} {
-			set numDisplayedObjects [expr $numDisplayedObjects + 1]
+			set numObjects [expr $numObjects + 1]
 		}
 	}
-	$this setVar numDisplayedObjects $numDisplayedObjects
+	$this setVar numObjects $numObjects
 }	
 
 
