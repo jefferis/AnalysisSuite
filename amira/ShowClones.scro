@@ -250,18 +250,18 @@ $this proc loadFiles {} {
 	}
 	#set hideNewModules 0
 	$this setVar lafObjectList $lafObjectList
-	$this makeGlomeruliToggles
+	$this makeCloneToggles
 }
 
-$this proc makeGlomeruliToggles {} {
+$this proc makeCloneToggles {} {
 	set lafObjectList [$this getVar lafObjectList]
 	for {set i 0} {$i<[llength $lafObjectList]} { set i [expr $i + 6]} {
 		set j [expr $i / 6]
-		$this newPortToggleList "Glomeruli$j" 6
-		lappend glomTogList "Glomeruli$j"
+		$this newPortToggleList "Clone$j" 6
+		lappend glomTogList "Clone$j"
 		for {set k 0} {[expr $k + $i] < [llength $lafObjectList]} { incr k} {
-			$this "Glomeruli$j" setLabel $k [lindex $lafObjectList [expr $k + $i]] 
-			$this "Glomeruli$j" setValue $k 1
+			$this "Clone$j" setLabel $k [lindex $lafObjectList [expr $k + $i]] 
+			$this "Clone$j" setValue $k 1
 		}
 	}		
 	$this setVar glomTogList $glomTogList
