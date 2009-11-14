@@ -132,7 +132,7 @@ $this proc updateNumDisplayedObjects {} {
 	set numDisplayedObjects 0
 	foreach lafObject [$this getVar lafObjectList] {
 		if {[exists $lafObject]} {
-			set numDisplayedObjects [expr $numDisplayedObjects + [$lafObject numDisplayedObjects getValue]]
+			set numDisplayedObjects [expr $numDisplayedObjects + 1]
 		}
 	}
 	$this setVar numDisplayedObjects $numDisplayedObjects
