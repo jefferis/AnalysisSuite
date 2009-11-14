@@ -1,5 +1,23 @@
 # Amira-Script-Object V3.0
-# Master script object to load subsidiry loadAllFiles objects
+# Master script object to load density files (amiramesh) for different clones
+
+# To use this:
+# 1) Prepare a directory containing density files for the clones
+#    Give them short names (eg aSP3g_F.am)
+#    and make sure they all have the same suffix
+# 2) Load in a copy of the script which makes a little object
+# 3) Specify a filename - one of the density files in your directory
+# 4) Click LoadAll
+# 5) HideAll/ShowAll will show hide the volume renderings
+# 6) You can also use the checkboxes
+# 7) You can use the setCloneColour function in the TCL window 
+#    e.g. ShowClones.scro setCloneColour "aSP3-c_F" 0 1 0.843137254901961
+# 8) you can put a bunch of these commands into a tcl script (name ends in .hx)
+#    See: setCloneColourExampleScript.hx for an example
+# 9) You can also use R to set colours, see RainbowColourCloneScript() in FruMARCMCode
+#    R can even do the equivalent of dragging and dropping the script onto Amira 
+#    for you by system(paste("open",hxscriptfilename))
+
 # For some reason I have to make a copy of this variable
 set myScriptDir ${SCRIPTDIR}
 
