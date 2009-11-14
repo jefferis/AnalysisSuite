@@ -233,7 +233,7 @@ $this proc loadFiles {} {
 			# $newModule setLabel $glom
 			$lineView setLabel "$glom"
 			
-			#$newModule hideIcon
+			$newModule hideIcon
 			lappend lafObjectList $glom
 			# lappend widths [$this width getValue]
 			# lappend thresholds [$this ScoreThreshold getValue]
