@@ -92,7 +92,7 @@ $this proc compute { } {
 			if {[exists $obj]} {
 				#echo "obj $obj exists"
 				if {[ $this $glomTog isNew ]} {
-					# $obj showLineViews [$this $glomTog getValue $i]
+					$obj setViewerMask [$this $glomTog getValue $i]
 				}
 				if {[$this $glomTog getValue $i]} {
 					lappend glomActive [$this $glomTog getLabel $i]
