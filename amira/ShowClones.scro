@@ -230,8 +230,8 @@ $this proc loadFiles {} {
 			$lineView doIt hit
 			$lineView fire
 			
-			$newModule setLabel $glom
-			$lineView setLabel "$glom.lv"
+			# $newModule setLabel $glom
+			$lineView setLabel "$glom"
 			
 			#$newModule hideIcon
 			lappend lafObjectList $glom
