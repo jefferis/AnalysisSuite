@@ -157,6 +157,8 @@ $this proc updateLafObjectsColor {} {
 			$glom fire
 			
 			$glom colormap disconnect
+			$glom range setValue 1 254
+			$glom range setValue 1 255
 			$glom colormap setDefaultColor [$this red getValue] [$this green getValue] [$this blue getValue]
 			$glom colormap setDefaultAlpha 0.500000
 			$glom doIt hit
