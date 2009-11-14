@@ -222,8 +222,8 @@ $this proc loadFiles {} {
 			# this sets the constant colour settings (in the absence of attached colormap)
 			$lineView colormap disconnect
 			$lineView slices setValue 256
-			Voltex range setValue 0 15
-			Voltex range setValue 1 255
+			$lineView range setValue 0 15
+			$lineView range setValue 1 255
 			$lineView colormap setDefaultColor [$this red getValue] [$this green getValue] [$this blue getValue]
 			$lineView colormap setDefaultAlpha 0.500000
 			# this is required to update the Voltex
