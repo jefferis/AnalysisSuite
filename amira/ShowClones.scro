@@ -206,6 +206,12 @@ $this proc setCloneColour { clone r g b } {
 	}
 }
 
+$this proc showClone { clone mask } {
+	if {[exists $clone]} {
+		$clone setViewerMask $mask
+	}
+}
+
 $this proc showIcons {mask} {
 }
 
