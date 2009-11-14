@@ -26,26 +26,26 @@ $this proc constructor { } {
 	$this newPortFloatSlider blue
 	$this blue setMinMax 0 1
 	
-	$this newPortFloatSlider width
-	$this width setMinMax 0 2.5
-	$this width setValue 1
+	# $this newPortFloatSlider width
+	# $this width setMinMax 0 2.5
+	# $this width setValue 1
+	# 
+	# $this newPortIntSlider ScoreThreshold
+	# $this ScoreThreshold setMinMax 0 4
+	# $this ScoreThreshold setValue 4
 	
-	$this newPortIntSlider ScoreThreshold
-	$this ScoreThreshold setMinMax 0 4
-	$this ScoreThreshold setValue 4
-	
-	$this newPortInfo dirName
+	$this setVar dirName ""
 	
 	$this setVar lafObjectList ""
 	$this setVar fileList ""
 	$this setVar glomTogList ""
 	$this setVar glomActive ""
 
-	$this setVar thresholds ""
-	$this setVar widths ""
+	# $this setVar thresholds ""
+	# $this setVar widths ""
 	
-	$this newPortInfo numObjects
-	$this updateNumObjects
+	# $this newPortInfo numObjects
+	# $this updateNumObjects
 
 	# Now define this based on script location - much cleaner
 	$this setVar lafScriptFile ${myScriptDir}/loadAllFile.scro
@@ -77,11 +77,11 @@ $this proc compute { } {
 			$this showIcons 0
 		}
 	}
-	if { [ $this ScoreThreshold isNew ] } {
-		# $this updateLafObjectsThreshold
-		$this updateNumObjects
-	}
-	if { [ $this red isNew ] || [ $this green isNew ] || [ $this blue isNew ] || [ $this width isNew ]} {
+	# if { [ $this ScoreThreshold isNew ] } {
+	# 	# $this updateLafObjectsThreshold
+	# 	$this updateNumObjects
+	# }
+	if { [ $this red isNew ] || [ $this green isNew ] || [ $this blue isNew ] } {
 		$this updateLafObjectsColor
 	}
 	set glomActive ""
@@ -128,15 +128,15 @@ $this proc showLineViews {mask} {
 	if {$mask == 1} { $this Action setLabel 3 HideAll}
 }
 
-$this proc updateNumObjects {} {
-	set numObjects 0
-	foreach lafObject [$this getVar lafObjectList] {
-		if {[exists $lafObject]} {
-			set numObjects [expr $numObjects + 1]
-		}
-	}
-	$this setVar numObjects $numObjects
-}	
+# $this proc updateNumObjects {} {
+# 	set numObjects 0
+# 	foreach lafObject [$this getVar lafObjectList] {
+# 		if {[exists $lafObject]} {
+# 			set numObjects [expr $numObjects + 1]
+# 		}
+# 	}
+# 	$this setVar numObjects $numObjects
+# }	
 
 
 
@@ -178,7 +178,7 @@ $this proc removeAll {} {
 			$glom removeAll
 			$glom green setValue [$this green getValue]
 			$glom blue setValue [$this blue getValue]
-			$glom width setValue [$this width getValue]
+			# $glom width setValue [$this width getValue]
 			$glom fire
 		}
 	} 
@@ -189,14 +189,14 @@ $this proc makeFileListFromDir {} {
 	set fileList [glob [file dirname $filename]/*[file extension $filename]]
 	# set the instance variable fileList to the value of the local fileList
 	$this setVar fileList $fileList
-	$this dirName setValue [file dirname $filename]
+	$this setVar dirName [file dirname $filename]
 }
 
 $this proc loadFiles {} {
 	set fileList [$this getVar fileList]	
 	set lafObjectList [$this getVar lafObjectList]
-	set thresholds [$this getVar thresholds]
-	set widths [$this getVar widths]
+	# set thresholds [$this getVar thresholds]
+	# set widths [$this getVar widths]
 	
 	set xstart [lindex [$this getIconPosition] 0]
 	set ystart [lindex [$this getIconPosition] 1]
