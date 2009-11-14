@@ -1,4 +1,7 @@
 # Amira Script
+# Drop me onto Amira, or use
+# open script.hx
+# from the command line
 ShowClones.scro setCloneColour "AL-d_F" 1 0 0
 ShowClones.scro setCloneColour "AL-d_M" 1 0.317647058823529 0
 ShowClones.scro setCloneColour "AL-j_F" 1 0.631372549019608 0

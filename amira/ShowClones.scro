@@ -17,6 +17,11 @@
 # 9) You can also use R to set colours, see RainbowColourCloneScript() in FruMARCMCode
 #    R can even do the equivalent of dragging and dropping the script onto Amira 
 #    for you by system(paste("open",hxscriptfilename))
+# 10) You can have multiple script objects referring to multiple directories if you want
+#     so long as none of the density files have the same name
+# 11) You may want to change the name of each script object if you have more than 1 eg
+#     ShowClones.scro setLabel "Dimorphic"
+#     ShowClones2.scro setLabel "Regular"
 
 # For some reason I have to make a copy of this variable
 set myScriptDir ${SCRIPTDIR}
