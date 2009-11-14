@@ -167,6 +167,21 @@ $this proc updateLafObjectsColor {} {
 	} 
 }
 
+$this proc setCloneColour { clone r g b } {
+	if {[exists $clone]} {
+		$clone colormap disconnect
+		$clone doIt hit
+		$clone fire
+		
+		$clone colormap disconnect
+		$clone range setValue 1 254
+		$clone range setValue 1 255
+		$clone colormap setDefaultColor $r $g $b
+		$clone colormap setDefaultAlpha 0.500000
+		$clone doIt hit
+		$clone fire
+	}
+}
 
 $this proc showIcons {mask} {
 }
