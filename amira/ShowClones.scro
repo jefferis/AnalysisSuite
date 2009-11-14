@@ -198,6 +198,9 @@ $this proc loadFiles {} {
 	set thresholds [$this getVar thresholds]
 	set widths [$this getVar widths]
 	
+	set xstart [lindex [$this getIconPosition] 0]
+	set ystart [lindex [$this getIconPosition] 1]
+	
 	#echo $fileList
 	foreach file $fileList {
 		if {[file size $file] > 0} {
@@ -213,9 +216,13 @@ $this proc loadFiles {} {
 			# $newModule width setValue [$this width getValue]
 			# $newModule ScoreThreshold setValue [$this ScoreThreshold getValue]
 			set glom [lindex [split $justfilename .] 0]
+			set ypos [expr $ystart + [expr [llength $lafObjectList] * 20 ] + 20]
+			
+			$newModule setIconPosition [expr $xstart + 50 ] $ypos
 			$newModule fire
 			
 			set lineView [create HxVoltex]
+			$lineView setIconPosition [expr $xstart] $ypos
 			$lineView data connect $newModule
 			# this removes the volume rendering type colour map (which is always attached)
 			$lineView colormap disconnect
