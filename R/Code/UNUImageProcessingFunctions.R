@@ -2,18 +2,19 @@
 # unu = Utah Nrrd Utilities - ie they operate on nrrd files
 # See http://teem.sourceforge.net/unrrdu/index.html
  
-Nrrd2op<-function(infiles,outfile,unu2opfun=c("max","min","+", "-", "x", "/"),CreateDirs=TRUE,Verbose=TRUE,Force=FALSE){
+Nrrd2op<-function(infiles,outfile,fun=c("max","min","+", "-", "x", "/"),
+	gzip=FALSE,CreateDirs=TRUE,Verbose=TRUE,Force=FALSE){
 	if(length(infiles)<1) return(NULL)
 	# Do nothing if inputs are older than output unless Force=T
 	if(!Force && !RunCmdForNewerInput(NULL,infiles,outfile)) return (NULL)
 	if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile))
-	unu2opfun=match.arg(unu2opfun)
+	fun=match.arg(fun)
 	
 	# 1 input: f1 -> output
 	if(length(infiles)==1) file.copy(infiles[1],outfile)
 	else if(length(infiles)>1) {
 		# 2 or more inputs: f1 x f2 -> output
-		cmd=paste("unu 2op",unu2opfun,
+		cmd=paste("unu 2op",fun,
 			shQuote(infiles[1]),shQuote(infiles[2]),"-o",shQuote(outfile))
 		system(cmd)
 		if(Verbose) cat(".")
@@ -21,12 +22,14 @@ Nrrd2op<-function(infiles,outfile,unu2opfun=c("max","min","+", "-", "x", "/"),Cr
 	# 3 or more inputs: f3 ... x output -> output
 	if(length(infiles)>2) {
 		for (f in infiles[-(1:2)]){
-			cmd=paste("unu 2op",unu2opfun,
+			cmd=paste("unu 2op",fun,
 				shQuote(f),shQuote(outfile),"-o",shQuote(outfile))
 			system(cmd)
 			if(Verbose) cat(".")
 		}		
 	}
+	if(length(infiles)>1 && gzip)
+		system(paste("unu save --format nrrd --encoding gzip","-i",shQuote(outfile),"-o",shQuote(outfile)))
 	return(length(infiles))
 }
 
