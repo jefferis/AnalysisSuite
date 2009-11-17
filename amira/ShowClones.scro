@@ -40,7 +40,7 @@ $this proc constructor { } {
 	$this Action setLabel 1 Remove
 	$this Action setLabel 2 Update
 	$this Action setLabel 3 HideAll
-	$this Action setLabel 4 ShowIcons
+	$this Action setLabel 4 Male
 	
 	$this newPortFloatSlider red
 	$this red setMinMax 0 1
@@ -94,10 +94,12 @@ $this proc compute { } {
 		# $this updateNumObjects
 	}
 	if { [ $this Action isNew  ] && [$this Action getValue]==4} {
-		if { [ $this Action getLabel 4]=="ShowIcons" } {
-			$this showIcons 1
-		} elseif {[ $this Action getLabel 4]=="HideIcons" } {
-			$this showIcons 0
+		if { [ $this Action getLabel 4]=="Male" } {
+			$this showMale 1
+			$this Action setLabel 4 Female
+		} elseif {[ $this Action getLabel 4]=="Female" } {
+			$this showMale 0
+			$this Action setLabel 4 Male
 		}
 	}
 	# if { [ $this ScoreThreshold isNew ] } {
@@ -107,24 +109,26 @@ $this proc compute { } {
 	if { [ $this red isNew ] || [ $this green isNew ] || [ $this blue isNew ] } {
 		$this updateLafObjectsColor
 	}
-	set glomActive ""
-	foreach glomTog [$this getVar glomTogList] {
-		for {set i 0} {$i < 6} {incr i} {
-			set obj [$this $glomTog getLabel $i]
-			#echo "checking obj $obj"
-			if {[exists $obj]} {
-				#echo "obj $obj exists"
-				if {[ $this $glomTog isNew ]} {
-					$obj setViewerMask [$this $glomTog getValue $i]
-				}
-				if {[$this $glomTog getValue $i]} {
-					lappend glomActive [$this $glomTog getLabel $i]
-					#echo [concat "added " [$this $glomTog getLabel $i]]
+	if {[$this Action getValue] != 4} {
+		set glomActive ""
+		foreach glomTog [$this getVar glomTogList] {
+			for {set i 0} {$i < 6} {incr i} {
+				set obj [$this $glomTog getLabel $i]
+				#echo "checking obj $obj"
+				if {[exists $obj]} {
+					#echo "obj $obj exists"
+					if {[ $this $glomTog isNew ]} {
+						$obj setViewerMask [$this $glomTog getValue $i]
+					}
+					if {[$this $glomTog getValue $i]} {
+						lappend glomActive [$this $glomTog getLabel $i]
+						#echo [concat "added " [$this $glomTog getLabel $i]]
+					}
 				}
 			}
-		}
-	} 
-	$this setVar glomActive $glomActive
+		} 
+		$this setVar glomActive $glomActive		
+	}
 	# echo $glomActive
 	# uncomment to turn on continuous update
 	# $this myupdate
@@ -212,7 +216,57 @@ $this proc showClone { clone mask } {
 	}
 }
 
-$this proc showIcons {mask} {
+
+$this proc updateTogglesFromList {glomActive} {
+	foreach glomTog [$this getVar glomTogList] {
+		for {set i 0} {$i < 6} {incr i} {
+			set obj [$this $glomTog getLabel $i]
+			if {[exists $obj]} {
+				if {[lsearch -exact $glomActive $obj] > -1} {
+					echo "found $obj, turning it on"
+					$obj setViewerMask 1
+					$this $glomTog setValue $i 1
+				} else {
+					echo "Didn't find $obj, turning it off"
+					$obj setViewerMask 0
+					$this $glomTog setValue $i 0
+				}
+			}
+		}
+	}	
+}
+
+$this proc showMale {mask} {
+	# mask = 1 for male, 0 for female
+	set glomActive ""
+	foreach clone [$this getVar glomActive] {
+		if {[exists $clone]} {
+			set cloneToAdd $clone
+			set sex [string index $clone end]
+			echo "clone $clone exists with sex $sex"
+			if {$sex eq "M"} {
+				echo "clone $clone is male"
+				if {$mask == 0} {
+					# we want to change to the female version
+					set trimmedName [string trimright $clone "M"]
+					append trimmedName "F"
+					set cloneToAdd $trimmedName
+				}			
+			} elseif {$sex eq "F"} {
+				echo "clone $clone is female"
+				if {$mask == 1} {
+					# we want to change to the male version
+					set trimmedName [string trimright $clone "F"]
+					append trimmedName "M"
+					set cloneToAdd $trimmedName
+				}			
+			}
+			lappend glomActive $cloneToAdd
+			echo "Appending $cloneToAdd"
+		}
+	}
+	$this updateTogglesFromList $glomActive
+	$this setVar glomActive $glomActive	
 }
 
 $this proc removeAll {} {
