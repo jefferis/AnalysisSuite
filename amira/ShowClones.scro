@@ -219,18 +219,17 @@ $this proc showClone { clone mask } {
 	}
 }
 
-
 $this proc updateTogglesFromList {glomActive} {
 	foreach glomTog [$this getVar glomTogList] {
 		for {set i 0} {$i < 6} {incr i} {
 			set obj [$this $glomTog getLabel $i]
 			if {[exists $obj]} {
 				if {[lsearch -exact $glomActive $obj] > -1} {
-					echo "found $obj, turning it on"
+					# echo "found $obj, turning it on"
 					$obj setViewerMask 1
 					$this $glomTog setValue $i 1
 				} else {
-					echo "Didn't find $obj, turning it off"
+					# echo "Didn't find $obj, turning it off"
 					$obj setViewerMask 0
 					$this $glomTog setValue $i 0
 				}
@@ -246,9 +245,9 @@ $this proc showMale {mask} {
 		if {[exists $clone]} {
 			set cloneToAdd $clone
 			set sex [string index $clone end]
-			echo "clone $clone exists with sex $sex"
+			# echo "clone $clone exists with sex $sex"
 			if {$sex eq "M"} {
-				echo "clone $clone is male"
+				# echo "clone $clone is male"
 				if {$mask == 0} {
 					# we want to change to the female version
 					set trimmedName [string trimright $clone "M"]
@@ -256,7 +255,7 @@ $this proc showMale {mask} {
 					set cloneToAdd $trimmedName
 				}			
 			} elseif {$sex eq "F"} {
-				echo "clone $clone is female"
+				# echo "clone $clone is female"
 				if {$mask == 1} {
 					# we want to change to the male version
 					set trimmedName [string trimright $clone "F"]
@@ -265,7 +264,7 @@ $this proc showMale {mask} {
 				}			
 			}
 			lappend glomActive $cloneToAdd
-			echo "Appending $cloneToAdd"
+			# echo "Appending $cloneToAdd"
 		}
 	}
 	$this updateTogglesFromList $glomActive
