@@ -82,6 +82,9 @@ $this proc compute { } {
 		$this loadFiles
 		# $this updateNumObjects
 	}
+	if { [ $this Action isNew  ] && [$this Action getValue]==1} {
+		$this removeAllData
+	}
 	if { [ $this Action isNew  ] && [$this Action getValue]==2} {
 		#$this myupdate
 	}
@@ -269,17 +272,19 @@ $this proc showMale {mask} {
 	$this setVar glomActive $glomActive	
 }
 
-$this proc removeAll {} {
+$this proc removeAllData {} {
 	# remove all "loadAllFile.scro" objects and their dependent objects
 	foreach glom [$this getVar glomActive] {
 		if {[exists $glom]} {
-			$glom removeAll
-			$glom green setValue [$this green getValue]
-			$glom blue setValue [$this blue getValue]
-			# $glom width setValue [$this width getValue]
-			$glom fire
+			remove "${glom}.am"
+			remove $glom
 		}
-	} 
+	}
+	# Delete toggles and list of active clones
+	$this setVar glomActive "" 
+	foreach glomTog [$this getVar glomTogList] {
+		$this deletePort $glomTog
+	}
 }
 
 $this proc makeFileListFromDir {} {
