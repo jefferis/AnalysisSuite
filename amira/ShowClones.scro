@@ -284,6 +284,11 @@ $this proc removeAllData {} {
 	foreach glomTog [$this getVar glomTogList] {
 		$this deletePort $glomTog
 	}
+	# Clear state variables
+	$this setVar lafObjectList ""
+	$this setVar fileList ""
+	$this setVar glomTogList ""
+	$this setVar glomActive ""
 }
 
 $this proc makeFileListFromDir {} {
