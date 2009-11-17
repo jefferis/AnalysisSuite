@@ -180,20 +180,8 @@ $this proc showLineViews {mask} {
 # }
 
 $this proc updateLafObjectsColor {} {
-	foreach glom [$this getVar glomActive] {
-		if {[exists $glom]} {
-			$glom colormap disconnect
-			$glom doIt hit
-			$glom fire
-			
-			$glom colormap disconnect
-			$glom range setValue 1 254
-			$glom range setValue 1 255
-			$glom colormap setDefaultColor [$this red getValue] [$this green getValue] [$this blue getValue]
-			$glom colormap setDefaultAlpha 0.500000
-			$glom doIt hit
-			$glom fire
-		}
+	foreach clone [$this getVar glomActive] {
+		$this setCloneColour $clone [$this red getValue] [$this green getValue] [$this blue getValue]
 	} 
 }
 
