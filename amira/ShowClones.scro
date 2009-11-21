@@ -255,7 +255,7 @@ $this proc showMale {mask} {
 
 $this proc removeAllData {} {
 	# remove all "loadAllFile.scro" objects and their dependent objects
-	foreach glom [$this getVar glomActive] {
+	foreach glom [$this getVar lafObjectList] {
 		if {[exists $glom]} {
 			remove "${glom}.am"
 			remove $glom
