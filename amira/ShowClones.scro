@@ -282,7 +282,8 @@ $this proc makeFileListFromDir {} {
 }
 
 $this proc loadFiles {} {
-	set fileList [$this getVar fileList]	
+	set fileList [$this getVar fileList]
+	set filesActuallyLoaded ""
 	set lafObjectList [$this getVar lafObjectList]
 	# set thresholds [$this getVar thresholds]
 	# set widths [$this getVar widths]
@@ -296,14 +297,12 @@ $this proc loadFiles {} {
 			set splitFile [file split $file]
 			set justfilename [lindex $splitFile [expr [llength $splitFile]-1]]
 			if { [file isfile $file] == 0 } { continue }
+			if { [exists $justfilename] } { continue }
+
 			set newModule [load $file]
-			# set the correct file list name for the new object
-			# $newModule fileListName setValue $file
-			# tell the new module to load in the file list
-			
 			# $newModule Action setValue 4
-			# $newModule width setValue [$this width getValue]
-			# $newModule ScoreThreshold setValue [$this ScoreThreshold getValue]
+			lappend filesActuallyLoaded newModule
+
 			set glom [lindex [split $justfilename .] 0]
 			set ypos [expr $ystart + [expr [llength $lafObjectList] * 20 ] + 20]
 			
@@ -339,6 +338,8 @@ $this proc loadFiles {} {
 	}
 	#set hideNewModules 0
 	$this setVar lafObjectList $lafObjectList
+	# replace input file list with the ones that we actually loaded
+	$this setVar fileList $filesActuallyLoaded
 	$this makeCloneToggles
 }
 
