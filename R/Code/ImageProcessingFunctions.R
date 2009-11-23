@@ -40,12 +40,12 @@ FlipAndORMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),gz
 		if(!exists("horizontalFlipReg") || !file.exists(horizontalFlipReg))
 			horizontalFlipReg=WriteFlipRegistration(infile,axis=flipAxis)
 		# and flip all masks, applying the horiz bridging registration
-		ReformatImage(resampledfile,target=resampledfile,
+		ReformatImage(infile,target=infile,
 			registrations=c(FlipBridgingReg,horizontalFlipReg),
 			filesToIgnoreModTimes=horizontalFlipReg, OverWrite='update', Verbose=T,
 			output=flippedresampledfile,reformatoptions="-v --pad-out 0 --nn",dryrun=FALSE)
 		# and OR ing those results
-		Nrrd2op(c(resampledfile,flippedresampledfile),orfile,'max',gzip=gzip)
+		Nrrd2op(c(infile,flippedresampledfile),orfile,'max',gzip=gzip)
 	}
 	unlink(horizontalFlipReg)
 }
