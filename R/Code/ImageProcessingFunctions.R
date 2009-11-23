@@ -24,7 +24,6 @@ ResampleMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),tar
 			filesToIgnoreModTimes=identityReg, OverWrite='update',
 			output=resampledfiles[i],reformatoptions="-v --pad-out 0 --nn",dryrun=FALSE)
 	}
-	unlink(horizontalFlipReg)
 	return(resampledfiles)
 }
 
