@@ -38,7 +38,7 @@ FlipAndORMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),gz
 
 		# make flipping registration
 		if(!exists("horizontalFlipReg") || !file.exists(horizontalFlipReg))
-			horizontalFlipReg=WriteFlipRegistration(resampledfile,axis=flipAxis)
+			horizontalFlipReg=WriteFlipRegistration(infile,axis=flipAxis)
 		# and flip all masks, applying the horiz bridging registration
 		ReformatImage(resampledfile,target=resampledfile,
 			registrations=c(FlipBridgingReg,horizontalFlipReg),
