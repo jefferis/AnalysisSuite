@@ -2,23 +2,40 @@
 # distinct from ImageAnalyisFunctions which are more statistical in nature
 # this is really about munging files
 
-ResampleAndFlipMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),targetspec,gzip=TRUE){
+ResampleAndFlipMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),targetspec,
+	suffix="-resampled",gzip=TRUE){
 	flipAxis=match.arg(flipAxis)
 	if(!file.exists(outdir)) dir.create(outdir)
-	for (infile in masks){
-		resampledfile=file.path(outdir,
-			sub(".nrrd$","-resampled.nrrd",basename(infile)))
-		flippedresampledfile=file.path(outdir,
-			sub(".nrrd$","-resampled-flip.nrrd",basename(infile)))
-		orfile=file.path(outdir,
-			sub(".nrrd$","-OR.nrrd",basename(infile)))
+	resampledfiles=ResampleMasks(masks,outdir,FlipBridgingReg,flipAxis,targetspec,suffix=suffix,gzip)
+	FlipAndORMasks(resampledfiles,outdir,FlipBridgingReg,flipAxis,gzip)
+}
 
+ResampleMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),targetspec,
+	suffix="-resampled",gzip=TRUE){
+	flipAxis=match.arg(flipAxis)
+	if(!file.exists(outdir)) dir.create(outdir)
+	resampledfiles=file.path(outdir,
+		sub(".nrrd$",paste(suffix,".nrrd",sep=""),basename(masks)))
+	for (i in seq(masks)){
 		if(!exists("identityReg") || !file.exists(identityReg))
 			identityReg=WriteIdentityRegistration()
 		# resample - use reformatx to do this, to ensure that we get the same result
-		ReformatImage(infile,target=targetspec, registrations=identityReg,
+		ReformatImage(masks[i],target=targetspec, registrations=identityReg,
 			filesToIgnoreModTimes=identityReg, OverWrite='update',
-			output=resampledfile,reformatoptions="-v --pad-out 0 --nn",dryrun=FALSE)
+			output=resampledfiles[i],reformatoptions="-v --pad-out 0 --nn",dryrun=FALSE)
+	}
+	unlink(horizontalFlipReg)
+	return(resampledfiles)
+}
+
+FlipAndORMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),gzip=TRUE){
+	flipAxis=match.arg(flipAxis)
+	if(!file.exists(outdir)) dir.create(outdir)
+	for (infile in masks){
+		flippedresampledfile=file.path(outdir,
+			sub(".nrrd$","-flip.nrrd",basename(infile)))
+		orfile=file.path(outdir,
+			sub(".nrrd$","-OR.nrrd",basename(infile)))
 
 		# make flipping registration
 		if(!exists("horizontalFlipReg") || !file.exists(horizontalFlipReg))
