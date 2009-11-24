@@ -344,6 +344,7 @@ $this proc loadFiles {} {
 
 $this proc makeCloneToggles {} {
 	set lafObjectList [$this getVar lafObjectList]
+	set glomTogList ""
 	for {set i 0} {$i<[llength $lafObjectList]} { set i [expr $i + 6]} {
 		set j [expr $i / 6]
 		$this newPortToggleList "Clone$j" 6
