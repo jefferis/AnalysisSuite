@@ -296,43 +296,41 @@ $this proc loadFiles {} {
 			set splitFile [file split $file]
 			set justfilename [lindex $splitFile [expr [llength $splitFile]-1]]
 			if { [file isfile $file] == 0 } { continue }
-			if { [exists $justfilename] } { continue }
-
-			set newModule [load $file]
-			# $newModule Action setValue 4
-			lappend filesActuallyLoaded newModule
-
-			set glom [lindex [split $justfilename .] 0]
-			set ypos [expr $ystart + [expr [llength $lafObjectList] * 20 ] + 20]
-			
-			$newModule setIconPosition [expr $xstart + 50 ] $ypos
-			$newModule fire
-			
-			set lineView [create HxVoltex]
-			$lineView setIconPosition [expr $xstart] $ypos
-			$lineView data connect $newModule
-			# this removes the volume rendering type colour map (which is always attached)
-			$lineView colormap disconnect
-			$lineView doIt hit
-			$lineView fire
-			# this sets the constant colour settings (in the absence of attached colormap)
-			$lineView colormap disconnect
-			$lineView slices setValue 256
-			$lineView range setValue 0 15
-			$lineView range setValue 1 255
-			$lineView colormap setDefaultColor [$this red getValue] [$this green getValue] [$this blue getValue]
-			$lineView colormap setDefaultAlpha 0.500000
-			# this is required to update the Voltex
-			$lineView doIt hit
-			$lineView fire
-			
-			# $newModule setLabel $glom
-			$lineView setLabel "$glom"
-			
-			$newModule hideIcon
+	
+			set glom [file rootname $justfilename]
 			lappend lafObjectList $glom
-			# lappend widths [$this width getValue]
-			# lappend thresholds [$this ScoreThreshold getValue]
+			set ypos [expr $ystart + [expr [llength $filesActuallyLoaded] * 20 ] + 20]
+
+			if { ![exists $justfilename] } { 
+				set newModule [load $file]
+				# $newModule Action setValue 4
+				lappend filesActuallyLoaded newModule
+				$newModule hideIcon
+				$newModule setIconPosition [expr $xstart + 50 ] $ypos
+				$newModule fire
+			}
+
+			if { ![exists $glom] } {
+				set lineView [create HxVoltex]
+				$lineView setIconPosition [expr $xstart] $ypos
+				$lineView data connect $newModule
+				# this removes the volume rendering type colour map (which is always attached)
+				$lineView colormap disconnect
+				$lineView doIt hit
+				$lineView fire
+				# this sets the constant colour settings (in the absence of attached colormap)
+				$lineView colormap disconnect
+				$lineView slices setValue 256
+				$lineView range setValue 0 15
+				$lineView range setValue 1 255
+				$lineView colormap setDefaultColor [$this red getValue] [$this green getValue] [$this blue getValue]
+				$lineView colormap setDefaultAlpha 0.500000
+				# this is required to update the Voltex
+				$lineView doIt hit
+				$lineView fire
+				$lineView setLabel "$glom"
+				# lappend widths [$this width getValue]
+			}
 		}
 	}
 	#set hideNewModules 0
