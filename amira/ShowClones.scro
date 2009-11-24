@@ -254,12 +254,11 @@ $this proc showMale {mask} {
 }
 
 $this proc removeAllData {} {
-	# remove all "loadAllFile.scro" objects and their dependent objects
-	foreach glom [$this getVar lafObjectList] {
-		if {[exists $glom]} {
-			remove "${glom}.am"
-			remove $glom
-		}
+	# remove all data files and viewers that we actually loaded/made
+	foreach datafile [$this getVar fileList] {
+		if {[exists $datafile]} { remove $datafile }
+		set glom [file rootname datafile] 
+		if {[exists $glom]} { remove $glom }
 	}
 	# Delete toggles and list of active clones
 	$this setVar glomActive "" 
