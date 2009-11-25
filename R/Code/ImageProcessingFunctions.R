@@ -10,10 +10,10 @@ ResampleAndFlipMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","
 	FlipAndORMasks(resampledfiles,outdir,FlipBridgingReg,flipAxis,gzip)
 }
 
-ResampleMasks<-function(...) ResampleImages(...,interpolation="nn")
+ResampleMasks<-function(masks,...) ResampleImages(images=masks,...,interpolation="nn")
 
 ResampleImages<-function(images,outdir,targetspec,registrations,suffix="-resampled",
-	interpolation=c("linear","nn","cubic")){
+	interpolation=c("linear","nn","cubic"),Verbose=TRUE){
 	interpolation=match.arg(interpolation)
 	if(!file.exists(outdir)) dir.create(outdir)
 	resampledfiles=file.path(outdir,
@@ -23,10 +23,12 @@ ResampleImages<-function(images,outdir,targetspec,registrations,suffix="-resampl
 		registrations=WriteIdentityRegistration()
 	for (i in seq(images)){
 		# resample - use reformatx to do this, to ensure that we get the same result
+		# even if we have to provide an identity registration
 		ReformatImage(images[i],target=targetspec, registrations=registrations,
-			filesToIgnoreModTimes=identityReg, OverWrite='update',
-			output=resampledfiles[i],reformatoptions=
-				paste("-v --pad-out 0 --"sep="",interpolation),dryrun=FALSE)
+			filesToIgnoreModTimes=ifelse(useIdentity,registrations,NULL),
+			OverWrite='update',output=resampledfiles[i],
+			reformatoptions=paste("-v --pad-out 0 --",sep="",interpolation),
+			dryrun=FALSE,Verbose=Verbose)
 	}
 	if(useIdentity) unlink(registrations)
 	return(resampledfiles)
