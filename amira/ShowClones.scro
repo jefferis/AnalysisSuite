@@ -32,7 +32,7 @@ $this proc constructor { } {
 	echo "Script directory is: $myScriptDir"
 	$this newPortFilename filename
 	# $this filename setValue ${myScriptDir}/lists
-	$this filename setValue /GD/projects/Sebastian/fruitless/RegistrationFolders/IS2Reg/SelectedExtractedClones/AL-d_F.am
+	$this filename setValue /Volumes/JData/JPeople/Sebastian/fruitless/Registration/IS2Reg/CanonicalClones-resampled/M/AL-a_M.am
 	
     $this newPortButtonList Action 5
 	$this Action setLabel Action:
