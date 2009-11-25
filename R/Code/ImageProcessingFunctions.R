@@ -33,7 +33,7 @@ ResampleImages<-function(images,outdir,targetspec,registrations,suffix="-resampl
 			reformatoptions=reformatoptions,dryrun=FALSE,Verbose=Verbose)
 	}
 	if(useIdentity) unlink(registrations)
-	return(resampledfiles)
+	invisible(resampledfiles)
 }
 
 FlipAndORMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),gzip=TRUE){
