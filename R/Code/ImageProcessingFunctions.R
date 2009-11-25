@@ -6,21 +6,20 @@ ResampleAndFlipMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","
 	suffix="-resampled",gzip=TRUE){
 	flipAxis=match.arg(flipAxis)
 	if(!file.exists(outdir)) dir.create(outdir)
-	resampledfiles=ResampleMasks(masks,outdir,FlipBridgingReg,flipAxis,targetspec,suffix=suffix,gzip)
+	resampledfiles=ResampleMasks(masks,outdir,targetspec,suffix=suffix)
 	FlipAndORMasks(resampledfiles,outdir,FlipBridgingReg,flipAxis,gzip)
 }
 
-ResampleMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),targetspec,
-	suffix="-resampled",gzip=TRUE){
-	flipAxis=match.arg(flipAxis)
+ResampleMasks<-function(masks,outdir,registrations,targetspec,suffix="-resampled"){
+
 	if(!file.exists(outdir)) dir.create(outdir)
 	resampledfiles=file.path(outdir,
 		sub(".nrrd$",paste(suffix,".nrrd",sep=""),basename(masks)))
+	if(missing(registrations))
+		registrations=WriteIdentityRegistration()
 	for (i in seq(masks)){
-		if(!exists("identityReg") || !file.exists(identityReg))
-			identityReg=WriteIdentityRegistration()
 		# resample - use reformatx to do this, to ensure that we get the same result
-		ReformatImage(masks[i],target=targetspec, registrations=identityReg,
+		ReformatImage(masks[i],target=targetspec, registrations=registrations,
 			filesToIgnoreModTimes=identityReg, OverWrite='update',
 			output=resampledfiles[i],reformatoptions="-v --pad-out 0 --nn",dryrun=FALSE)
 	}
