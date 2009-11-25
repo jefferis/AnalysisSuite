@@ -197,6 +197,21 @@ $this proc setCloneColour { clone r g b } {
 	}
 }
 
+$this proc setCloneVoltexRange { clone lower upper } {
+	if {[exists $clone]} {
+		$clone range setValue 0 $lower
+		$clone range setValue 1 $upper
+		$clone fire
+	}
+}
+
+$this proc setAllCloneVoltexRanges { lower upper } {
+	set glomActive ""
+	foreach clone [$this getVar glomActive] {
+		$this setCloneVoltexRange $clone $lower $upper
+	}
+}
+
 $this proc showClone { clone mask } {
 	if {[exists $clone]} {
 		$clone setViewerMask $mask
