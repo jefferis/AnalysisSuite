@@ -187,8 +187,10 @@ $this proc updateLafObjectsColor {} {
 
 $this proc setCloneColour { clone r g b } {
 	if {[exists $clone]} {
-		$clone range setValue 1 254
-		$clone range setValue 1 255
+		# change upper range to trick amira into updating colours
+		set upperrange [$clone range getValue 1]
+		$clone range setValue 1 [expr $upperrange - 1]
+		$clone range setValue 1 $upperrange
 		$clone colormap setDefaultColor $r $g $b
 		$clone colormap setDefaultAlpha 0.500000
 		$clone fire
