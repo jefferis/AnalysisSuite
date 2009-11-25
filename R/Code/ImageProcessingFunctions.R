@@ -13,7 +13,7 @@ ResampleAndFlipMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","
 ResampleMasks<-function(masks,...) ResampleImages(images=masks,...,interpolation="nn")
 
 ResampleImages<-function(images,outdir,targetspec,registrations,suffix="-resampled",
-	interpolation=c("linear","nn","cubic"),TargetIsMask=FALSE,Verbose=TRUE){
+	interpolation=c("linear","nn","cubic"),TargetIsMask=FALSE,Verbose=TRUE,...){
 	interpolation=match.arg(interpolation)
 	if(!file.exists(outdir)) dir.create(outdir)
 	resampledfiles=file.path(outdir,
@@ -23,14 +23,15 @@ ResampleImages<-function(images,outdir,targetspec,registrations,suffix="-resampl
 		registrations=WriteIdentityRegistration()
 	# set additional reformat options
 	# TargetIsMask means only calculate for pixels where mask is non-zero
-	reformatoptions=paste(ifelse(TargetIsMask,"--mask",""),"-v --pad-out 0 --",sep="",interpolation)
+	reformatoptions=paste(ifelse(TargetIsMask,"--mask","")," -v --pad-out 0 --",sep="",interpolation)
+	filesToIgnoreModTimes=if(useIdentity) registrations else NULL
 	for (i in seq(images)){		
 		# resample - use reformatx to do this, to ensure that we get the same result
 		# even if we have to provide an identity registration
 		ReformatImage(images[i],target=targetspec, registrations=registrations,
-			filesToIgnoreModTimes=ifelse(useIdentity,registrations,NULL),
+			filesToIgnoreModTimes=filesToIgnoreModTimes,
 			OverWrite='update',output=resampledfiles[i],
-			reformatoptions=reformatoptions,dryrun=FALSE,Verbose=Verbose)
+			reformatoptions=reformatoptions,dryrun=FALSE,Verbose=Verbose,...)
 	}
 	if(useIdentity) unlink(registrations)
 	invisible(resampledfiles)
@@ -95,7 +96,8 @@ FlipAndORMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),gz
 ReformatImage<-function(floating,target,registrations,output, 
 	dryrun=FALSE, Verbose=TRUE, MakeLock=TRUE, OverWrite=c("no","update","yes"),
 	filesToIgnoreModTimes=NULL,
-	reformatxPath="/usr/local/bin/reformatx",reformatoptions="-v --pad-out 0",...){
+	reformatxPath="/usr/local/bin/reformatx",reformatoptions="-v --pad-out 0",
+	Push=FALSE,...){
 		# TODO improve default ouput file name
 	if(missing(output)){
 		output=file.path(dirname(floating),paste(basename(target),"-",basename(floating),'.nrrd',sep=""))
@@ -127,7 +129,7 @@ ReformatImage<-function(floating,target,registrations,output,
 	} else OverWrite="yes" # just for the purpose of the runtime checks below 
 		
 	cmd=paste(shQuote(reformatxPath), reformatoptions,
-		"-o",shQuote(output),"--floating",shQuote(floating),targetspec,
+		"-o",shQuote(output),ifelse(Push,"--push",""),"--floating",shQuote(floating),targetspec,
 		paste(shQuote(registrations),collapse=" "))
 	lockfile=paste(output,".lock",sep="")
 	PrintCommand<-FALSE
