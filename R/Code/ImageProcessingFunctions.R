@@ -10,12 +10,13 @@ ResampleAndFlipMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","
 	FlipAndORMasks(resampledfiles,outdir,FlipBridgingReg,flipAxis,gzip)
 }
 
-ResampleMasks<-function(masks,outdir,registrations,targetspec,suffix="-resampled"){
+ResampleMasks<-function(masks,outdir,targetspec,registrations,suffix="-resampled"){
 
 	if(!file.exists(outdir)) dir.create(outdir)
 	resampledfiles=file.path(outdir,
 		sub(".nrrd$",paste(suffix,".nrrd",sep=""),basename(masks)))
-	if(missing(registrations))
+	useIdentity=missing(registrations)
+	if(useIdentity)
 		registrations=WriteIdentityRegistration()
 	for (i in seq(masks)){
 		# resample - use reformatx to do this, to ensure that we get the same result
@@ -23,6 +24,7 @@ ResampleMasks<-function(masks,outdir,registrations,targetspec,suffix="-resampled
 			filesToIgnoreModTimes=identityReg, OverWrite='update',
 			output=resampledfiles[i],reformatoptions="-v --pad-out 0 --nn",dryrun=FALSE)
 	}
+	if(useIdentity) unlink(registrations)
 	return(resampledfiles)
 }
 
