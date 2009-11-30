@@ -168,3 +168,50 @@ WriteIdentityRegistration<-function(regfolder=file.path(tempdir(),"identityreg.l
 	return(regfolder)
 }
 
+AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
+	outfile=NULL,outdir=NULL, options="")
+{
+	if(is.null(outfile) && is.null(outdir))
+		outfile=sub("(\\.[^.]+)$",paste(suffix,"\\1",sep=""),infile)
+	else if (is.null(outfile) && !is.null(outdir))
+		outfile=file.path(outdir,sub("(\\.[^.]+)$",paste(suffix,"\\1",sep=""),basename(infile)))
+	else if (!is.null(outfile)  && !is.null(outdir))
+		outfile=file.path(outdir,outfile)
+	
+	# take a nrrd image and run Torsten's auto crop function
+	# read in the resultant affine transformation file
+	# and shift the nrrd's origin
+	cropxformreg=paste(tempfile(),".list",sep="")
+	options=paste('--auto-crop',threshold,'--crop-xform-out',shQuote(cropxformreg),options)
+	
+	tmpoutfile=paste(sep=".",outfile,"tmp.nrrd")
+	cmd=paste("convert",options,shQuote(infile),shQuote(tmpoutfile))
+	if(!RunCmdForNewerInput(cmd,infile,tmpoutfile)) return (FALSE)
+
+	reg=ReadIGSRegistration(cropxformreg)
+	xlate=reg$affine_xform$xlate
+	unlink(cropxformreg)
+
+	inh=ReadNrrdHeader(infile)
+	outh=ReadNrrdHeader(tmpoutfile)
+	originalOrigin=c(0,0,0)
+	if("space origin"%in%names(inh)) originalOrigin=inh[["space origin"]]
+	newOrigin=originalOrigin+xlate
+	newOriginLine=paste("space origin: (",paste(newOrigin,collapse=","),")",sep="")
+	
+	oht=attr(outh,"headertext")
+	if("space origin"%in%names(outh)){
+		# replace existing space origin
+		oht=sub("space origin: .*",newOriginLine,oht)
+	} else {
+		# just append
+		oht=c(oht,newOriginLine)
+	}
+	# add a blank line
+	oht=c(oht,"")
+	tmpheader=tempfile()
+	writeLines(oht,tmpheader)
+	system(paste("unu data",shQuote(tmpoutfile),"| cat",tmpheader,"- >",shQuote(outfile)))
+	system(cmd)
+	unlink(c(tmpoutfile,tmpheader))
+}
