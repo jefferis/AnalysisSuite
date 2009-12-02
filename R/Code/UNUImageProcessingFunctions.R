@@ -49,3 +49,25 @@ NrrdResample<-function(infile,outfile,size,otherargs=NULL,...){
 .callunu<-function(cmd,args,unu="unu",...){
 	system(paste(unu,cmd,paste(args,collapse=" ")),intern=TRUE,...)
 }
+
+NrrdHisto<-function(infile,outfile=sub("\\.([^.]+)$",".histo.\\1",infile),maskfile,bins,min,max,...){
+	if (missing(min) || missing(max)) {
+		# calculate the minimum and maximum
+		r=NrrdMinMax(infile)
+		if(missing(min)) min=r[1]
+		if(missing(max)) max=r[2]
+	}
+	if(missing(bins)){
+		# check if this is a float data type
+		if(ReadNrrdHeader(infile)$type%in%c("float","double"))
+			bins=1000
+		else {
+			bins=as.integer((max-min)+1)
+			if(bins>2^16) bins=1000
+		}
+	}
+	options=paste("-b",bins,"-min",min,"-max",max)
+	if(!missing(maskfile)) options=paste(options,"-w",shQuote(maskfile))
+	.callunu("histo",paste(options,"-i",shQuote(infile),"-o",shQuote(outfile)),...)
+	return(outfile)
+}
