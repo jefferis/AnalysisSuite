@@ -119,7 +119,7 @@ Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,AttachFullHeader=FALSE,or
 	if('space directions'%in%names(h)){
 		voxdims=rowSums(sqrt(h[['space directions']]^2))
 	} else if ('spacings'%in%names(h)){
-		voxdims=spacings
+		voxdims=h[["spacings"]]
 	} else {
 		# no pixel size info, so just return
 		return(d)
