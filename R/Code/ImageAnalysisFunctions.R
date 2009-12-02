@@ -32,3 +32,12 @@ FitCumulativeGaussianToHistogram<-function(h,truncate=1.0,plot=T,...){
 	}
 	params
 }
+
+MakeHistogramFromNrrd<-function(filename,...){
+	tmp=tempfile()
+	outfile=NrrdHisto(filename,outfile=tmp,...)
+	if(outfile!=tmp) return(NULL)
+	h=ReadHistogramFromNrrd(tmp)
+	unlink(tmp)
+	return(h)
+}
