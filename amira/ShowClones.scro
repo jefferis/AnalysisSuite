@@ -32,13 +32,13 @@ $this proc constructor { } {
 	echo "Script directory is: $myScriptDir"
 	$this newPortFilename filename
 	# $this filename setValue ${myScriptDir}/lists
-	$this filename setValue /GD/projects/Sebastian/fruitless/RegistrationFolders/IS2Reg/SelectedExtractedClones/AL-d_F.am
+	$this filename setValue /Volumes/JData/JPeople/Sebastian/fruitless/Registration/IS2Reg/CanonicalClones-resampled/M/AL-a_M.am
 	
     $this newPortButtonList Action 5
 	$this Action setLabel Action:
 	$this Action setLabel 0 LoadAll
 	$this Action setLabel 1 Remove
-	$this Action setLabel 2 Update
+	$this Action setLabel 2 Flip
 	$this Action setLabel 3 HideAll
 	$this Action setLabel 4 Male
 	
@@ -58,12 +58,13 @@ $this proc constructor { } {
 	# $this ScoreThreshold setValue 4
 	
 	$this setVar dirName ""
-	
 	$this setVar lafObjectList ""
 	$this setVar fileList ""
 	$this setVar glomTogList ""
 	$this setVar glomActive ""
 
+	# the default axis to flip over (0=X, 1=Y ...)
+	$this setVar flipAxis 0
 	# $this setVar thresholds ""
 	# $this setVar widths ""
 	
@@ -86,7 +87,8 @@ $this proc compute { } {
 		$this removeAllData
 	}
 	if { [ $this Action isNew  ] && [$this Action getValue]==2} {
-		#$this myupdate
+		# flip
+		$this flipActiveClones [$this getVar flipAxis]
 	}
 	if { [ $this Action isNew  ] && [$this Action getValue]==3} {		
 		if { [ $this Action getLabel 3]=="ShowAll" } {
@@ -187,11 +189,44 @@ $this proc updateLafObjectsColor {} {
 
 $this proc setCloneColour { clone r g b } {
 	if {[exists $clone]} {
-		$clone range setValue 1 254
-		$clone range setValue 1 255
+		# change upper range to trick amira into updating colours
+		set upperrange [$clone range getValue 1]
+		$clone range setValue 1 [expr $upperrange - 1]
+		$clone range setValue 1 $upperrange
 		$clone colormap setDefaultColor $r $g $b
 		$clone colormap setDefaultAlpha 0.500000
 		$clone fire
+	}
+}
+
+$this proc flipClone { clone axis } {
+	set data "$clone.am"
+	if {[exists $data]} {
+		$data flip $axis
+		$clone doIt hit
+		$clone fire
+	}
+}
+
+$this proc flipActiveClones { axis } {
+	set glomActive ""
+	foreach clone [$this getVar glomActive] {
+		$this flipClone $clone $axis
+	}
+}
+
+$this proc setCloneVoltexRange { clone lower upper } {
+	if {[exists $clone]} {
+		$clone range setValue 0 $lower
+		$clone range setValue 1 $upper
+		$clone fire
+	}
+}
+
+$this proc setAllCloneVoltexRanges { lower upper } {
+	set glomActive ""
+	foreach clone [$this getVar glomActive] {
+		$this setCloneVoltexRange $clone $lower $upper
 	}
 }
 

@@ -6,25 +6,35 @@ ResampleAndFlipMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","
 	suffix="-resampled",gzip=TRUE){
 	flipAxis=match.arg(flipAxis)
 	if(!file.exists(outdir)) dir.create(outdir)
-	resampledfiles=ResampleMasks(masks,outdir,FlipBridgingReg,flipAxis,targetspec,suffix=suffix,gzip)
+	resampledfiles=ResampleMasks(masks,outdir,targetspec,suffix=suffix)
 	FlipAndORMasks(resampledfiles,outdir,FlipBridgingReg,flipAxis,gzip)
 }
 
-ResampleMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),targetspec,
-	suffix="-resampled",gzip=TRUE){
-	flipAxis=match.arg(flipAxis)
+ResampleMasks<-function(masks,...) ResampleImages(images=masks,...,interpolation="nn")
+
+ResampleImages<-function(images,outdir,targetspec,registrations,suffix="-resampled",
+	interpolation=c("linear","nn","cubic"),TargetIsMask=FALSE,Verbose=TRUE,...){
+	interpolation=match.arg(interpolation)
 	if(!file.exists(outdir)) dir.create(outdir)
 	resampledfiles=file.path(outdir,
-		sub(".nrrd$",paste(suffix,".nrrd",sep=""),basename(masks)))
-	for (i in seq(masks)){
-		if(!exists("identityReg") || !file.exists(identityReg))
-			identityReg=WriteIdentityRegistration()
+		sub(".nrrd$",paste(suffix,".nrrd",sep=""),basename(images)))
+	useIdentity=missing(registrations)
+	if(useIdentity)
+		registrations=WriteIdentityRegistration()
+	# set additional reformat options
+	# TargetIsMask means only calculate for pixels where mask is non-zero
+	reformatoptions=paste(ifelse(TargetIsMask,"--mask","")," -v --pad-out 0 --",sep="",interpolation)
+	filesToIgnoreModTimes=if(useIdentity) registrations else NULL
+	for (i in seq(images)){		
 		# resample - use reformatx to do this, to ensure that we get the same result
-		ReformatImage(masks[i],target=targetspec, registrations=identityReg,
-			filesToIgnoreModTimes=identityReg, OverWrite='update',
-			output=resampledfiles[i],reformatoptions="-v --pad-out 0 --nn",dryrun=FALSE)
+		# even if we have to provide an identity registration
+		ReformatImage(images[i],target=targetspec, registrations=registrations,
+			filesToIgnoreModTimes=filesToIgnoreModTimes,
+			OverWrite='update',output=resampledfiles[i],
+			reformatoptions=reformatoptions,dryrun=FALSE,Verbose=Verbose,...)
 	}
-	return(resampledfiles)
+	if(useIdentity) unlink(registrations)
+	invisible(resampledfiles)
 }
 
 FlipAndORMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),gzip=TRUE){
@@ -86,7 +96,8 @@ FlipAndORMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),gz
 ReformatImage<-function(floating,target,registrations,output, 
 	dryrun=FALSE, Verbose=TRUE, MakeLock=TRUE, OverWrite=c("no","update","yes"),
 	filesToIgnoreModTimes=NULL,
-	reformatxPath="/usr/local/bin/reformatx",reformatoptions="-v --pad-out 0",...){
+	reformatxPath="/usr/local/bin/reformatx",reformatoptions="-v --pad-out 0",
+	Push=FALSE,...){
 		# TODO improve default ouput file name
 	if(missing(output)){
 		output=file.path(dirname(floating),paste(basename(target),"-",basename(floating),'.nrrd',sep=""))
@@ -118,7 +129,7 @@ ReformatImage<-function(floating,target,registrations,output,
 	} else OverWrite="yes" # just for the purpose of the runtime checks below 
 		
 	cmd=paste(shQuote(reformatxPath), reformatoptions,
-		"-o",shQuote(output),"--floating",shQuote(floating),targetspec,
+		"-o",shQuote(output),ifelse(Push,"--push",""),"--floating",shQuote(floating),targetspec,
 		paste(shQuote(registrations),collapse=" "))
 	lockfile=paste(output,".lock",sep="")
 	PrintCommand<-FALSE
