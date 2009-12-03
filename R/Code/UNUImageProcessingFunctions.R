@@ -76,7 +76,7 @@ NrrdQuantize<-function(infile,outfile,min,max,bits=c("8","16","32"),
 	gzip=FALSE,CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE){
 
 	# Do nothing if inputs are older than output unless Force=T
-	if(!Force && !RunCmdForNewerInput(NULL,infile,outfile)) return (NULL)
+	if(!Force && !RunCmdForNewerInput(NULL,infile,outfile)) return (FALSE)
 	if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile),recursive = TRUE)
 	
 	bits=match.arg(bits)
@@ -94,5 +94,5 @@ NrrdQuantize<-function(infile,outfile,min,max,bits=c("8","16","32"),
 	system(cmd)
 	if(Verbose) cat(".")
 	if(UseLock) unlink(lockfile)
-	TRUE
+	return(TRUE)
 }
