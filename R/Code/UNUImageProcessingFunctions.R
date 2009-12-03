@@ -71,3 +71,28 @@ NrrdHisto<-function(infile,outfile=sub("\\.([^.]+)$",".histo.\\1",infile),maskfi
 	.callunu("histo",paste(options,"-i",shQuote(infile),"-o",shQuote(outfile)),...)
 	return(outfile)
 }
+
+NrrdQuantize<-function(infile,outfile,min,max,bits=c("8","16","32"),
+	gzip=FALSE,CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE){
+
+	# Do nothing if inputs are older than output unless Force=T
+	if(!Force && !RunCmdForNewerInput(NULL,infile,outfile)) return (NULL)
+	if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile))
+	
+	bits=match.arg(bits)
+	
+	lockfile=paste(outfile,sep=".","lock")
+	if(UseLock && !makelock(lockfile)) return (FALSE)
+	# unu quantize -b 8 -min 7397.386 -max 65535 -i AL-PNs_mask_MF_final_IS2_SAIA24-1_02.nrrd \
+	# | unu save -f nrrd -e gz -o AL-PNs_mask_MF_final_IS2_SAIA24-1_02-quant.nrrd
+	
+	minmaxopts=paste(ifelse(missing(min),"",paste("-min",min)), 
+		ifelse(missing(max),"",paste("-max",max)))
+	cmd=paste("unu quantize -b",bits,minmaxopts,"-i",shQuote(infile))
+	if(gzip) cmd=paste(cmd,"| unu save -f nrrd -e gzip -o",shQuote(outfile))
+	else cmd=paste(cmd,"-o",shQuote(outfile))
+	system(cmd)
+	if(Verbose) cat(".")
+	if(UseLock) unlink(lockfile)
+	TRUE
+}
