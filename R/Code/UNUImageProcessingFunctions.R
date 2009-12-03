@@ -77,7 +77,7 @@ NrrdQuantize<-function(infile,outfile,min,max,bits=c("8","16","32"),
 
 	# Do nothing if inputs are older than output unless Force=T
 	if(!Force && !RunCmdForNewerInput(NULL,infile,outfile)) return (NULL)
-	if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile))
+	if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile),recursive = TRUE)
 	
 	bits=match.arg(bits)
 	
