@@ -41,3 +41,12 @@ MakeHistogramFromNrrd<-function(filename,...){
 	unlink(tmp)
 	return(h)
 }
+
+optimalDownsamplingSigma<-function(downsampleby=2,sourcesigma=0.5,targetsigma=0.5,pixelSize=1)
+{
+	# Optimal downsampling - according to http://pacific.mpi-cbg.de/wiki/index.php/Downsample
+	# A results of NaN means no downsampling required
+	sigma.pixels=sqrt((targetsigma * downsampleby)^2 - sourcesigma^2)
+	sigma=sigma.pixels * pixelSize
+	sigma
+}
