@@ -198,7 +198,8 @@ AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
 	if(hasOrigin){
 		# Torsten's tool will add to existing origin if present
 		cmd=paste("convert",options,shQuote(infile),shQuote(outfile))
-		if(!RunCmdForNewerInput(cmd,infile,outfile)) return (FALSE)		
+		if(!RunCmdForNewerInput(cmd,infile,outfile)) return (FALSE)
+		else return (TRUE)
 	} else {
 		# read in the resultant affine transformation file
 		# and shift the nrrd's origin assuming that it was 0,0,0
