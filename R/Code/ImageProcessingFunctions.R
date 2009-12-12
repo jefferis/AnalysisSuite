@@ -236,3 +236,18 @@ AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
 	system(cmd)
 	unlink(c(tmpoutfile,tmpheader))
 }
+
+NormaliseAndSmoothNrrd<-function(infile,outfile,outdir,threshold,max,sigma=3,kernelsigmacutoff=2.5,DryRun=FALSE)
+{
+	if(missing(outfile) && !missing(outdir))
+		outfile=file.path(outdir,basename(infile))
+	else if(missing(outdir) && missing(outfile))
+		outfile=sub("(\\.[^.]+)$",paste("-nsmooth","\\1",sep=""),infile)
+	cmd=paste("unu 2op - ",infile,threshold, "-t float")
+	cmd=paste(cmd, "| unu 2op / - ",(max-threshold))
+	cmd=paste(cmd, "| unu resample --size x0.25 x0.25 x0.5 -o",outfile)
+	kernel=paste("--kernel gauss:",sigma,",",kernelsigmacutoff,sep="")
+	cmd=paste(cmd,kernel)
+	if(DryRun) print(cmd)
+	else RunCmdForNewerInput(cmd,infile,outfile)
+}
