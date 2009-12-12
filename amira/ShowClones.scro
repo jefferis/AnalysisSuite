@@ -200,7 +200,7 @@ $this proc setCloneColour { clone r g b } {
 }
 
 $this proc flipClone { clone axis } {
-	set data "$clone.am"
+	set data [$clone data source]
 	if {[exists $data]} {
 		$data flip $axis
 		$clone doIt hit
