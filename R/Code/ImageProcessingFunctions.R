@@ -246,6 +246,8 @@ NormaliseAndSmoothNrrd<-function(infile,outfile,outdir,threshold,max,
 		outfile=file.path(outdir,basename(infile))
 	else if(missing(outdir) && missing(outfile))
 		outfile=sub("(\\.[^.]+)$",paste("-nsmooth","\\1",sep=""),infile)
+		
+	haveRun=FALSE
 	cmd=paste("unu 3op clamp ",threshold,infile,max)
 	cmd=paste(cmd, "| unu 2op - - ",threshold)
 	cmd=paste(cmd, "| unu 2op / - ",(max-threshold),"-t float")
@@ -253,13 +255,13 @@ NormaliseAndSmoothNrrd<-function(infile,outfile,outdir,threshold,max,
 	cmd=paste(cmd, "| unu resample --size",scalefactor,kernel)
 
 	lockfile=paste(outfile,sep=".","lock")
-	if(UseLock && !makelock(lockfile)) return (FALSE)
+	if(UseLock && !makelock(lockfile)) return (haveRun)
 
 	# nb 9f means max compression (9), specialised for filtered data
 	if(gzip) cmd=paste(cmd,"| unu save --format nrrd --encoding gz:9f -o",outfile)
 	else cmd=paste(cmd,"-o",outfile)
 	if(DryRun) print(cmd)
-	else RunCmdForNewerInput(cmd,infile,outfile)
+	else haveRun<-RunCmdForNewerInput(cmd,infile,outfile)
 	if(UseLock) unlink(lockfile)
-	return(TRUE)
+	return(haveRun)
 }
