@@ -35,7 +35,7 @@ Nrrd2op<-function(infiles,outfile,fun=c("max","min","+", "-", "x", "/"),
 
 NrrdMinMax<-function(filename,...){
 	minmax=.callunu("minmax",shQuote(filename),...)
-	as.integer(sub("(min|max): ","",minmax))
+	as.numeric(sub("(min|max): ","",minmax))
 }
 
 NrrdResample<-function(infile,outfile,size,otherargs=NULL,...){
