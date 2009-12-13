@@ -1514,7 +1514,7 @@ ReadAmiraLandmarks<-function(filename,Verbose=FALSE,CoordinatesOnly=TRUE){
 }
 
 WriteAmiraLandmarks<-function(filename,d){
-	if(is.list(d)) l=d
+	if(is.list(d) && !is.data.frame(d)) l=d
 	else l=list(d)
 	nSets=length(l)
 	nummarkers=sapply(l,nrow)
