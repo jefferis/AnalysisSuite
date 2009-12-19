@@ -769,3 +769,21 @@ getMBTips<-function(ANeuron,verbose=TRUE){
 #@-at
 #@-node:jefferis.20051014173041.13:@thin R/DensityFunctions.R
 #@-leo
+
+clampmax<-function(xmin,xmax) {
+	# this fn returns a new function that will find the maximum of its inputs
+	# and then clamp the return value between xmin and xmax
+	# +/- Inf are converted to NA
+	
+	# Example: image.gjdens(projection(d,projfun=clampmax(0,15)))
+	function(x,...){
+		r=max(x,...)
+		if(r==Inf || r==-Inf) 
+			NA
+		else if(r<xmin)
+			xmin 
+		else if(r>xmax)
+			xmax
+		else r
+	}
+}
