@@ -49,3 +49,15 @@ RunCmdForNewerInput<-function(cmd,infiles,outfile,Verbose=FALSE,...){
 	if(!is.null(cmd)) system(cmd,...)
 	return(TRUE)
 }
+
+ncpus<-function(default=1){
+	os=R.version$os
+	if(!is.na(pmatch("darwin",os)))
+		return(as.integer(sub(".*:","",system("sysctl hw.ncpu",intern=T))))
+	else if(!is.na(pmatch("linux",os)))
+		return(as.integer(system("cat /proc/cpuinfo | grep processor | wc -l",intern=T)))
+	else {
+		warning("I don't know how to check cpu number on OS",os,"defaulting to",default)
+		return(default)
+	}
+}
