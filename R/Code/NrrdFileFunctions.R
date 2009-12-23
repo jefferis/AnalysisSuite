@@ -322,3 +322,39 @@ ReadHistogramFromNrrd<-function(filename,...){
 	.Names = c("breaks", "counts", "intensities", 
 	"density", "mids", "xname", "equidist"), class = "histogram")
 }
+
+FixSpaceOrigin<-function(f,origin, Verbose=TRUE)
+{
+	if(length(origin)==6) origin=origin[c(1,3,5)]
+	if(length(origin)!=3) stop("Supply either an origin or a bounding box")
+	
+	KeepBackup=TRUE # for now, insist on this
+	# function to change the space origin field in a nrrd file
+	inh=ReadNrrdHeader(f)
+	originalOrigin=c(0,0,0)
+	if("space origin"%in%names(inh)) originalOrigin=inh[["space origin"]]
+	if(Verbose) cat("Old origin was:",originalOrigin,"; new origin is:",origin,"\n")
+	newOrigin=origin
+	newOriginLine=paste("space origin: (",paste(newOrigin,collapse=","),")",sep="")
+	
+	oht=attr(inh,"headertext")
+	if("space origin"%in%names(inh)){
+		# replace existing space origin
+		oht=sub("space origin: .*",newOriginLine,oht)
+	} else {
+		# just append
+		oht=c(oht,newOriginLine)
+	}
+	# add a blank line
+	oht=c(oht,"")
+	tmpheader=tempfile()
+	tmpfile=tempfile()
+	writeLines(oht,tmpheader)
+	oldfile=f
+	if(KeepBackup){
+		oldfile=paste("f",sep="",".bak")
+		if(!file.rename(f,oldfile)) stop("Unable to rename",f,"to",oldfile)
+	}
+	system(paste("unu data",shQuote(oldfile),"| cat",tmpheader,"- >",shQuote(f)))
+	unlink(c(tmpfile,tmpheader))	
+}
