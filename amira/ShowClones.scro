@@ -339,7 +339,7 @@ $this proc loadFiles {} {
 			if { ![exists $justfilename] } { 
 				set newModule [load $file]
 				# $newModule Action setValue 4
-				lappend filesActuallyLoaded newModule
+				lappend filesActuallyLoaded $newModule
 				$newModule hideIcon
 				$newModule setIconPosition [expr $xstart + 50 ] $ypos
 				$newModule fire
