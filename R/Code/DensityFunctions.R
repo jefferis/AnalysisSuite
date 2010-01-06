@@ -829,3 +829,15 @@ ijkpos.gjdens<-function(d,xyz,roundToNearestPixel=TRUE)
 	}
 	if(is.matrix(ijk)) t(ijk) else ijk
 }
+
+MinBoundingBox<-function(d,threshold=0,aspixels=TRUE)
+{
+	# Returns the bounding box that contains all voxels above threshold
+	# find voxels above threshold
+	z=d>threshold
+	# Make a list containing projections down onto each axis
+	l=lapply(seq(length(dim(d))), function(x) apply(z,x,sum,na.rm=TRUE))
+	newBBAsPixels=sapply(l,function(x) range(which(x>0)))
+	if(aspixels) newBBAsPixels
+	else xyzpos.gjdens(d,newBBAsPixels)
+}
