@@ -38,7 +38,7 @@
 
 # PROJECT ROOT <---EDIT ME!
 # This should be the folder that CONTAINS the R directory
-RootDir<-file.path("~","projects","AnalysisSuite")
+RootDir<-path.expand(file.path("~","projects","AnalysisSuite"))
 if(inherits(try(setwd(RootDir),silent=TRUE),'try-error'))
 	stop(paste("Unable to change to specified RootDir:",RootDir," Please change Code/Startup.R appropriately"))
 
@@ -81,7 +81,7 @@ if(file.exists(file.path(BinDir,"gregxform"))) {
 } else if(file.exists(file.path("/Applications","IGSRegistrationTools","bin","gregxform"))) {
 	IGSRegToolsDir=file.path("/Applications","IGSRegistrationTools","bin")
 } else if(file.exists(file.path("~/bin","gregxform"))) {
-	IGSRegToolsDir=file.path("~/bin")
+	IGSRegToolsDir=path.expand(file.path("~/bin"))
 } else if(file.exists(file.path("/usr/local/bin","gregxform"))) {
 	IGSRegToolsDir="/usr/local/bin"
 } else cat("Unable to find IGSRegistrationTools binaries - you will not be able to transform neurons.  See Startup.R for details\n\n")
