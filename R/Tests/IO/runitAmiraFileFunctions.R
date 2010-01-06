@@ -354,7 +354,7 @@ test.ReadAM3D<-function(){
 	"StartPoint", "BranchPoints", "EndPoints", "NumSegs", "SegList", 
 	"nTrees", "d", "OrientInfo"))
 	
-	result.new=ReadNeuronFromAM3D(file.path(TestDir,"Neurites.am"))
+	result.new=ReadNeuronFromAM3D(file.path(TestDir,"IO","Neurites.am"))
 	checkEquals(result,result.new[fieldsToCheck],tol=1e-6)
 }
 
