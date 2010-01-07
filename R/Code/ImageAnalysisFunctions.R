@@ -51,12 +51,16 @@ optimalDownsamplingSigma<-function(downsampleby=2,sourcesigma=0.5,targetsigma=0.
 	sigma
 }
 
-findCDFCorner<-function(x,grad=1)
+findCDFCorner<-function(x,grad=1,scaleXTo1=TRUE)
 {
 	# take set of pixel intensities, find cumulative histogram
 	n=1000
 	e=ecdf(x)
 	xmax=max(x)
+	# easiest way to do this is adjust the target gradient
+	# if xmax>>1 dy/dx will always be smaller than if we scaled xvals to max 1
+	# so we want to divide target grad by xmax
+	if(scaleXTo1) grad=grad/xmax
 	xs=seq(from=0,to=xmax,len=n)
 	grads=diff(e(xs))/diff(xs)
 	# find smoothed derivative
