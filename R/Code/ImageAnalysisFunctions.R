@@ -54,17 +54,13 @@ optimalDownsamplingSigma<-function(downsampleby=2,sourcesigma=0.5,targetsigma=0.
 findCDFCorner<-function(x,grad=1)
 {
 	# take set of pixel intensities, find cumulative histogram
+	n=1000
 	e=ecdf(x)
-	nKnots=length(knots(e))
-	xs=c(0,knots(e))
-	xmax=xs[length(xs)]
-	ys=c(e(0),e(knots(e)))
-	
-	# find first derivative
-	dys=diff(ys)
-	dxs=diff(xs)
+	xmax=max(x)
+	xs=seq(from=0,to=xmax,len=n)
+	grads=diff(e(xs))/diff(xs)
 	# find smoothed derivative
-	ls=lowess(xs[-length(xs)],dys/dxs,f=1/50,delta=1/10000*xmax)
+	ls=lowess(xs[-n],grads,f=1/50,delta=1/1000*xmax)
 	# find x val where derivative is closest to grad
 	ls$x[which.min(abs(ls$y-grad))]
 }
