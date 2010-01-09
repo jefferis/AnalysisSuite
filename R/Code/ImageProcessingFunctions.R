@@ -180,7 +180,7 @@ WriteIdentityRegistration<-function(regfolder=file.path(tempdir(),"identityreg.l
 }
 
 AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
-	outfile=NULL,outdir=NULL, options="")
+	outfile=NULL,outdir=NULL, options="",convertTool="convert")
 {
 	if(is.null(outfile) && is.null(outdir))
 		outfile=sub("(\\.[^.]+)$",paste(suffix,"\\1",sep=""),infile)
@@ -197,16 +197,16 @@ AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
 	options=paste('--auto-crop',threshold,options)
 	if(hasOrigin){
 		# Torsten's tool will add to existing origin if present
-		cmd=paste("convert",options,shQuote(infile),shQuote(outfile))
+		cmd=paste(convertTool,options,shQuote(infile),shQuote(outfile))
 		if(!RunCmdForNewerInput(cmd,infile,outfile)) return (FALSE)
 		else return (TRUE)
 	} else {
 		# read in the resultant affine transformation file
 		# and shift the nrrd's origin assuming that it was 0,0,0
 		cropxformreg=paste(tempfile(),".list",sep="")
-		options=paste('--crop-xform-out',shQuote(cropxformreg))
+		options=paste(options,'--crop-xform-out',shQuote(cropxformreg))
 		tmpoutfile=paste(sep=".",outfile,"tmp.nrrd")
-		cmd=paste("convert",options,shQuote(infile),shQuote(tmpoutfile))
+		cmd=paste(convertTool,options,shQuote(infile),shQuote(tmpoutfile))
 		if(!RunCmdForNewerInput(cmd,infile,tmpoutfile)) return (FALSE)
 	}
 	
