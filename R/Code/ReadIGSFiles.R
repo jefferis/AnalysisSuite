@@ -43,6 +43,10 @@
 trim =function(t) sub('[[:space:]]+$', '', sub('^[[:space:]]+', '', t))
 
 ReadIGSRegistration <- function (filename){
+	if(!file.exists(filename)) {
+		warning("filename ",filename," does not exist. ReadIGSRegistration Returning NULL")
+		return(NULL)
+	}
 	if(file.info(filename)$isdir){
 		# this is a directory, so see if we can find the registration
 		dirname=filename
