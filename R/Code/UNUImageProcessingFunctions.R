@@ -96,3 +96,17 @@ NrrdQuantize<-function(infile,outfile,min,max,bits=c("8","16","32"),
 	if(UseLock) unlink(lockfile)
 	return(TRUE)
 }
+
+NrrdTestIntegrity<-function(infile,defaultReturnVal=TRUE){
+	# Tests integrity of a compressed nrrd file using crc check
+	if(!file.exists(infile)) return(NA)
+	h=ReadNrrdHeader(infile)
+	if(tolower(h$encoding)%in%c("gz","gzip")) testprog='gzip'
+	else if(tolower(h$encoding)%in%c("bz2","bzip2")) testprog='bzip2'
+	else {
+		warning("Unable to test integrity of nrrd file with encoding",h$encoding)
+		return(defaultReturnVal)
+	}
+	testval=system(paste("unu data",infile," | ",testprog,"-t"),ignore.stderr=TRUE)
+	return(testval==0)
+}
