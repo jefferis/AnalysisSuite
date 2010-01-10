@@ -180,7 +180,7 @@ WriteIdentityRegistration<-function(regfolder=file.path(tempdir(),"identityreg.l
 }
 
 AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
-	outfile=NULL,outdir=NULL, options="")
+	outfile=NULL,outdir=NULL, options="",Force=FALSE,UseLock=FALSE)
 {
 	if(is.null(outfile) && is.null(outdir))
 		outfile=sub("(\\.[^.]+)$",paste(suffix,"\\1",sep=""),infile)
@@ -193,13 +193,18 @@ AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
 	hasOrigin=TRUE
 	if(is.null(inh[["space origin"]])) hasOrigin=FALSE
 	
+	# Check if we actually need to run
+	if(!Force && !RunCmdForNewerInput(NULL,infile,outfile)) return (FALSE)
+	lockfile=paste(outfile,sep=".","lock")
+	if(UseLock && !makelock(lockfile)) return (FALSE)
+	
 	# take a nrrd image and run Torsten's auto crop function
 	options=paste('--auto-crop',threshold,options)
 	if(hasOrigin){
 		# Torsten's tool will add to existing origin if present
 		cmd=paste("convert",options,shQuote(infile),shQuote(outfile))
-		if(!RunCmdForNewerInput(cmd,infile,outfile)) return (FALSE)
-		else return (TRUE)
+		system(cmd)
+		return (TRUE)
 	} else {
 		# read in the resultant affine transformation file
 		# and shift the nrrd's origin assuming that it was 0,0,0
@@ -207,9 +212,8 @@ AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
 		options=paste('--crop-xform-out',shQuote(cropxformreg))
 		tmpoutfile=paste(sep=".",outfile,"tmp.nrrd")
 		cmd=paste("convert",options,shQuote(infile),shQuote(tmpoutfile))
-		if(!RunCmdForNewerInput(cmd,infile,tmpoutfile)) return (FALSE)
+		system(cmd)
 	}
-	
 
 	reg=ReadIGSRegistration(cropxformreg)
 	xlate=reg$affine_xform$xlate
