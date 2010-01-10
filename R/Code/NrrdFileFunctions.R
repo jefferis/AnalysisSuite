@@ -124,17 +124,16 @@ Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,AttachFullHeader=FALSE,or
 		# no pixel size info, so just return
 		return(d)
 	}
-	latticeBounds=rbind(c(0,0,0),h$sizes*voxdims)
+	latticeBoundingBox=rbind(c(0,0,0),(h$sizes-1)*voxdims)
 	if(!missing(origin)){
-		latticeBounds=t(origin+t(latticeBounds))
+		latticeBoundingBox=t(origin+t(latticeBoundingBox))
 	} else if('space origin'%in%names(h)){
-		latticeBounds=t(h[['space origin']]+t(latticeBounds))
+		latticeBoundingBox=t(h[['space origin']]+t(latticeBoundingBox))
 	}
-	attr(d,"BoundingBox")<-latticeBounds
-	attr(d,"x")<-seq(latticeBounds[1],latticeBounds[2],len=h$sizes[1])
-	attr(d,"y")<-seq(latticeBounds[3],latticeBounds[4],len=h$sizes[2])
-	attr(d,"z")<-seq(latticeBounds[5],latticeBounds[6],len=h$sizes[3])
-
+	attr(d,"BoundingBox")<-as.vector(latticeBoundingBox)
+	attr(d,"x")<-seq(latticeBoundingBox[1],latticeBoundingBox[2],len=h$sizes[1])
+	attr(d,"y")<-seq(latticeBoundingBox[3],latticeBoundingBox[4],len=h$sizes[2])
+	attr(d,"z")<-seq(latticeBoundingBox[5],latticeBoundingBox[6],len=h$sizes[3])
 	return(d)
 }
 
