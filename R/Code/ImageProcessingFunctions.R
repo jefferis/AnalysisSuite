@@ -180,7 +180,7 @@ WriteIdentityRegistration<-function(regfolder=file.path(tempdir(),"identityreg.l
 }
 
 AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
-	outfile=NULL,outdir=NULL, options="",convertTool="convert",Force=FALSE,UseLock=FALSE)
+	outfile=NULL,outdir=NULL, options="",convertTool="convertx",Force=FALSE,UseLock=FALSE)
 {
 	if(is.null(outfile) && is.null(outdir))
 		outfile=sub("(\\.[^.]+)$",paste(suffix,"\\1",sep=""),infile)
