@@ -428,7 +428,12 @@ test.ReadAmiraTutorialVolumeData<-function(){
 test.ReadAmiraTutorialLabelsData<-function(){
 	lobus.labels<-checkNonNullOutput(
 		ReadAmiramesh(file.path(AmiraTutorialDirectory,"lobus.labels.am")),
-		"Failed to read lobus.labels.am")
+		"Failed to read lobus.labels.am with ReadAmiramesh")
+}
+test.ReadAmiraTutorialLabelsDataWithRead3DDensityFromAmiraLattice<-function(){
+	lobus.labels<-checkNonNullOutput(
+		Read3DDensityFromAmiraLattice(file.path(AmiraTutorialDirectory,"lobus.labels.am")),
+		"Failed to read lobus.labels.am with Read3DDensityFromAmiraLattice")
 }
 test.ReadAmiraTutorialSurfaceData<-function(){
 	lobus.surf<-checkNonNullOutput(
