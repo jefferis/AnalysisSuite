@@ -104,8 +104,14 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
 			seek(con,df$nBytes[i],origin="current")
 		} else {
 			if(Verbose) cat("Reading data section",df$DataName[i],"\n")
-			if(df$RType[i]=="integer") whatval=integer(0) else whatval=numeric(0)
-			x=readBin(con,df$SimpleDataLength[i],size=df$Size[i],what=whatval,signed=df$Signed[i],endian=endian)
+			if(df$HxType[i]=="HxByteRLE"){
+				d=readBin(con,what=raw(0),n=as.integer(df$HxLength[i]),size=1)
+				d=DecodeRLEBytes(d,df$SimpleDataLength[i])
+				x=as.integer(d)
+			} else {
+				if(df$RType[i]=="integer") whatval=integer(0) else whatval=numeric(0)
+				x=readBin(con,df$SimpleDataLength[i],size=df$Size[i],what=whatval,signed=df$Signed[i],endian=endian)				
+			}
 			# note that first dim is moving fastest
 			dims=unlist(df$Dims[i])
 			# if the individual elements have subelements
@@ -1439,7 +1445,7 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	return(d)
 }
 
-DecodeRLEBytes<-function(d,lengthAfter){
+DecodeRLEBytes<-function(d,uncompressedLength){
 	# expects some raw data
 	# expects to be told how many bytes how many bytes this will turn into
 	
@@ -1455,10 +1461,10 @@ DecodeRLEBytes<-function(d,lengthAfter){
 	# data can therefore only be parsed by the trick of making 2 rows if there 
 	# are no control bytes in range -126 to -1
 	
-	rval=raw(lengthAfter)
+	rval=raw(uncompressedLength)
 	bytesRead=0
 	filepos=1
-	while(bytesRead<lengthAfter){
+	while(bytesRead<uncompressedLength){
 		x=d[filepos]
 		filepos=filepos+1
 		if(x==0)
