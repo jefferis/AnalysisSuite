@@ -191,7 +191,7 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 					function(x) {if(is.null(x$Color)) return ('black')
 						if(is.character(x$Color)) x$Color=unlist(strsplit(x$Color," "))
 						return(rgb(x$Color[1],x$Color[2],x$Color[3]))})
-				Materials=data.frame(id=Ids,col=I(Colors))
+				Materials=data.frame(id=Ids,col=I(Colors),level=seq(from=0,length=length(Ids)))
 				rownames(Materials)<-names(returnList[["Parameters"]]$Materials)
 			})
 			if(inherits(te,'try-error')) warning("Unable to parse Amiramesh materials table")
