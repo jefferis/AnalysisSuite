@@ -269,3 +269,13 @@ NormaliseAndSmoothNrrd<-function(infile,outfile,outdir,threshold,max,
 	if(UseLock) unlink(lockfile)
 	return(haveRun)
 }
+
+SimplifyLabelFile<-function(f,omitMaterials="CellBody",includeMaterials=NULL)
+{
+	d=ReadAmiramesh(f)
+	m=attr(d,"Materials")
+	m=subset(m,!rownames(m)%in%omitMaterials & !is.na(id))
+	d[!d%in%m$level]=0
+	d[d%in%m$level]=1
+	d
+}
