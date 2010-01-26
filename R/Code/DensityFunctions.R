@@ -841,3 +841,22 @@ MinBoundingBox<-function(d,threshold=0,aspixels=TRUE)
 	if(aspixels) newBBAsPixels
 	else xyzpos.gjdens(d,newBBAsPixels)
 }
+
+CropToBoundingBox<-function(d,bb)
+{
+	# Crops a density to the nearest pixels mataching a specified bounding box 
+	# Can get the bounding box from another density
+	if(is.gjdens(bb)) bb=getBoundingBox(bb)
+	if(!is.matrix(bb)) matrix(bb,ncol=3)
+	if(!all(dim(bb)==c(2,3)))
+		stop("Incorrect bounding box specification (x0,x1,y0,y1,z0,z1)")
+	ijks=ijkpos.gjdens(d,bb)
+	newd=d[ijks[1]:ijks[2],ijks[3]:ijks[4],ijks[5]:ijks[6]]
+	dims=dim(newd)
+	# This seems to unset dims - don't know why
+	mostattributes(newd)=attributes(d)
+	dim(newd)<-dims
+	actualbb=xyzpos.gjdens(d,ijks)
+	attr(newd,"BoundingBox")=actualbb
+	newd
+}
