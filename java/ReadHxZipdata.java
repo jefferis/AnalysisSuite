@@ -7,6 +7,7 @@ import java.io.PrintWriter;
 import java.io.OutputStreamWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.BufferedInputStream;
 import java.util.zip.InflaterInputStream;
 
 public class ReadHxZipdata {
@@ -35,9 +36,11 @@ public class ReadHxZipdata {
 		try{
 			
 			FileInputStream im = new FileInputStream(file);
+			
 			im.skip(offset);
 			System.err.println("Skipping "+offset+" bytes");
-			InflaterInputStream decompressor = new InflaterInputStream(im);
+			BufferedInputStream bis = new BufferedInputStream(im);
+			InflaterInputStream decompressor = new InflaterInputStream(bis);
 			byte[] buf = new byte[dataLength];
 			int bytesread = decompressor.read(buf,0,dataLength);
 			im.close();
