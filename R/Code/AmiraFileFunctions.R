@@ -1419,7 +1419,6 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 			d=as.integer(d)
 		} else if(dataEncoding == "HXZIP"){
 			d=DecodeHxZip(filename,seek(fc),
-				compressedLength=compressedLength,
 				uncompressedLength=dataLength,
 				what=dataTypes$what[i],size=dataTypes$size[i],
 				signed=dataTypes$signed[i],endian=endian)
@@ -1451,12 +1450,12 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	return(d)
 }
 
-DecodeHxZip<-function(file,offset,compressedLength,uncompressedLength,...){
+DecodeHxZip<-function(file,offset,uncompressedLength,...){
 	JavaDir<-file.path(RootDir,"java")
 	if(!file.exists(file.path(JavaDir,"ReadHxZipdata.class"))) stop("Can't find ReadHxZipdata program")
 	tmp=tempfile()
 	system(paste("cd",shQuote(JavaDir),";",
-		"java ReadHxZipdata",shQuote(file),offset,compressedLength,uncompressedLength,shQuote(tmp)))
+		"java ReadHxZipdata",shQuote(file),offset,uncompressedLength,shQuote(tmp)))
 	
 	d=readBin(tmp,n=uncompressedLength,...)
 	unlink(tmp)

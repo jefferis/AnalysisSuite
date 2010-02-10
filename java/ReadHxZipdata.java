@@ -14,25 +14,24 @@
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.BufferedInputStream;
-import java.util.zip.Inflater;
+import java.util.zip.InflaterInputStream;
 
 public class ReadHxZipdata {
 	
 	public static void main(String [ ] args)
 	{
-		if(args.length!=5) {
-			System.err.println("usage: java ReadHxZipdata <infile> <offset> <compressedDatalength> <uncompressedDatalength> <outfile>");
+		if(args.length!=4) {
+			System.err.println("usage: java ReadHxZipdata <infile> <zlibdataoffset> <uncompressedDatalength> <outfile>");
 			return;
 		}
 
 		String file=args[0];
-		String outfile=args[4];
-		int offset=0,dataLength=0,compressedDataLength=0;
+		String outfile=args[3];
+		int zlibdataoffset=0,dataLength=0,compressedDataLength=0;
 		try {
 			// the String to int conversion happens here
-			offset = Integer.parseInt(args[1].trim());
-			compressedDataLength = Integer.parseInt(args[2].trim());
-			dataLength = Integer.parseInt(args[3].trim());
+			zlibdataoffset = Integer.parseInt(args[1].trim());
+			dataLength = Integer.parseInt(args[2].trim());
 			System.err.println("dataLength is "+dataLength+" bytes");
 	    }
 	    catch (NumberFormatException nfe)
@@ -42,22 +41,28 @@ public class ReadHxZipdata {
 		
 		try{
 			
-			// First read compressed data
+			// First set up input stream
 			FileInputStream im = new FileInputStream(file);
-			System.err.println("Skipping "+offset+" bytes");
+			System.err.println("Skipping "+zlibdataoffset+" bytes");
 			BufferedInputStream bis = new BufferedInputStream(im);
-			bis.skip(offset);
-			byte[] compressedData = new byte[compressedDataLength];
-			bis.read(compressedData);
-			im.close();
-
+			bis.skip(zlibdataoffset);
+		
 			// Now decompress data
-			Inflater decompressor = new Inflater();
+			InflaterInputStream decompressor = new InflaterInputStream(bis);
 			byte[] buf = new byte[dataLength];
-			decompressor.setInput(compressedData, 0, compressedDataLength);
-			int bytesread = decompressor.inflate(buf);
-			decompressor.end();
 			
+			// Loop to read uncompressed data until we've got all we wanted
+		    int offset = 0, len = dataLength;
+			while (len > 0 && decompressor.available()==1) {
+				int count = decompressor.read(buf, offset, len);
+				if (count <= 0)
+					return;
+				offset += count;
+				len -= count;
+			}
+			im.close();
+						
+			int bytesread = dataLength - len;
 			System.err.println("Read "+bytesread+" bytes");
 			
 			// Now write output
