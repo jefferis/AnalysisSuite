@@ -1385,7 +1385,7 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	if(isTRUE(grep("\\(Hx.?*\\)",postAt)==1)){
 		postAt=sub(".?*\\(([^)]+)\\).?*","\\1",postAt)
 		dataEncoding=toupper(strsplit(postAt,",")[[1]][1])
-		rleLength=as.integer(strsplit(postAt,",")[[1]][2])
+		compressedLength=as.integer(strsplit(postAt,",")[[1]][2])
 	}
 	
 #     Amira docs: The primitive data types must be
@@ -1414,9 +1414,15 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	if(Verbose) cat("dataLength =",dataLength,"dataType =",dataTypes$what[i],"size=",dataTypes$size[i],"\n")
 	if(binary){
 		if(dataEncoding=="HXBYTERLE"){
-			d=readBin(fc,what=raw(0),n=rleLength,size=1)
+			d=readBin(fc,what=raw(0),n=compressedLength,size=1)
 			d=DecodeRLEBytes(d,dataLength)
 			d=as.integer(d)
+		} else if(dataEncoding == "HXZIP"){
+			d=DecodeHxZip(filename,seek(fc),
+				compressedLength=compressedLength,
+				uncompressedLength=dataLength,
+				what=dataTypes$what[i],size=dataTypes$size[i],
+				signed=dataTypes$signed[i],endian=endian)
 		} else if(dataEncoding==""){
 			d=readBin(fc,what=dataTypes$what[i],n=dataLength,size=dataTypes$size[i],
 				signed=dataTypes$signed[i],endian=endian)
@@ -1443,6 +1449,18 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 # 			attr(d,"BoundingBox")<-NULL
 	}
 	return(d)
+}
+
+DecodeHxZip<-function(file,offset,compressedLength,uncompressedLength,...){
+	JavaDir<-file.path(RootDir,"java")
+	if(!file.exists(file.path(JavaDir,"ReadHxZipdata.class"))) stop("Can't find ReadHxZipdata program")
+	tmp=tempfile()
+	system(paste("cd",shQuote(JavaDir),";",
+		"java ReadHxZipdata",shQuote(file),offset,compressedLength,uncompressedLength,shQuote(tmp)))
+	
+	d=readBin(tmp,n=uncompressedLength,...)
+	unlink(tmp)
+	d
 }
 
 DecodeRLEBytes<-function(d,uncompressedLength){
