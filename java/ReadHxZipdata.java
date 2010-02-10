@@ -18,6 +18,8 @@ import java.util.zip.InflaterInputStream;
 
 public class ReadHxZipdata {
 	
+	static boolean verbose = false;
+	
 	public static void main(String [ ] args)
 	{
 		if(args.length!=4) {
@@ -32,7 +34,7 @@ public class ReadHxZipdata {
 			// the String to int conversion happens here
 			zlibdataoffset = Integer.parseInt(args[1].trim());
 			dataLength = Integer.parseInt(args[2].trim());
-			System.err.println("dataLength is "+dataLength+" bytes");
+			if(verbose) System.err.println("dataLength is "+dataLength+" bytes");
 	    }
 	    catch (NumberFormatException nfe)
 	    {
@@ -43,7 +45,7 @@ public class ReadHxZipdata {
 			
 			// First set up input stream
 			FileInputStream im = new FileInputStream(file);
-			System.err.println("Skipping "+zlibdataoffset+" bytes");
+			if(verbose) System.err.println("Skipping "+zlibdataoffset+" bytes");
 			BufferedInputStream bis = new BufferedInputStream(im);
 			bis.skip(zlibdataoffset);
 		
@@ -63,13 +65,13 @@ public class ReadHxZipdata {
 			im.close();
 						
 			int bytesread = dataLength - len;
-			System.err.println("Read "+bytesread+" bytes");
+			if(verbose) System.err.println("Read "+bytesread+" bytes");
 			
 			// Now write output
 			FileOutputStream fos = new FileOutputStream(outfile);
 			fos.write(buf);
 			fos.close();
-			System.err.println("Wrote "+bytesread+" bytes");
+			if(verbose) System.err.println("Wrote "+bytesread+" bytes");
 		}
 		catch (Exception e) {
 			System.out.println(""+e);
