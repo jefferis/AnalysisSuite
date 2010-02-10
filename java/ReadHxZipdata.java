@@ -10,16 +10,7 @@ import java.io.FileOutputStream;
 import java.util.zip.InflaterInputStream;
 
 public class ReadHxZipdata {
-	private static PrintWriter out;
-	private static String charsetName = "UTF-8";
 	
-	static {
-        try {
-            out = new PrintWriter(new OutputStreamWriter(System.out, charsetName), true);
-        }
-        catch (UnsupportedEncodingException e) { System.out.println(e); }
-    }
-
 	public static void main(String [ ] args)
 	{
 		if(args.length!=4) {
@@ -34,6 +25,7 @@ public class ReadHxZipdata {
 			// the String to int conversion happens here
 			offset = Integer.parseInt(args[1].trim());
 			dataLength = Integer.parseInt(args[2].trim());
+			System.err.println("dataLength is "+dataLength+" bytes");
 	    }
 	    catch (NumberFormatException nfe)
 	    {
@@ -41,15 +33,22 @@ public class ReadHxZipdata {
 	    }
 		
 		try{
-			FileOutputStream fos = new FileOutputStream(outfile);
 			
 			FileInputStream im = new FileInputStream(file);
 			im.skip(offset);
+			System.err.println("Skipping "+offset+" bytes");
 			InflaterInputStream decompressor = new InflaterInputStream(im);
 			byte[] buf = new byte[dataLength];
-			decompressor.read(buf,0,dataLength);
+			int bytesread = decompressor.read(buf,0,dataLength);
+			im.close();
+			decompressor.close();
 			
+			System.err.println("Read "+bytesread+" bytes");
+			
+			FileOutputStream fos = new FileOutputStream(outfile);
 			fos.write(buf);
+			fos.close();
+			System.err.println("Wrote "+bytesread+" bytes");
 		}
 		catch (Exception e) {
 			System.out.println(""+e);
