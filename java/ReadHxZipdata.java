@@ -2,9 +2,6 @@
 // Amiramesh files using the HxZip encoding
 // (c) Copyright 2010 Gregory Jefferis. All Rights Reserved. 
 
-import java.io.UnsupportedEncodingException;
-import java.io.PrintWriter;
-import java.io.OutputStreamWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.BufferedInputStream;
