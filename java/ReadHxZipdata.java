@@ -41,8 +41,14 @@ public class ReadHxZipdata {
 			System.err.println("Skipping "+offset+" bytes");
 			BufferedInputStream bis = new BufferedInputStream(im);
 			InflaterInputStream decompressor = new InflaterInputStream(bis);
+			// long bytesread = decompressor.skip(dataLength);
 			byte[] buf = new byte[dataLength];
-			int bytesread = decompressor.read(buf,0,dataLength);
+			int i=0;
+			for(; i<dataLength && decompressor.available()==1 ;i++){
+				buf[i]=(byte) decompressor.read();
+			}
+			int bytesread = i;
+			// int bytesread = decompressor.read(buf,0,dataLength);
 			im.close();
 			decompressor.close();
 			
