@@ -64,7 +64,7 @@
 # source("Greg Data:AnalysingTraceFiles:R:NeuronFunctions5.s")
 # source(file.path(CodeDir,"NeuronFunctions5.s"))
 
-if(!require(scatterplot3d) || !require(rgl)){
+if(!require(rgl) && !require(scatterplot3d)){
 	stop("Please install either rgl or scatterplot3d for 3d plotting")
 }   # for plotneuron3d()
 
