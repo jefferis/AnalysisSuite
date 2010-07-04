@@ -252,7 +252,7 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 	return(returnList)
 }
 
-.ParseAmirameshParameters<-function(textArray, CheckLabel=TRUE){
+.ParseAmirameshParameters<-function(textArray, CheckLabel=TRUE,ParametersOnly=FALSE){
 #  Reads Torsten's IGS TypedStream format which is what he uses for:
 #  registration
 #  studylist
@@ -260,9 +260,12 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 #  Note that there are special methods to handle the 
 #  coefficients and active members of a spline warp 
 	
+	closeConnectionWhenDone=TRUE
 	if(is.character(textArray)) con=textConnection(textArray,open='r')
-	else con=textArray
-	
+	else {
+		con=textArray
+		closeConnectionWhenDone=FALSE
+	}
 	l=list()
 	
 	checkLabel=function(label) 	{
@@ -286,6 +289,9 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 		# skip if this is a blank line
 		if(nchar(thisLine)==0) next
 
+		# skip if this is a comment
+		if(substr(thisLine,1,1)=="#") next
+
 		items=strsplit(thisLine," ",extended=FALSE)[[1]]
 		
 		if(length(items)==0) next
@@ -306,7 +312,10 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 			if(CheckLabel) label=checkLabel(label)
 			l[[length(l)+1]]=.ParseAmirameshParameters(con,CheckLabel=CheckLabel)
 			names(l)[length(l)]<-label
-			next
+			
+			if(ParametersOnly && label=="Parameters")
+				break # we're done
+			else next
 		}
 		if(items[length(items)]=="}") {
 			returnAfterParsing=TRUE
