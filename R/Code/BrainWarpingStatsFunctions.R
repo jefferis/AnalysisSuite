@@ -142,18 +142,31 @@ TransformNeuronSimple<-function(neuron,transform=c("original","affine")){
 }
 
 TransformSurfFile<-function(surffile,outfile,warpfile=NULL,transform=c("warp","affine"),
-	UseAffineForNAs=FALSE,...){
+	na.action=c("ignore","affine","warp-nocheck"),...){
 	transform=match.arg(transform)
+	na.action=match.arg(na.action)
 	surfheaderlines<-readLines(surffile,n=500)
 	vertexdef=grep("^Vertices",surfheaderlines)
 	nVertices=as.integer(sub("Vertices\\s+","",surfheaderlines[vertexdef],perl=T))
 	if(is.na(nVertices) || nVertices<1) stop("could not parse file")
 	xyz=read.table(surffile,skip=vertexdef,nrows=nVertices)
 	txyz=transformedPoints(surffile,xyz,warpfile=warpfile,transforms=transform,...)[[transform]]
-	if(transform=="warp" && UseAffineForNAs && any(is.na(txyz))) {
-		# use affine transformed points to replace NAs
+	if(transform=="warp" && na.action!="ignore" && any(is.na(txyz))) {
 		narows=apply(txyz,1,function(x) any(is.na(x)))
-		txyz[narows,]=transformedPoints(surffile,xyz[narows,],warpfile=warpfile,transforms='affine',...)[['affine']]
+		if(na.action=='affine'){
+			# use affine transformed points to replace NAs
+			txyz[narows,]=transformedPoints(surffile,xyz[narows,],warpfile=warpfile,
+				transforms='affine',...)[['affine']]
+			warning("Falling back to affine transformation for ",sum(narows),"/",length(narows),
+			" points.")
+		}
+		else{
+			# use warp without gregxform checking if inversion was successful
+			txyz[narows,]=transformedPoints(surffile,xyz[narows,],warpfile=warpfile,
+				transforms='warp',gregxoptions="--binary --no-check",...)[['warp']]
+			warning("Falling back to warp-nocheck transformation for ",	sum(narows),"/",length(narows),
+				" points.")
+		}
 	}
 	# now splice file back together again
 	writeLines(surfheaderlines[1:vertexdef],outfile)
