@@ -141,6 +141,22 @@ TransformNeuronSimple<-function(neuron,transform=c("original","affine")){
 	}
 }
 
+TransformSurfFile<-function(surffile,outfile,warpfile=NULL,transform=c("warp","affine"),...){
+	transform=match.arg(transform)
+	surfheaderlines<-readLines(surffile,n=500)
+	vertexdef=grep("^Vertices",surfheaderlines)
+	nVertices=as.integer(sub("Vertices\\s+","",surfheaderlines[vertexdef],perl=T))
+	if(is.na(nVertices) || nVertices<1) stop("could not parse file")
+	xyz=read.table(surffile,skip=vertexdef,nrows=nVertices)
+	txyz=transformedPoints(surffile,xyz,warpfile=warpfile,transforms=transform,...)[[transform]]
+	# now splice file back together again
+	writeLines(surfheaderlines[1:vertexdef],outfile)
+	write.table(txyz,outfile,append=TRUE,col.names=FALSE,row.names=FALSE)
+	# now we need to append the rest of the file
+	cmd=paste("tail -n +",vertexdef+nVertices," ",shQuote(surffile)," >> ",shQuote(outfile),sep="")
+	system(cmd)
+}
+
 MirrorNeuron<-function(n,mirrorAxisSize,mirrorAxis=c("X","Y","Z"),warpfunction,...){
 	mirrorAxis=match.arg(mirrorAxis)
 	# function to transform a neuron into contralateral hemisphere
