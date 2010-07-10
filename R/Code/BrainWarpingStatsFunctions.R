@@ -141,7 +141,8 @@ TransformNeuronSimple<-function(neuron,transform=c("original","affine")){
 	}
 }
 
-TransformSurfFile<-function(surffile,outfile,warpfile=NULL,transform=c("warp","affine"),...){
+TransformSurfFile<-function(surffile,outfile,warpfile=NULL,transform=c("warp","affine"),
+	UseAffineForNAs=FALSE,...){
 	transform=match.arg(transform)
 	surfheaderlines<-readLines(surffile,n=500)
 	vertexdef=grep("^Vertices",surfheaderlines)
@@ -149,6 +150,11 @@ TransformSurfFile<-function(surffile,outfile,warpfile=NULL,transform=c("warp","a
 	if(is.na(nVertices) || nVertices<1) stop("could not parse file")
 	xyz=read.table(surffile,skip=vertexdef,nrows=nVertices)
 	txyz=transformedPoints(surffile,xyz,warpfile=warpfile,transforms=transform,...)[[transform]]
+	if(transform=="warp" && UseAffineForNAs && any(is.na(txyz))) {
+		# use affine transformed points to replace NAs
+		narows=apply(txyz,1,function(x) any(is.na(x)))
+		txyz[narows,]=transformedPoints(surffile,xyz[narows,],warpfile=warpfile,transforms='affine',...)[['affine']]
+	}
 	# now splice file back together again
 	writeLines(surfheaderlines[1:vertexdef],outfile)
 	write.table(txyz,outfile,append=TRUE,col.names=FALSE,row.names=FALSE)
