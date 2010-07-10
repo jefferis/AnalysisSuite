@@ -199,8 +199,8 @@ AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
 	if(UseLock && !makelock(lockfile)) return (FALSE)
 	
 	# take a nrrd image and run Torsten's auto crop function
-	options=paste('--auto-crop',threshold,options)
 	if(hasOrigin){
+		options=paste("--crop-by-threshold",threshold,options)
 		# Torsten's tool will add to existing origin if present
 		cmd=paste(convertTool,options,shQuote(infile),shQuote(outfile))
 		system(cmd)
@@ -209,9 +209,11 @@ AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
 		# read in the resultant affine transformation file
 		# and shift the nrrd's origin assuming that it was 0,0,0
 		cropxformreg=paste(tempfile(),".list",sep="")
-		options=paste(options,'--crop-xform-out',shQuote(cropxformreg))
+		options=paste("--crop-by-threshold-write-xform",threshold,options)
 		tmpoutfile=paste(sep=".",outfile,"tmp.nrrd")
-		cmd=paste(convertTool,options,shQuote(infile),shQuote(tmpoutfile))
+		# nb xform is written to stdout by default
+		cmd=paste(convertTool,options,shQuote(infile),shQuote(tmpoutfile),
+			">",shQuote(cropxformreg))
 		system(cmd)
 	}
 
