@@ -102,7 +102,7 @@ sourcelist<-setdiff(sourcelist,"Startup.R")
 SourcePaths<-file.path(CodeDir,sourcelist)
 for (MyPath in SourcePaths) {
 	#cat(MyPath," ")
-	source(MyPath)
+	try(source(MyPath))
 }
 
 setwd(ObjDir)
