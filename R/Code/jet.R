@@ -27,6 +27,3 @@ jet.colors2<-function(n){
 		# there is a glitch that sometimes produces repeated colours
 		unique(x)
 }
-
-		
-		
