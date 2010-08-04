@@ -101,7 +101,7 @@ ReadIGSTypedStream<-function(con, CheckLabel=TRUE){
 		# skip if this is a blank line
 		if(nchar(thisLine)==0) next
 
-		items=strsplit(thisLine," ",extended=FALSE)[[1]]
+		items=strsplit(thisLine," ",fixed=TRUE)[[1]]
 		
 		if(length(items)==0) next
 		# get the label and items
