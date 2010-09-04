@@ -1,0 +1,27 @@
+This package provides numerous functions for reading/writing and analysing neuroanatomical data in R.  It is an update to accompany the paper:
+
+Cachero, Ostrovsky et al., Sexual Dimorphism in the Fly Brain, Current Biology (2010), doi:10.1016/j.cub.2010.07.045
+
+http://dx.doi.org/10.1016/j.cub.2010.07.045
+
+of software first released for the paper:
+
+"Comprehensive Maps of Drosophila Higher Olfactory Centers: 
+Spatially Segregated Fruit and Pheromone Representation"
+Cell (2007), doi:10.1016/j.cell.2007.01.040
+by Gregory S.X.E. Jefferis*, Christopher J. Potter*
+Alexander M. Chan, Elizabeth C. Marin
+Torsten Rohlfing, Calvin R. Maurer, Jr., and Liqun Luo
+
+http://dx.doi.org/10.1016/j.cell.2007.01.040
+
+INSTALLATION
+------------
+
+  * You need to copy the source code to a suitable location on your hard drive
+  * edit ''R/Code/Startup.R'' according to instructions in that file
+  * Then start R
+  * source ''R/Code/Startup.R''
+  * See http://flybrain.mrc-lmb.cam.ac.uk/dokuwiki/doku.php?id=warping_manual: for further details
+
+
