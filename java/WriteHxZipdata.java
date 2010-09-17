@@ -22,14 +22,20 @@ public class WriteHxZipdata {
 
 		String infilepath=args[0];
 		String outfilepath=args[1];
-		File infile = new File(infilepath);
+		
+		File infile = null;
+		if(!infilepath.equals("-")) infile = new File(infilepath);
 		File outfile = new File(outfilepath);
 
 		try{
 			
 			// First set up input stream
-			FileInputStream im = new FileInputStream(infile);
-			BufferedInputStream bis = new BufferedInputStream(im);
+			BufferedInputStream bis;
+			if(infile!=null){
+				bis = new BufferedInputStream(new FileInputStream(infile));
+			} else {
+				bis = new BufferedInputStream(System.in);
+			}
 			BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(outfile));
 		
 			// Now compress data
