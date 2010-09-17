@@ -1386,13 +1386,14 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	
 	# and finally the data type
 	ldl=headerLines[LatticeTypeDefLine]
-	dataTypeName=sub(".*\\{\\s*(\\w+)\\s+.?*\\s*\\}.*","\\1",ldl,ignore.case=T)
+	# dataTypeName=sub(".*\\{\\s*(\\w+)\\s+.?*\\s*\\}.*","\\1",ldl,ignore.case=T,perl=T)
+	dataTypeName=sub(".*\\{\\s*(\\w+)\\s+.*?\\s*\\}.*","\\1",ldl,ignore.case=T,perl=T)
 	# check if the data is encoded in some way
 	#"Lattice { byte Labels } @1(HxByteRLE,391697)"
 	postAt=strsplit(ldl,"@1")[[1]][2]
 	dataEncoding=""
-	if(isTRUE(grep("\\(Hx.?*\\)",postAt)==1)){
-		postAt=sub(".?*\\(([^)]+)\\).?*","\\1",postAt)
+	if(isTRUE(grep("\\(Hx.*?\\)",postAt)==1)){
+		postAt=sub(".*?\\(([^)]+)\\).*?","\\1",postAt)
 		dataEncoding=toupper(strsplit(postAt,",")[[1]][1])
 		compressedLength=as.integer(strsplit(postAt,",")[[1]][2])
 	}
