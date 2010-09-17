@@ -16,7 +16,7 @@ public class WriteHxZipdata {
 	public static void main(String [ ] args)
 	{
 		if(args.length!=2) {
-			System.err.println("usage: java WriteHxZipdata <infile> <outfile>");
+			System.err.println("usage: java WriteHxZipdata <infile|-> <outfile|-> (where - implies stdin|out)");
 			return;
 		}
 
@@ -25,7 +25,8 @@ public class WriteHxZipdata {
 		
 		File infile = null;
 		if(!infilepath.equals("-")) infile = new File(infilepath);
-		File outfile = new File(outfilepath);
+		File outfile = null;
+		if(!outfilepath.equals("-")) outfile = new File(outfilepath);
 
 		try{
 			
@@ -36,7 +37,12 @@ public class WriteHxZipdata {
 			} else {
 				bis = new BufferedInputStream(System.in);
 			}
-			BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream(outfile));
+			BufferedOutputStream bos;
+			if(outfile!=null){
+				bos = new BufferedOutputStream(new FileOutputStream(outfile));
+			} else {
+				bos = new BufferedOutputStream(System.out);
+			}
 		
 			// Now compress data
 			DeflaterOutputStream compressor = new DeflaterOutputStream(bos);
