@@ -22,6 +22,6 @@ INSTALLATION
   * edit ''R/Code/Startup.R'' according to instructions in that file
   * Then start R
   * source ''R/Code/Startup.R''
-  * See http://flybrain.mrc-lmb.cam.ac.uk/dokuwiki/doku.php?id=warping_manual: for further details
+  * See http://flybrain.mrc-lmb.cam.ac.uk/dokuwiki/doku.php?id=warping_manual:start for further details
 
 
