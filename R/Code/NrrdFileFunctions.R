@@ -262,7 +262,7 @@ Write3DDensityToHanchuanRaw<-function(filename,dens,dtype=c("float","byte","usho
 }
 
 ConvertNrrdToAmira<-function(infile,outfile=sub("\\.nrrd$",".am",infile),dtype,
-	TypeConversion=c("scale","cast")){
+	TypeConversion=c("scale","cast"),...){
 	TypeConversion=match.arg(TypeConversion)
 	d=Read3DDensityFromNrrd(infile,AttachFullHeader=T)
 	h=attr(d,"header")
@@ -292,7 +292,7 @@ ConvertNrrdToAmira<-function(infile,outfile=sub("\\.nrrd$",".am",infile),dtype,
 		}
 		else stop("Don't yet know how to convert ",oldtype," to ",dtype)
 	}
-	Write3DDensityToAmiraLattice(outfile,d,dtype=dtype)
+	Write3DDensityToAmiraLattice(outfile,d,dtype=dtype,...)
 }
 
 ReadHistogramFromNrrd<-function(filename,...){
