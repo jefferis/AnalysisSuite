@@ -1247,7 +1247,7 @@ Write3DDensityToAmiraRectilinear<-function(filename,d){
 		cat(d$eval.points[,3],"\n",file=fc)
 }
 
-Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text"),
+Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text","hxzip"),
 	dtype=c("float","byte", "short", "ushort", "int", "double"),WriteNrrdHeader=FALSE,endian=c('big','little')){
 	# Produces a lattice format file -
 	# that is one with a regular x,y,z grid
@@ -1291,7 +1291,13 @@ Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text"),
 	if(!is.null(BoundingBox)) cat("\t BoundingBox",BoundingBox,"\n",file=fc)
 	cat("}\n\n",file=fc)
 	
-	cat("Lattice {",dtype,"ScalarField } = @1\n\n",file=fc)
+	if(ftype=="hxzip"){
+		tmp=tempfile()
+		writeBin(as.vector(d,mode=dmode),tmp,size=dtypesize,endian=endian)
+		zipdata=EncodeHxZip(tmp)
+		unlink(tmp)
+		cat("Lattice { ",dtype," ScalarField } = @1(HxZip,",length(zipdata),")\n\n",sep="",file=fc)
+	} else cat("Lattice {",dtype,"ScalarField } = @1\n\n",file=fc)
 
 	cat("@1\n",file=fc)
 	
@@ -1301,6 +1307,7 @@ Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text"),
 	# Write a Nrrd header to accompany the amira file if desired
 	# see http://teem.sourceforge.net/nrrd/
 	if(WriteNrrdHeader) {
+		if(ftype=="hxzip") stop("Nrrd cannot cope with Amira's HxZip encoding (which is subtly different from gzip)")
 		nrrdFilename=paste(filename,sep=".","nhdr")
 		cat("NRRD0004\n",file=nrrdFilename)
 		fc=file(nrrdFilename,open="at") # ie append, text mode
@@ -1329,7 +1336,10 @@ Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text"),
 		write(as.vector(d,mode=dmode),ncol=1,file=filename,append=TRUE)
 	} else {
 		fc=file(filename,open="ab") # ie append, bin mode
-		writeBin(as.vector(d,mode=dmode),fc,size=dtypesize,endian=endian)
+		if(ftype=="hxzip")
+			writeBin(zipdata,fc,size=1,endian=endian)
+		else
+			writeBin(as.vector(d,mode=dmode),fc,size=dtypesize,endian=endian)
 		close(fc)
 	}
 }
@@ -1469,6 +1479,18 @@ DecodeHxZip<-function(file,offset,uncompressedLength,...){
 	
 	d=readBin(tmp,n=uncompressedLength,...)
 	unlink(tmp)
+	d
+}
+
+EncodeHxZip<-function(datafile){
+	JavaDir<-file.path(RootDir,"java")
+	if(!file.exists(file.path(JavaDir,"WriteHxZipdata.class"))) stop("Can't find WriteHxZipdata program")
+	tmpzip=tempfile()
+	system(paste("cd",shQuote(JavaDir),";",
+		"java WriteHxZipdata",shQuote(datafile),shQuote(tmpzip)))
+	
+	d=readBin(tmpzip,n=file.info(tmpzip)$size,what='raw')
+	unlink(tmpzip)
 	d
 }
 
