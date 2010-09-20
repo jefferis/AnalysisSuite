@@ -262,7 +262,7 @@ Write3DDensityToHanchuanRaw<-function(filename,dens,dtype=c("float","byte","usho
 }
 
 ConvertNrrdToAmira<-function(infile,outfile=sub("\\.nrrd$",".am",infile),dtype,
-	TypeConversion=c("scale","cast")){
+	TypeConversion=c("scale","cast"),...){
 	TypeConversion=match.arg(TypeConversion)
 	d=Read3DDensityFromNrrd(infile,AttachFullHeader=T)
 	h=attr(d,"header")
@@ -292,7 +292,7 @@ ConvertNrrdToAmira<-function(infile,outfile=sub("\\.nrrd$",".am",infile),dtype,
 		}
 		else stop("Don't yet know how to convert ",oldtype," to ",dtype)
 	}
-	Write3DDensityToAmiraLattice(outfile,d,dtype=dtype)
+	Write3DDensityToAmiraLattice(outfile,d,dtype=dtype,...)
 }
 
 ReadHistogramFromNrrd<-function(filename,...){
@@ -356,4 +356,46 @@ FixSpaceOrigin<-function(f,origin, Verbose=TRUE)
 	}
 	system(paste("unu data",shQuote(oldfile),"| cat",tmpheader,"- >",shQuote(f)))
 	unlink(c(tmpfile,tmpheader))	
+}
+
+AddOrReplaceNrrdHeaderField<-function(infile,outfile,field,value,Force=FALSE,action=c("addreplace","addonly","replaceonly")){
+	# see if a given field exists and add or replace its value
+	if (infile==outfile) stop("AddOrReplaceNrrdHeaderField: Cannot currently save on top of existing file")
+	if(!Force && file.exists(outfile)) stop("Use Force=TRUE to replace existing files")
+	inh=ReadNrrdHeader(infile)
+	action=match.arg(action)
+
+	newFieldLine=paste(field,": ",value,sep="")
+	oht=attr(inh,"headertext")
+
+	if(field%in%names(inh)) {
+		# replace existing field
+		if(action=="addonly") {
+			warning("Unable to replace field in addonly mode")
+			return(FALSE)
+		}
+		oht=sub(paste(field,": .*",sep=""),newFieldLine,oht)
+	} else {
+		if(action=="replaceonly") {
+			warning("Unable to replace field in replaceonly mode")
+			return(FALSE)
+		}
+		# just append
+		oht=c(oht,newFieldLine)
+	}
+
+	# add a blank line
+	oht=c(oht,"")
+	tmpheader=tempfile()
+	writeLines(oht,tmpheader)
+	system(paste("unu data",shQuote(infile),"| cat",tmpheader,"- >",shQuote(outfile)))
+	unlink(tmpheader)
+}
+
+.standardNrrdFieldName<-function(fieldname)
+{
+	if(length(fieldname)>1) return(sapply(fieldname,.standardNrrdFieldName))
+	if(!fieldname%in%c("space dimension","space units","space origin","space directions","measurement frame"))
+	fieldname=gsub(" ","",fieldname,fixed=TRUE)
+	fieldname
 }
