@@ -222,6 +222,20 @@ $this proc setAllCloneVoltexRanges { lower upper } {
 	}
 }
 
+$this proc setCloneAlphaScale { clone alpha } {
+	if {[exists $clone]} {
+		$clone setAlphaScale $alpha
+		$clone fire
+	}
+}
+
+$this proc setAllCloneAlphaScales { alpha } {
+	set glomActive ""
+	foreach clone [$this getVar glomActive] {
+		$this setCloneAlphaScale $clone $alpha
+	}
+}
+
 $this proc showClone { clone mask } {
 	if {[exists $clone]} {
 		$clone setViewerMask $mask
