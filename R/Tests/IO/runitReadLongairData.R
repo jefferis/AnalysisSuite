@@ -17,9 +17,9 @@ test.ReadLongairNeuron.SinglePath<-function(){
 	        92.2131886482239, 91.6643006205559, 91.1154125928879, 
 	        91.1154125928879, 90.5665245652199, 90.0176365375519, 
 	        89.4687485098839), Z = c(39, 40, 41, 42, 43, 44, 45, 
-	        46, 47, 48, 49), radius = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 
+	        46, 47, 48, 49), W = 2*c(1, 1, 1, 1, 1, 1, 1, 1, 1, 
 	        1, 1), Parent = c(-1, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10)), .Names = c("PointNo", 
-	    "Label", "X", "Y", "Z", "radius", "Parent"), row.names = c(NA, 
+	    "Label", "X", "Y", "Z", "W", "Parent"), row.names = c(NA, 
 	    -11L), class = "data.frame")), .Names = c("NumPoints", 
 	"StartPoint", "BranchPoints", "EndPoints", "NumSegs", "SegList", 
 	"d"))
@@ -647,7 +647,7 @@ test.ReadLongairNeuron.PathsJoiningFirstPath<-function(){
 	        56, 56, 56, 57, 57, 57, 57, 57, 57, 57, 57, 57, 57, 58, 
 	        59, 60, 61, 61, 61, 62, 63, 64, 64, 64, 64, 64, 64, 65, 
 	        65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 65, 
-	        65, 65, 65, 65, 65, 65, 65, 65), radius = c(1, 1, 1, 
+	        65, 65, 65, 65, 65, 65, 65, 65), W = 2*c(1, 1, 1, 
 	        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
 	        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
 	        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
@@ -749,7 +749,7 @@ test.ReadLongairNeuron.PathsJoiningFirstPath<-function(){
 	        673, 674, 675, 676, 677, 678, 679, 680, 681, 682, 683, 
 	        684, 685, 686, 687, 688, 689, 690, 691, 692, 693, 694, 
 	        695, 696, 697, 698, 699, 700)), .Names = c("PointNo", 
-	    "Label", "X", "Y", "Z", "radius", "Parent"), row.names = c(NA, 
+	    "Label", "X", "Y", "Z", "W", "Parent"), row.names = c(NA, 
 	    701L), class = "data.frame")), .Names = c("NumPoints", 
 	"StartPoint", "BranchPoints", "EndPoints", "NumSegs", "SegList", 
 	"d"))
@@ -1178,7 +1178,7 @@ test.ReadLongairNeuron.HigherOrderPath<-function(){
 	    64, 64, 63, 63, 63, 63, 63, 63, 63, 62, 62, 62, 62, 62, 62, 
 	    62, 62, 62, 62, 62, 61, 61, 61, 61, 61, 60, 60, 60, 60, 60, 
 	    59, 59, 59, 59, 60, 61, 61, 61, 60, 60, 60, 60, 60, 60, 59, 
-	    59, 58, 58, 58), radius = c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
+	    59, 58, 58, 58), W = 2*c(1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
 	    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
 	    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
 	    1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 
@@ -1249,7 +1249,7 @@ test.ReadLongairNeuron.HigherOrderPath<-function(){
 	    497, 498, 499, 500, 501, 502, 503, 504, 505, 506, 507, 508, 
 	    509, 510, 511, 512, 513, 514, 515, 516, 517, 518, 519, 520, 
 	    521, 522, 523, 524, 525)), .Names = c("PointNo", "Label", 
-	    "X", "Y", "Z", "radius", "Parent"), row.names = c(NA, 526L
+	    "X", "Y", "Z", "W", "Parent"), row.names = c(NA, 526L
 	    ), class = "data.frame")), .Names = c( "NumPoints", 
 	"StartPoint", "BranchPoints", "EndPoints", "NumSegs", "SegList", 
 	"d"))
