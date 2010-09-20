@@ -240,7 +240,6 @@ AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
 	tmpheader=tempfile()
 	writeLines(oht,tmpheader)
 	system(paste("unu data",shQuote(tmpoutfile),"| cat",tmpheader,"- >",shQuote(outfile)))
-	system(cmd)
 	unlink(c(tmpoutfile,tmpheader))
 }
 
