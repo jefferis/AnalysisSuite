@@ -358,19 +358,28 @@ FixSpaceOrigin<-function(f,origin, Verbose=TRUE)
 	unlink(c(tmpfile,tmpheader))	
 }
 
-AddOrReplaceNrrdHeaderField<-function(infile,outfile,field,value,Force=FALSE){
+AddOrReplaceNrrdHeaderField<-function(infile,outfile,field,value,Force=FALSE,action=c("addreplace","addonly","replaceonly")){
 	# see if a given field exists and add or replace its value
 	if (infile==outfile) stop("AddOrReplaceNrrdHeaderField: Cannot currently save on top of existing file")
 	if(!Force && file.exists(outfile)) stop("Use Force=TRUE to replace existing files")
 	inh=ReadNrrdHeader(infile)
+	action=match.arg(action)
 
 	newFieldLine=paste(field,": ",value,sep="")
 	oht=attr(inh,"headertext")
 
 	if(field%in%names(inh)) {
 		# replace existing field
+		if(action=="addonly") {
+			warning("Unable to replace field in addonly mode")
+			return(FALSE)
+		}
 		oht=sub(paste(field,": .*",sep=""),newFieldLine,oht)
 	} else {
+		if(action=="replaceonly") {
+			warning("Unable to replace field in replaceonly mode")
+			return(FALSE)
+		}
 		# just append
 		oht=c(oht,newFieldLine)
 	}
