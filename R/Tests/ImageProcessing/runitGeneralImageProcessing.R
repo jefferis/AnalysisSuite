@@ -20,3 +20,14 @@ test.AutoCropNrrd<-function(){
 	checkEqualsNumeric(h$`space origin`,spaceOrigin,msg="Mismatch with expected image origin (physical coords)",tol=1e-6)
 	unlink(tmpdir,recursive=TRUE)	
 }
+
+test.AddOrReplaceNrrdHeaderField<-function(){
+	tmpdir=tempfile()
+	dir.create(tmpdir)
+	lhmaskfile=file.path(ObjDir,"LHMask.nrrd")
+	AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=file.path(tmpdir,"LHMask.nrrd"),"space origin","(0,0,0)")
+	h=ReadNrrdHeader(file.path(tmpdir,"LHMask.nrrd"))
+	newSpaceOrigin=c(0,0,0)
+	checkEqualsNumeric(h$`space origin`,newSpaceOrigin,msg="Mismatch with expected image origin (physical coords)",tol=1e-6)
+	unlink(tmpdir,recursive=TRUE)	
+}

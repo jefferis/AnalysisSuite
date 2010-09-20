@@ -357,3 +357,36 @@ FixSpaceOrigin<-function(f,origin, Verbose=TRUE)
 	system(paste("unu data",shQuote(oldfile),"| cat",tmpheader,"- >",shQuote(f)))
 	unlink(c(tmpfile,tmpheader))	
 }
+
+AddOrReplaceNrrdHeaderField<-function(infile,outfile,field,value,Force=FALSE){
+	# see if a given field exists and add or replace its value
+	if (infile==outfile) stop("AddOrReplaceNrrdHeaderField: Cannot currently save on top of existing file")
+	if(!Force && file.exists(outfile)) stop("Use Force=TRUE to replace existing files")
+	inh=ReadNrrdHeader(infile)
+
+	newFieldLine=paste(field,": ",value,sep="")
+	oht=attr(inh,"headertext")
+
+	if(field%in%names(inh)) {
+		# replace existing field
+		oht=sub(paste(field,": .*",sep=""),newFieldLine,oht)
+	} else {
+		# just append
+		oht=c(oht,newFieldLine)
+	}
+
+	# add a blank line
+	oht=c(oht,"")
+	tmpheader=tempfile()
+	writeLines(oht,tmpheader)
+	system(paste("unu data",shQuote(infile),"| cat",tmpheader,"- >",shQuote(outfile)))
+	unlink(tmpheader)
+}
+
+.standardNrrdFieldName<-function(fieldname)
+{
+	if(length(fieldname)>1) return(sapply(fieldname,.standardNrrdFieldName))
+	if(!fieldname%in%c("space dimension","space units","space origin","space directions","measurement frame"))
+	fieldname=gsub(" ","",fieldname,fixed=TRUE)
+	fieldname
+}
