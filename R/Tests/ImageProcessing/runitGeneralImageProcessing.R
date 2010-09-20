@@ -17,6 +17,6 @@ test.AutoCropNrrd<-function(){
 	imageSize=c(44,42,40)
 	spaceOrigin=c(4.2,7.0,5.6)
 	checkEqualsNumeric(h$sizes,imageSize,msg="Mismatch with expected image dimensions in pixels")
-	checkEqualsNumeric(h$`space origin`,spaceOrigin,msg="Mismatch with expected image origin (physical coords)")
+	checkEqualsNumeric(h$`space origin`,spaceOrigin,msg="Mismatch with expected image origin (physical coords)",tol=1e-6)
 	unlink(tmpdir,recursive=TRUE)	
 }
