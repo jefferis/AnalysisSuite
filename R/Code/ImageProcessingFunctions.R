@@ -204,6 +204,7 @@ AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
 		# Torsten's tool will add to existing origin if present
 		cmd=paste(convertTool,options,shQuote(infile),shQuote(outfile))
 		system(cmd)
+		if(UseLock) unlink(lockfile)
 		return (TRUE)
 	} else {
 		# read in the resultant affine transformation file
@@ -241,6 +242,7 @@ AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
 	writeLines(oht,tmpheader)
 	system(paste("unu data",shQuote(tmpoutfile),"| cat",tmpheader,"- >",shQuote(outfile)))
 	unlink(c(tmpoutfile,tmpheader))
+	if(UseLock) unlink(lockfile)
 }
 
 NormaliseAndSmoothNrrd<-function(infile,outfile,outdir,threshold,max,
