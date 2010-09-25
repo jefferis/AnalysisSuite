@@ -61,3 +61,16 @@ ncpus<-function(default=1){
 		return(default)
 	}
 }
+
+makehardlink=function(from,to,DryRun=FALSE,Force=FALSE){
+	if(length(to)>1) stop("can only have one target")
+	# handle multiple froms
+	if(length(from)>1){
+		if(!file.info(".")$isdir) stop("target (to) must be a directory for multiple sources (from)")
+		from=paste(shQuote(from),collapse=" ")
+	} else from = shQuote(from)
+	if(nchar(from)>20000) stop("Shell command length exceeded!")
+	cmd=paste("ln",ifelse(Force,"-f",""),from,shQuote(to))
+	if(DryRun) cat("I would run:",cmd,"\n")
+	else system(cmd)
+}
