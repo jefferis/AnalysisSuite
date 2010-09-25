@@ -64,6 +64,9 @@ ncpus<-function(default=1){
 
 makehardlink=function(from,to,DryRun=FALSE,Force=FALSE){
 	if(length(to)>1) stop("can only have one target")
+	# fix any paths using e.g. ~ for home dir - necessary because we will 
+	# quote the paths later on which will prevent the shell from expanding them
+	to=path.expand(to);from=path.expand(from)
 	# handle multiple froms
 	if(length(from)>1){
 		if(!file.info(".")$isdir) stop("target (to) must be a directory for multiple sources (from)")
