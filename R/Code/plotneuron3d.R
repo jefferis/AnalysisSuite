@@ -64,6 +64,23 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,NeuronNames=FALSE,
 	invisible(rglreturnlist)
 }
 
+plot3dsurface<-function(x,d=MBLHData,VertexComponent="Vertices",col=rainbow,...){
+	# simple function to plot surfaces as read in using ParseAMSurfToContourList
+	# handle multiple objects
+	if(length(x)>1) {
+		if(is.function(col)) col=col(length(x))
+		if(is.factor(col)) col=rainbow(nlevels(col))[as.integer(col)]		
+		
+		invisible(mapply(
+			plot3dsurface,x,VertexComponent=VertexComponent,col=col,...,MoreArgs=list(d=d)))
+	} else {
+		# get order triangle vertices
+		tri=as.integer(t(d[[x]]))
+		invisible(triangles3d(d[[VertexComponent]]$X[tri],
+			d[[VertexComponent]]$Y[tri],d[[VertexComponent]]$Z[tri],col=col,...))
+	}
+}
+
 IdentifyNeuronsMatchingRegion<-function(neurons,select3dfunc,EndPointsOnly=TRUE,Verbose=FALSE,...){
 	## use a qeury function from rgl's select3d to outline a query region
 	## in current rgl scene and see if any neurons are inside
