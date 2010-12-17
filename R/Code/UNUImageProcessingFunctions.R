@@ -35,6 +35,7 @@ Nrrd2op<-function(infiles,outfile,fun=c("max","min","+", "-", "x", "/"),
 
 NrrdMinMax<-function(filename,...){
 	minmax=.callunu("minmax",shQuote(filename),...)
+	if(length(minmax)==0) return(c(NA,NA))
 	as.numeric(sub("(min|max): ","",minmax))
 }
 
@@ -54,6 +55,7 @@ NrrdHisto<-function(infile,outfile=sub("\\.([^.]+)$",".histo.\\1",infile),maskfi
 	if (missing(min) || missing(max)) {
 		# calculate the minimum and maximum
 		r=NrrdMinMax(infile)
+		if(any(is.na(r))) stop("Unable to find min and max from: ",infile)
 		if(missing(min)) min=r[1]
 		if(missing(max)) max=r[2]
 	}
