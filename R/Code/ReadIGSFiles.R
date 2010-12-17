@@ -42,7 +42,9 @@
 
 trim =function(t) sub('[[:space:]]+$', '', sub('^[[:space:]]+', '', t))
 
-ReadIGSRegistration <- function (filename){
+ReadIGSRegistration <- function (filename,ReturnRegistrationOnly=TRUE){
+	# ReturnRegistrationOnly = FALSE will not attempt to extract the registration element from the
+	# registration file
 	if(!file.exists(filename)) {
 		warning("filename ",filename," does not exist. ReadIGSRegistration Returning NULL")
 		return(NULL)
@@ -55,7 +57,7 @@ ReadIGSRegistration <- function (filename){
 			stop(paste("Unable to read registration file in",dirname))
 	}
 	r=ReadIGSTypedStream(filename)
-	if(!is.null(r$registration)) return(r$registration)
+	if(!is.null(r$registration) && ReturnRegistrationOnly) return(r$registration)
 	else return(r)
 }
 
