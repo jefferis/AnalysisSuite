@@ -201,6 +201,23 @@ SimpleDirectPotentialSynapses<-function(a,b,s=2,returnDistanceMatrix=FALSE){
 			 & segs[,3]<=upperRange[3] & segs[,1]>=lowerRange[1]
 			 & segs[,2]>=lowerRange[2] & segs[,3]>=lowerRange[3]) )
 	}
+	segswithin<-function(seg,segs,d){
+		upperRange=seg[1:3]+d
+		lowerRange=seg[1:3]-d
+        
+        #belowUpperRange <- segs[,1:3] <= upperRange
+        #aboveLowerRange <- lowerRange >= segs[,1:3]
+        
+       # if(nrow(segs)==1) allWithinRange = all(belowUpperRange & aboveLowerRange)
+       # else allWithinRange=apply(cbind(belowUpperRange , aboveLowerRange), 1, all)
+        
+        #return(segs[allWithinRange, ])
+        
+		 return(segs[segs[,1]<=upperRange[1] & segs[,2]<=upperRange[2]
+			 & segs[,3]<=upperRange[3] & segs[,1]>=lowerRange[1]
+			 & segs[,2]>=lowerRange[2] & segs[,3]>=lowerRange[3],] )
+	}
+
     selectedBSegs=apply(a,1,segswithin,b,maxlineseglength*2+s*2)
     
     rval=matrix(NA,nrow=nrow(a),ncol=nrow(b))
