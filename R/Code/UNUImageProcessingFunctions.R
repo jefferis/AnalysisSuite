@@ -112,3 +112,27 @@ NrrdTestIntegrity<-function(infile,defaultReturnVal=TRUE){
 	testval=system(paste("unu data",infile," | ",testprog,"-t"),ignore.stderr=TRUE)
 	return(testval==0)
 }
+
+NrrdProject<-function(infile,outfile,axis,
+	measure=c("max", "min", "mean", "median", "mode", "variance", "skew",
+	"intc", "slope", "error", "sd", "product", "sum", "L1", "L2", "Linf"),
+	suffix=NULL,
+	CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE){
+	measure=match.arg(measure)
+	if (missing(outfile)) {
+		if(is.null(suffix)) suffix=paste("-",axis,measure,sep="")
+		outfile=sub("\\.nrrd$",paste(suffix,".png",sep=""),infile)
+	}
+	if(!Force && !RunCmdForNewerInput(NULL,infile,outfile)) return (FALSE)
+	if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile),recursive = TRUE)
+	lockfile=paste(outfile,sep=".","lock")
+	if(UseLock && !makelock(lockfile)) return (FALSE)
+	
+	cmd=paste("unu resample -s x0.3333 x.333 = -k cheap -i",shQuote(infile),
+		"| unu project -a",axis,"-m ",measure," | unu quantize -b 8 | unu save -f png",
+		"-o",shQuote(outfile))
+	rval = system(cmd)==0
+	if(Verbose) cat(".")
+	if(UseLock) unlink(lockfile)
+	return(rval)
+}
