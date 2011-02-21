@@ -322,7 +322,7 @@ ReadHistogramFromNrrd<-function(filename,...){
 	"density", "mids", "xname", "equidist"), class = "histogram")
 }
 
-FixSpaceOrigin<-function(f,origin, Verbose=TRUE)
+FixSpaceOrigin<-function(f,origin, Verbose=TRUE, KeepOriginalModificationTime = FALSE)
 {
 	if(length(origin)==6) origin=origin[c(1,3,5)]
 	if(length(origin)!=3) stop("Supply either an origin or a bounding box")
@@ -351,10 +351,14 @@ FixSpaceOrigin<-function(f,origin, Verbose=TRUE)
 	writeLines(oht,tmpheader)
 	oldfile=f
 	if(KeepBackup){
-		oldfile=paste("f",sep="",".bak")
+		oldfile=paste(f,sep="",".bak")
 		if(!file.rename(f,oldfile)) stop("Unable to rename",f,"to",oldfile)
 	}
 	system(paste("unu data",shQuote(oldfile),"| cat",tmpheader,"- >",shQuote(f)))
+	if(KeepOriginalModificationTime  && KeepBackup){
+		cmd=paste("touch -am -r",shQuote(oldfile),shQuote(f))
+		system(cmd)
+	}
 	unlink(c(tmpfile,tmpheader))	
 }
 
