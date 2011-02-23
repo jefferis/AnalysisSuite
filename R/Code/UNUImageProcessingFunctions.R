@@ -116,6 +116,7 @@ NrrdTestIntegrity<-function(infile,defaultReturnVal=TRUE){
 NrrdProject<-function(infile,outfile,axis,
 	measure=c("max", "min", "mean", "median", "mode", "variance", "skew",
 	"intc", "slope", "error", "sd", "product", "sum", "L1", "L2", "Linf"),
+	scale="x0.3333 x0.333",
 	suffix=NULL,
 	CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE){
 	measure=match.arg(measure)
@@ -123,16 +124,20 @@ NrrdProject<-function(infile,outfile,axis,
 		if(is.null(suffix)) suffix=paste("-",axis,measure,sep="")
 		outfile=sub("\\.nrrd$",paste(suffix,".png",sep=""),infile)
 	}
-	if(!Force && !RunCmdForNewerInput(NULL,infile,outfile)) return (FALSE)
+	if(!file.exists(infile)) stop("infile: ",infile," does not exist")
+	# return TRUE to signal output exists (we just didn't make it now)
+	if(!Force && !RunCmdForNewerInput(NULL,infile,outfile)) return (TRUE)
 	if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile),recursive = TRUE)
 	lockfile=paste(outfile,sep=".","lock")
+	# return FALSE to signal output doens't exist
 	if(UseLock && !makelock(lockfile)) return (FALSE)
-	
-	cmd=paste("unu resample -s x0.3333 x.333 = -k cheap -i",shQuote(infile),
+	if(is.numeric(scale)) scale=paste(scale,collapse=" ")
+	cmd=paste("unu resample -s",scale," = -k cheap -i",shQuote(infile),
 		"| unu project -a",axis,"-m ",measure," | unu quantize -b 8 | unu save -f png",
 		"-o",shQuote(outfile))
 	rval = system(cmd)==0
 	if(Verbose) cat(".")
 	if(UseLock) unlink(lockfile)
-	return(rval)
+	if(rval!=0) stop("unu error ",rval," in NrrdProject")
+	return(TRUE)
 }
