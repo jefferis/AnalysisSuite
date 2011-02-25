@@ -63,6 +63,7 @@ ReadVTKLandmarks<-function(filename){
 	m=matrix(points,ncol=3,byrow=T)
 	colnames(m)=c("X","Y","Z")
 	attr(m,"file")=filename
+	attr(m,"title")=title
 	attr(m,"vtk_datatype")=datatype
 	m
 }
