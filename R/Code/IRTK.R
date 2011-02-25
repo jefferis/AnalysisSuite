@@ -40,6 +40,7 @@ irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL, xformtype=c("rigi
 		landmarks=src
 		target=tempfile()
 		src=tempfile()
+		on.exit(unlink(src,target))
 		WriteVTKLandmarks(src,landmarks[[1]],"Landmark Set 1 (Source)")
 		WriteVTKLandmarks(target,landmarks[[2]],"Landmark Set 2 (Target)")
 	} else {
