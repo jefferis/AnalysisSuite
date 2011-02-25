@@ -32,7 +32,9 @@ irtk.dof2mat<-function(doffile,matfile,Invert=FALSE,...){
 	system(cmdline,...)
 }
 
-irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL, xformtype=c("rigid","affine","nonrigid"),...){
+irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL, 
+	xformtype=c("rigid","affine","nonrigid"),cpspacing=10,...){
+		# cpspacing is the control point spacing
 	xformtype=match.arg(xformtype)
 	landmarks=NULL
 	if(is.list(src)){
@@ -40,7 +42,7 @@ irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL, xformtype=c("rigi
 		landmarks=src
 		target=tempfile()
 		src=tempfile()
-		on.exit(unlink(src,target))
+		on.exit(unlink(c(src,target)))
 		WriteVTKLandmarks(src,landmarks[[1]],"Landmark Set 1 (Source)")
 		WriteVTKLandmarks(target,landmarks[[2]],"Landmark Set 2 (Target)")
 	} else {
@@ -55,8 +57,8 @@ irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL, xformtype=c("rigi
 			stop("Please supply an output file")
 		} else {
 			# constructing default output file based on srcfilename
-			srcstem=sub("\\.[^.]$","",src)
-			targetstem=sub("\\.[^.]$","",targetstem)
+			srcstem=sub("\\.[^.]$","",basename(src))
+			targetstem=sub("\\.[^.]$","",target)
 			dofout=paste(targetstem,"_",srcstem,".dof",sep="")
 		}
 	}
@@ -64,13 +66,16 @@ irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL, xformtype=c("rigi
 	if(!is.null(dofin)) {
 		if(!file.exists(dofin))
 			stop("dofin file: ",dofin," is missing")
-		args=c(args,"-dofin",dofin)
 	}
 	
 	cmd=paste("p",sep=substring(xformtype,1,1),"reg")
-	rval=.callirtk(cmd,args=c(shQuote(target),shQuote(src),
-		"-dofout",shQuote(dofout),ifelse(dofin,paste("-dofin",shQuote(dofin)),NULL)),
-		...)
+	args=c(shQuote(target), shQuote(src), "-dofout",shQuote(dofout))
+	if(xformtype=="nonrigid")
+		args=c(args,"-ds",cpspacing)
+		
+	if(!is.null(dofin))
+		args=c( args, paste("-dofin", shQuote(dofin)) )
+	rval=.callirtk(cmd,args, ...)
 	if(rval!=0) stop("error ",rval," in IRTK ",cmd)
 	return(dofout)
 }
