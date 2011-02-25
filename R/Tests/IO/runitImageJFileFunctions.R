@@ -4,7 +4,7 @@
 # ImageJ LUT reading rountines
 # now going to use the RUnit package (see pdf in doc dir)
 
-# runTestFile(file.path(TestDir,"runitImageJFileFunctions.R"))
+# runTestFile(file.path(TestDir,"IO","runitImageJFileFunctions.R"))
 require(RUnit)
 
 ImageJDirectory=NULL

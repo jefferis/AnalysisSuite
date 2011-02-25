@@ -1,7 +1,7 @@
 # runitAffine.R
 # functions to test affine functions
 
-# runTestFile(file.path(CodeDir,"TestAffine.R"))
+# runTestFile(file.path(TestDir,"Geometry","TestAffine.R"))
 require(RUnit)
 
 checkM=function(m){
