@@ -6,10 +6,12 @@ require(RUnit)
 
 test.ReadWriteVTKLandmarks<-function(){
 	testData=matrix(rnorm(15),ncol=3)
+
 	tmpfile=tempfile()
+	on.exit(unlink(tmpfile))
 
 	WriteVTKLandmarks(tmpfile,testData)
 	testData.new=ReadVTKLandmarks(tmpfile)
-	unlink(tmpfile)
+
 	checkEqualsNumeric(testData,testData.new,tol=1e-6)	
 }
