@@ -1,7 +1,7 @@
 # runitDensityFunctions.R
 # functions to test affine functions
 
-# runTestFile(file.path(CodeDir,"runitDensityFunctions.R"))
+# runTestFile(file.path(TestDir,"Core","runitDensityFunctions.R"))
 require(RUnit)
 
 makeDummyDensityData<-function()
