@@ -2,6 +2,9 @@
 # Image Registration Toolkit (IRTK)
 # See: http://www.doc.ic.ac.uk/~dr/software
 
+# See also VTKIO.R for functions to read the VTK pointset format
+# used by IRTK
+
 irtk.dof2mat<-function(doffile,matfile,Invert=FALSE,...){
 	# see http://www.doc.ic.ac.uk/~dr/software/usage.html#dof2mat
 	# reads in a transformation matrix from doffile and converts
@@ -29,17 +32,44 @@ irtk.dof2mat<-function(doffile,matfile,Invert=FALSE,...){
 	system(cmdline,...)
 }
 
-WriteVTKLandmarks<-function(filename,d,title,datatype=c("float","double")){
-	if(ncol(d)!=3) stop("Expect N rows x 3 cold of 3d points")
-	nummarkers=nrow(d)
-	datatype=match.arg(datatype)
-	if(missing(title)) title=paste("Data written from R by WriteVTKLandmarks at",Sys.time())
+irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL, xformtype=c("rigid","affine","nonrigid"),...){
+	xformtype=match.arg(xformtype)
+	landmarks=NULL
+	if(is.list(src)){
+		# this should be a landmark pair
+		landmarks=src
+		target=tempfile()
+		src=tempfile()
+		WriteVTKLandmarks(src,landmarks[[1]],"Landmark Set 1 (Source)")
+		WriteVTKLandmarks(target,landmarks[[2]],"Landmark Set 2 (Target)")
+	} else {
+		if(is.null(target)) stop("Please specify target file")
+		if(!file.exists(src)) stop("Missing src file: ",src)
+		if(!file.exists(target)) stop("Missing target file: ",target)
+	}
 	
-	cat("# vtk DataFile Version 2.0",
-		title,
-		"ASCII",
-		"DATASET POLYDATA",
-		paste("POINTS",nummarkers,datatype),sep="\n",file=filename)
-
-	write.table(d,col.names=F,row.names=F,file=filename,append=TRUE)
+	if(is.null(dofout)) {
+		if(!is.null(landmarks)){ 
+			# ie we were given an R list not some files
+			stop("Please supply an output file")
+		} else {
+			# constructing default output file based on srcfilename
+			srcstem=sub("\\.[^.]$","",src)
+			targetstem=sub("\\.[^.]$","",targetstem)
+			dofout=paste(targetstem,"_",srcstem,".dof",sep="")
+		}
+	}
+		
+	if(!is.null(dofin)) {
+		if(!file.exists(dofin))
+			stop("dofin file: ",dofin," is missing")
+		args=c(args,"-dofin",dofin)
+	}
+	
+	cmd=paste("p",sep=substring(xformtype,1,1),"reg")
+	rval=.callirtk(cmd,args=c(shQuote(target),shQuote(src),
+		"-dofout",shQuote(dofout),ifelse(dofin,paste("-dofin",shQuote(dofin)),NULL)),
+		...)
+	if(rval!=0) stop("error ",rval," in IRTK ",cmd)
+	return(dofout)
 }
