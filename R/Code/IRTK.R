@@ -64,9 +64,7 @@ irtk.dof2mat<-function(doffile,matfile,Invert=FALSE,...){
 		c(shQuote(doffile),"-matout",shQuote(matfile),ifelse(Invert,character(0),"-invert")),...)
 	if(rval>0) return(NULL)
 	
-	mat=irtk.readmat(matfile,skip=1)
-	if(length(mat)!=16) stop("Unable to read a 4x4 matrix. Output was:",readLines(matfile))
-	matrix(mat,nrow=4,byrow=T)
+	irtk.readmat(matfile)
 }
 
 .callirtk<-function(cmd,args,irtkdir=path.expand("~/dev/registration/irtk"),Verbose=FALSE,DryRun=FALSE,...){
