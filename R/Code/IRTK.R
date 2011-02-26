@@ -34,8 +34,11 @@ irtk.dof2mat<-function(doffile,matfile,Invert=FALSE,...){
 
 irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL,
 	xformtype=c("rigid","affine","nonrigid"),cpspacing=10,...){
-	# landmark registration 
-	# xform maps points in target to points in src
+	# landmarks registration: xform maps points in target to points in src
+	# 
+	# this xform can later be used via "transformation" to map
+	# the target image into the src space.
+	# 
 	# cpspacing is the control point spacing
 		
 	xformtype=match.arg(xformtype)
@@ -81,4 +84,62 @@ irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL,
 	rval=.callirtk(cmd,args, ...)
 	if(rval!=0) stop("error ",rval," in IRTK ",cmd)
 	return(dofout)
+}
+
+irtk.transformation<-function(src, dofin, output, target,Invert=FALSE,
+	datatype=c("points","image","surface"),
+	interp=c("nn","linear","bspline","cspline","sinc"), moreArgs, ...){
+	# See http://www.doc.ic.ac.uk/~dr/software/usage.html#transformation
+	# TODO process moreArgs (direct options for image transformation)
+	interp=match.arg(interp)
+	datatype=match.arg(datatype)
+	cmd=switch(datatype,
+		surface='stransformation',points='ptransformation','transformation')
+	
+	if(datatype=="points" && !is.character(src)){
+		# handle points provided directly as R matrix
+		pointsrc=tempfile()
+		WriteVTKLandmarks(pointsrc,src)
+		src=pointsrc
+		if(missing(output)) output=NA
+		on.exit(unlink(pointsrc))
+	} else if(!file.exists(src))
+		stop("Cannot read source file: ",src)
+	
+	ReadOutputPoints=FALSE
+	if(missing(output)) {
+		srcstem=sub("\\.[^.]+$","",src)
+		srcext=sub(".*(\\.[^.]+)$","\\1",basename(src))
+		dofinstem=sub("^([^._]+)[._].*","\\1",basename(dofin))
+		dofout=paste(srcstem,"-",dofinstem,srcext,sep="")
+	} else if(is.na(output)){
+		if(datatype=="points"){
+			# assume that we want to get the points straight back into memory
+			ReadOutputPoints=TRUE
+			pointsout=tempfile()
+			output=pointsout
+			on.exit(unlink(pointsout),add=TRUE)
+		} else 
+			stop("Have not implemented direct reading of (s)transformation output")
+	}
+	if(file.access(dirname(output),2)!=0)
+		stop("Cannot write to output directory:",dirname(output))
+
+	if(!file.exists(src)) stop("Cannot read dofin file: ",dofin)
+
+	args=c(shQuote(src),shQuote(output),"-dofin",shQuote(dofin))
+
+	if(Invert) argcs=c(args,"-invert")
+
+	if(datatype=="image"){
+		if(interp!="nn")
+			args=c(args,paste("-",interp,sep=""))
+		if(!missing(target))
+			args=c("-target",target)
+	}
+
+	rval=.callirtk(cmd, args, ...)
+	if(rval!=0) stop("error ",rval," in IRTK ",cmd)
+	if(ReadOutputPoints) ReadVTKLandmarks(output)
+	else output
 }
