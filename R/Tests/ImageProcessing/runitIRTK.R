@@ -37,22 +37,25 @@ test.ExactAffineLandmarksRegistration<-function(){
 	17.9999694824219, 51, 70, 70), .Dim = c(10L, 3L))
 	
 	# and an affine transform
-	xform=structure(c(0.942915828297041, 0.0179328718440451, -0.0203888393514411, 
-	0, -0.0136353310033790, 0.910056271341136, 0.169845521757469, 
-	0, 0.0437687209705831, -0.323941288649830, 1.73923692084124, 
-	0, -0.216405156503470, 18.1009782432420, -30.7167612528349, 1
-	), .Dim = c(4L, 4L))
+	# this has been checked for 0 shear
+	# require(AnalyzeFMRI)
+	# mat34.to.TRSZ(xform) 
+	xform=ComposeAffineFromIGSParams.named(rx=5,ry=10,rz=20,tx=20,ty=30,tz=40)
+	xform=ComposeAffineFromIGSParams.named(rx=5,ry=10,rz=20,sx=1.1,sz=1.3,tx=20,ty=30,tz=40)
 	
 	# and apply to get a new point set exactly related by an affine xform
 	testLandmarks=rev(list(target=points,src=TransformPoints(points,xform)))
 	
 	# Now feed those points to irtk pareg
-	# which will find an affine registration to map
-	# points from target -> src
+	# whatever the docs say, I conclude that pareg is calculating
+	# a 9 dof affine because it cannnot find the exact transformation 
+
 	dofout=tempfile()
 	on.exit(unlink(dofout))
 	irtk.preg(testLandmarks,dofout=dofout,xformtype='affine')
 	xformcalc=irtk.dof2mat(dofout, Invert=TRUE)
+	
+	print(mat34.to.TRSZ(xform) )
 	
 	# check that we get back the same affine transform
 	checkEqualsNumeric(xformcalc,xform,
