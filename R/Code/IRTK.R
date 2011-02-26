@@ -5,6 +5,26 @@
 # See also VTKIO.R for functions to read the VTK pointset format
 # used by IRTK
 
+# General notes:
+# Transformation Direction
+# ========================
+# (from rreg)
+# Estimate a rigid transformation between two images. The rigid transformation
+# is represented by six degrees of freedom when registering 3-D images. Three
+# degrees of freedom encode rotations about the axes and the remainder encode
+# components of a translation. Three degrees of freedom can encode a rigid
+# transformation between 2-D images, one for a rotation about the origin and two
+# for a translation. The mandatory arguments are the file names of two images, the
+# first is treated as a `target' image and the second is treated as a `source'
+# image. The transformation that is estimated maps locations in the target to
+# locations in the source.
+# ie src <-- target
+
+# So like CMTK, the affine registration calculated is the inverse of what one
+# might naively expect.  The reason for this is that non-rigid transforms are
+# more efficient if they provide a lookup from a regulat grid in target space
+# back to irregular locations in the source image (which can be interpolated)
+
 irtk.dof2mat<-function(doffile,matfile,Invert=FALSE,...){
 	# see http://www.doc.ic.ac.uk/~dr/software/usage.html#dof2mat
 	# reads in a transformation matrix from doffile and converts
@@ -90,6 +110,30 @@ irtk.transformation<-function(src, dofin, output, target,Invert=FALSE,
 	datatype=c("points","image","surface"),
 	interp=c("nn","linear","bspline","cspline","sinc"), moreArgs, ...){
 	# See http://www.doc.ic.ac.uk/~dr/software/usage.html#transformation
+# Quoting from help for transformation:
+# Transform one image (the source) onto the voxel lattice of a second image (the
+# target) using a transformation estimate.The transformation estimate must be
+# 
+
+# A typical set of command line arguments
+# might be as follows: transformation a.nii.gz out.nii.gz -dofin tr-a-b.dof
+# -target b.nii.gz -linear In this example the image being transformed is
+# a.nii.gz, the voxel lattice of the resulting image (out.nii.gz) will match that
+# of the target image (b.nii.gz). The transformation given, tr-a-b.dof, is used to
+# transform the source intensities to the target but it should be noted that this
+# transformation maps locations in the target image to locations in the source
+# image. The intensity at each voxel of out.nii.gz is `pulled-back' from the
+# corresponding source location. If no file is given for the transformation, a
+# default identity transformation is used. I.e. it is assumed that the target and
+# source images share the same world coordinate system (although they need not
+# share the same voxel lattice). An interpolation method (`-linear' in the above
+# example) is usually required because the source locations corresponding to
+# target voxels may not coincide with the source voxel lattice. If no
+# interpolation scheme is specified, nearest neighbour interpolation is used by
+# default. If no target image is specified, the voxel lattice of the source is
+# used as a default.
+	
+	
 	# TODO process moreArgs (direct options for image transformation)
 	interp=match.arg(interp)
 	datatype=match.arg(datatype)
