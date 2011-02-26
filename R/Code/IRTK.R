@@ -53,19 +53,17 @@ irtk.dof2mat<-function(doffile,matfile,Invert=FALSE,...){
 	# see http://www.doc.ic.ac.uk/~dr/software/usage.html#dof2mat
 	# reads in a transformation matrix from doffile and converts
 	# to 4 x4 homogeneous transformation matrix
-	deleteoutput=FALSE
 	if(missing(matfile)) {
 		matfile=tempfile()
-		deleteoutput=TRUE
+		on.exit(unlink(matfile))
 	}
 	
 	rval=.callirtk('dof2mat',
 		c(shQuote(doffile),"-matout",shQuote(matfile),ifelse(Invert,character(0),"-invert")),...)
 	if(rval>0) return(NULL)
 	
-	mat=scan(matfile,skip=1)
+	mat=irtk.readmat(matfile,skip=1)
 	if(length(mat)!=16) stop("Unable to read a 4x4 matrix. Output was:",readLines(matfile))
-	if(deleteoutput) unlink(matfile)
 	matrix(mat,nrow=4,byrow=T)
 }
 
