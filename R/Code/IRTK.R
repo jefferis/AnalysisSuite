@@ -32,10 +32,14 @@ irtk.dof2mat<-function(doffile,matfile,Invert=FALSE,...){
 	system(cmdline,...)
 }
 
-irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL, 
+irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL,
 	xformtype=c("rigid","affine","nonrigid"),cpspacing=10,...){
-		# cpspacing is the control point spacing
+	# landmark registration 
+	# xform maps points in target to points in src
+	# cpspacing is the control point spacing
+		
 	xformtype=match.arg(xformtype)
+	cmd=paste("p",sep=substring(xformtype,1,1),"reg")
 	landmarks=NULL
 	if(is.list(src)){
 		# this should be a landmark pair
@@ -50,16 +54,16 @@ irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL,
 		if(!file.exists(src)) stop("Missing src file: ",src)
 		if(!file.exists(target)) stop("Missing target file: ",target)
 	}
-	
+
 	if(is.null(dofout)) {
 		if(!is.null(landmarks)){ 
 			# ie we were given an R list not some files
 			stop("Please supply an output file")
 		} else {
 			# constructing default output file based on srcfilename
-			srcstem=sub("\\.[^.]$","",basename(src))
-			targetstem=sub("\\.[^.]$","",target)
-			dofout=paste(targetstem,"_",srcstem,".dof",sep="")
+			srcstem=sub("\\.[^.]+$","",basename(src))
+			targetstem=sub("\\.[^.]+$","",target)
+			dofout=paste(targetstem,"_",srcstem,"_",cmd,".dof",sep="")
 		}
 	}
 		
@@ -68,7 +72,6 @@ irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL,
 			stop("dofin file: ",dofin," is missing")
 	}
 	
-	cmd=paste("p",sep=substring(xformtype,1,1),"reg")
 	args=c(shQuote(target), shQuote(src), "-dofout",shQuote(dofout))
 	if(xformtype=="nonrigid")
 		args=c(args,"-ds",cpspacing)
