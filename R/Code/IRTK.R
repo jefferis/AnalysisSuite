@@ -36,6 +36,9 @@ irtk.readmat<-function(matfile,endian='big'){
 	# read an irtk format binary matrix file
 	# this is not documented but seems fairly obvious
 	# However I do wonder whether always big endian
+	# OK - Not quite so obvious - the binary mat file
+	# stores the inverse of what is written to stdout
+	# not sure which corresponds to version discussed in documentation
 	con=file(matfile,open='rb')
 	on.exit(close(con))
 	header=readLines(con,1) 
@@ -43,7 +46,6 @@ irtk.readmat<-function(matfile,endian='big'){
 	if(regexpr("^irtkMatrix",header)<0) stop("This is not a valid IRTK matrix")
 	dims=as.integer(unlist(strsplit(
 		sub(".* (\\d+) x (\\d+)","\\1 \\2",header)," ")))
-	s=seek(con)
 	m=readBin(con,what="double",n=prod(dims),size=8,endian=endian)
 	dim(m)=dims
 	m
