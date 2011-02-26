@@ -47,6 +47,8 @@ test.ExactAffineLandmarksRegistration<-function(){
 	testLandmarks=list(points,TransformPoints(points,xform))
 	
 	# Now feed those points to irtk pareg
+	# which will find an affine registration to map
+	# points from target -> src
 	dofout=tempfile()
 	on.exit(unlink(dofout))
 	irtk.preg(testLandmarks,dofout=dofout,xformtype='affine')
