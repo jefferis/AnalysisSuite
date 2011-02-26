@@ -76,17 +76,16 @@ irtk.dof2mat<-function(doffile,matfile,Invert=FALSE,...){
 
 irtk.preg<-function(target, src=NULL, dofout=NULL, dofin=NULL,
 	xformtype=c("rigid","affine","nonrigid"),cpspacing=10,...){
-	# landmarks registration: xform maps points in target to points in src
-	# 
-	# this xform can later be used via "transformation" to transform
-	# the src image into the target space.
-	# 
-	# Quoting from docs for "transformation":
-	# The transformation given, tr-a-b.dof, is used to transform the source
-	# intensities to the target but it should be noted that this transformation
-	# maps locations in the target image to locations in the source image. 
-	# The intensity at each voxel of out.nii.gz is `pulled-back' 
-	# from the corresponding source location.
+	# landmarks registration: xform maps points in src to points in target
+	# ie 2->1. This is the opposite of what the IRTK docs say, but I am 
+	# quite convinced. Specifically:
+	# I think that affine finds a 9dof xform from 2->1
+	# Then if you do dof2mat you get a binary irtk matrix file
+	# containing the inverse of the 9dof xform (ie 1->2). 
+	# Just to add to the confusion dof2mat will show the 9dof xform on stdout.
+	# ie 2->1
+	# BUT whatever is happening internally both mat and dof files specify 
+	# a 1->2 transformation so the documentation is fundamentally correct
 	
 	# cpspacing is the control point spacing
 		
@@ -115,7 +114,7 @@ irtk.preg<-function(target, src=NULL, dofout=NULL, dofin=NULL,
 			# constructing default output file based on srcfilename
 			srcstem=sub("\\.[^.]+$","",basename(src))
 			targetstem=sub("\\.[^.]+$","",target)
-			dofout=paste(targetstem,"_",srcstem,"_",cmd,".dof",sep="")
+			dofout=paste(targetstem,"-",srcstem,"_",cmd,".dof",sep="")
 		}
 	}
 		
