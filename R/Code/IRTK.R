@@ -74,7 +74,7 @@ irtk.dof2mat<-function(doffile,matfile,Invert=FALSE,...){
 	system(cmdline,...)
 }
 
-irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL,
+irtk.preg<-function(target, src=NULL, dofout=NULL, dofin=NULL,
 	xformtype=c("rigid","affine","nonrigid"),cpspacing=10,...){
 	# landmarks registration: xform maps points in target to points in src
 	# 
@@ -93,16 +93,16 @@ irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL,
 	xformtype=match.arg(xformtype)
 	cmd=paste("p",sep=substring(xformtype,1,1),"reg")
 	landmarks=NULL
-	if(is.list(src)){
+	if(is.list(target)){
 		# this should be a landmark pair
-		landmarks=src
+		landmarks=target
 		target=tempfile()
 		src=tempfile()
 		on.exit(unlink(c(src,target)))
-		WriteVTKLandmarks(src,landmarks[[1]],"Landmark Set 1 (Source)")
-		WriteVTKLandmarks(target,landmarks[[2]],"Landmark Set 2 (Target)")
+		WriteVTKLandmarks(target,landmarks[[1]],"Landmark Set 1 (Target)")
+		WriteVTKLandmarks(src,landmarks[[2]],"Landmark Set 2 (Source)")
 	} else {
-		if(is.null(target)) stop("Please specify target file")
+		if(is.null(src)) stop("Please specify source file")
 		if(!file.exists(src)) stop("Missing src file: ",src)
 		if(!file.exists(target)) stop("Missing target file: ",target)
 	}
