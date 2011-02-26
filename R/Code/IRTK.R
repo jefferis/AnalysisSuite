@@ -78,9 +78,16 @@ irtk.preg<-function(src, target=NULL, dofout=NULL, dofin=NULL,
 	xformtype=c("rigid","affine","nonrigid"),cpspacing=10,...){
 	# landmarks registration: xform maps points in target to points in src
 	# 
-	# this xform can later be used via "transformation" to map
-	# the target image into the src space.
+	# this xform can later be used via "transformation" to transform
+	# the src image into the target space.
 	# 
+	# Quoting from docs for "transformation":
+	# The transformation given, tr-a-b.dof, is used to transform the source
+	# intensities to the target but it should be noted that this transformation
+	# maps locations in the target image to locations in the source image. 
+	# The intensity at each voxel of out.nii.gz is `pulled-back' 
+	# from the corresponding source location.
+	
 	# cpspacing is the control point spacing
 		
 	xformtype=match.arg(xformtype)
