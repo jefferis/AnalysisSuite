@@ -25,6 +25,13 @@
 # more efficient if they provide a lookup from a regulat grid in target space
 # back to irregular locations in the source image (which can be interpolated)
 
+irtk.help<-function(cmd,web=FALSE){
+	# simple wrapper function that returns command line usage information for 
+	# irtk commands
+	if(web) browseURL(paste("http://www.doc.ic.ac.uk/~dr/software/usage.html",sep="#",cmd))
+	else .callirtk(cmd,"")
+}
+
 irtk.dof2mat<-function(doffile,matfile,Invert=FALSE,...){
 	# see http://www.doc.ic.ac.uk/~dr/software/usage.html#dof2mat
 	# reads in a transformation matrix from doffile and converts
