@@ -44,7 +44,7 @@ test.ExactAffineLandmarksRegistration<-function(){
 	), .Dim = c(4L, 4L))
 	
 	# and apply to get a new point set exactly related by an affine xform
-	testLandmarks=list(points,TransformPoints(points,xform))
+	testLandmarks=rev(list(target=points,src=TransformPoints(points,xform)))
 	
 	# Now feed those points to irtk pareg
 	# which will find an affine registration to map
@@ -52,7 +52,7 @@ test.ExactAffineLandmarksRegistration<-function(){
 	dofout=tempfile()
 	on.exit(unlink(dofout))
 	irtk.preg(testLandmarks,dofout=dofout,xformtype='affine')
-	xformcalc=irtk.dof2mat(dofout,Invert=TRUE)
+	xformcalc=irtk.dof2mat(dofout, Invert=TRUE)
 	
 	# check that we get back the same affine transform
 	checkEqualsNumeric(xformcalc,xform,
