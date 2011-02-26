@@ -61,7 +61,7 @@ irtk.dof2mat<-function(doffile,matfile,Invert=FALSE,...){
 	}
 	
 	rval=.callirtk('dof2mat',
-		c(shQuote(doffile),"-matout",shQuote(matfile),ifelse(Invert,character(0),"-invert")),...)
+		c(shQuote(doffile),"-matout",shQuote(matfile),ifelse(Invert,"-invert","")),...)
 	if(rval>0) return(NULL)
 	
 	irtk.readmat(matfile)
