@@ -184,7 +184,7 @@ irtk.transformation<-function(src, dofin, output, target,Invert=FALSE,
 		srcstem=sub("\\.[^.]+$","",src)
 		srcext=sub(".*(\\.[^.]+)$","\\1",basename(src))
 		dofinstem=sub("^([^._]+)[._].*","\\1",basename(dofin))
-		dofout=paste(srcstem,"-",dofinstem,srcext,sep="")
+		output=paste(srcstem,"-",dofinstem,srcext,sep="")
 	} else if(is.na(output)){
 		if(datatype=="points"){
 			# assume that we want to get the points straight back into memory
@@ -202,13 +202,13 @@ irtk.transformation<-function(src, dofin, output, target,Invert=FALSE,
 
 	args=c(shQuote(src),shQuote(output),"-dofin",shQuote(dofin))
 
-	if(Invert) argcs=c(args,"-invert")
+	if(Invert) args=c(args,"-invert")
 
 	if(datatype=="image"){
 		if(interp!="nn")
 			args=c(args,paste("-",interp,sep=""))
 		if(!missing(target))
-			args=c("-target",target)
+			args=c(args,"-target",target)
 	}
 
 	rval=.callirtk(cmd, args, ...)
