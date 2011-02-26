@@ -215,3 +215,40 @@ irtk.transformation<-function(src, dofin, output, target,Invert=FALSE,
 	if(ReadOutputPoints) ReadVTKLandmarks(output)
 	else output
 }
+
+irtk.transformedPoints<-function(xyzs=NULL,dofins,direction=c("inverse","forward"),
+	transforms=c("warp","affine"),...){
+	# provide a wrapper for irtk.transformation suitable for calling
+	# from TransformNeuron
+	# I don't know how to access the affine transform preceding a non-rigid transform
+	# so right now the transforms switch is ignored
+	
+	transforms=match.arg(transforms,several.ok=TRUE)
+	# FIXME check direction mapping for points
+	direction=match.arg(direction) #nb inverse implies from sample to ref
+
+	# massage xyzs input to a 3 col matrix
+	if(is.data.frame(xyzs)) xyzs=data.matrix(xyzs)
+		if(ncol(xyzs)>3){
+		if(all(c("X","Y","Z")) %in% colnames(xyzs))
+		xyzs=xyzs[,c("X","Y","Z")]
+		else xyzs=xyzs[,1:3]
+	}
+
+	l=list(pre=xyzs)
+	if(length(transforms)!=length(dofins)) 
+		stop("Must provide the same number of transform descriptors as dof files")
+	names(dofins)=transforms
+	for (t in transforms){
+		l[[t]]=irtk.transformation(xyzs,dofins[t],output=NA)
+	}
+	l
+}
+
+irtk.TransformNeuron<-function(neuron,dofin=NULL,transform=c("warp","affine"),...){
+	# FIXME - transform specifiers (warp, affine etc) are irrelevant for IRTK 
+	transform=match.arg(transform,several.ok=FALSE)
+	neuron$d[,c("X","Y","Z")]=irtk.transformedPoints(neuron$d[,c("X","Y","Z")],
+		dofins=dofin,transforms=transform,...)[[transform]]
+	neuron
+}
