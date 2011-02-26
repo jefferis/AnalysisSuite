@@ -32,6 +32,23 @@ irtk.help<-function(cmd,web=FALSE){
 	else .callirtk(cmd,"")
 }
 
+irtk.readmat<-function(matfile,endian='big'){
+	# read an irtk format binary matrix file
+	# this is not documented but seems fairly obvious
+	# However I do wonder whether always big endian
+	con=file(matfile,open='rb')
+	on.exit(close(con))
+	header=readLines(con,1) 
+	# irtkMatrix 4 x 4
+	if(regexpr("^irtkMatrix",header)<0) stop("This is not a valid IRTK matrix")
+	dims=as.integer(unlist(strsplit(
+		sub(".* (\\d+) x (\\d+)","\\1 \\2",header)," ")))
+	s=seek(con)
+	m=readBin(con,what="double",n=prod(dims),size=8,endian=endian)
+	dim(m)=dims
+	m
+}
+
 irtk.dof2mat<-function(doffile,matfile,Invert=FALSE,...){
 	# see http://www.doc.ic.ac.uk/~dr/software/usage.html#dof2mat
 	# reads in a transformation matrix from doffile and converts
