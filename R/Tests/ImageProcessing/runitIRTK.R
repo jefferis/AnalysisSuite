@@ -44,11 +44,12 @@ test.ExactAffineLandmarksRegistration<-function(){
 	xform=ComposeAffineFromIGSParams.named(rx=5,ry=10,rz=20,sx=1.1,sz=1.3,tx=20,ty=30,tz=40)
 	
 	# and apply to get a new point set exactly related by an affine xform
-	testLandmarks=rev(list(target=points,src=TransformPoints(points,xform)))
+	testLandmarks=list(target=TransformPoints(points,xform),src=points)
 	
 	# Now feed those points to irtk pareg
-	# whatever the docs say, I conclude that pareg is calculating
-	# a 9 dof affine because it cannnot find the exact transformation 
+	# I conclude that internally pareg is calculating a 9 dof affine from
+	# source to target but that both dof and mat files give 
+	# a transformation from target to source
 
 	dofout=tempfile()
 	on.exit(unlink(dofout))
