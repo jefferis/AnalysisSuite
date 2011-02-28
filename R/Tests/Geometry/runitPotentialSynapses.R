@@ -4,7 +4,7 @@
 # runit tests for the Potential synapse code
 # Created: GSXEJ 2006-03-05
 
-# runTestFile(file.path(CodeDir,"runitPotentialSynapses.R"))
+# runTestFile(file.path(TestDir,"Geometry","runitPotentialSynapses.R"))
 require(RUnit)
 
 

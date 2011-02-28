@@ -1,19 +1,20 @@
 # runitImageJFileFunctions.R
 
 # Some test neurons to verify that all is well for the 
-# AmiraFileFunctions rountines
+# ImageJ LUT reading rountines
 # now going to use the RUnit package (see pdf in doc dir)
 
-# runTestFile(file.path(TestDir,"runitImageJFileFunctions.R"))
+# runTestFile(file.path(TestDir,"IO","runitImageJFileFunctions.R"))
 require(RUnit)
 
 ImageJDirectory=NULL
-if(file.exists("/Applications/ImageJ")){
-	ImageJDirectory="/Applications/ImageJ"	
-} else if(file.exists("/Applications/Fiji.app")){
-	ImageJDirectory="/Applications/Fiji.app"
+
+if(file.exists("/Applications/Fiji.app")){
+	ImageJDirectory="/Applications/Fiji.app"	
 } else if(file.exists("/Applications/Fiji/Fiji.app")){
 	ImageJDirectory="/Applications/Fiji/Fiji.app"
+} else if(file.exists("/Applications/ImageJ")){
+	ImageJDirectory="/Applications/ImageJ"
 }
 
 test.ReadWriteImageJLUTs<-function(){

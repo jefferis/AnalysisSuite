@@ -282,3 +282,10 @@ SimplifyLabelFile<-function(f,omitMaterials="CellBody",includeMaterials=NULL)
 	d[d%in%m$level]=1
 	d
 }
+
+CMTKStatistics<-function(f,exe="statistics"){
+	if(length(f)>1) sapply(f,CMTKStatistics,exe=exe)
+	rval=system2(exe,f,stdout=TRUE)
+	tc=textConnection(rval)
+	read.table(tc,header=TRUE,skip=1)
+}

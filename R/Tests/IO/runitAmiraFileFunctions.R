@@ -4,7 +4,7 @@
 # AmiraFileFunctions rountines
 # now going to use the RUnit package (see pdf in doc dir)
 
-# runTestFile(file.path(TestDir,"runitAmiraFileFunctions.R"))
+# runTestFile(file.path(TestDir,"IO","runitAmiraFileFunctions.R"))
 require(RUnit)
 
 AmiraTutorialDirectory=NULL
