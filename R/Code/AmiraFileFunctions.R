@@ -810,6 +810,12 @@ WriteNeuronToAM<-function(ANeuron,AMFile=NULL,
 	
 	if(is.null(AMFile))
 		AMFile=paste(sub("(.*)\\.[^.]*$","\\1",ANeuron$InputFileName),sep=".",suffix)
+	else if(isTRUE(file.info(AMFile)$isdir)){
+		# we've been given a directory
+		# we want to write a file into this directory with same name as original
+		AMFile=file.path(AMFile,
+			paste(sub("(.*)\\.[^.]*$","\\1",basename(ANeuron$InputFileName)),sep=".",suffix))
+	}
 	
 	if(!Force && file.exists(AMFile) ){
 		warning(paste(AMFile,"already exists; use Force=T to overwrite"))
@@ -968,6 +974,12 @@ WriteNeuronToAM3D<-function(ANeuron,AMFile=NULL,
 	
 	if(is.null(AMFile))
 		AMFile=paste(sub("(.*)\\.[^.]*$","\\1",ANeuron$InputFileName),sep=".",suffix)
+	else if(isTRUE(file.info(AMFile)$isdir)){
+		# we've been given a directory
+		# we want to write a file into this directory with same name as original
+		AMFile=file.path(AMFile,
+			paste(sub("(.*)\\.[^.]*$","\\1",basename(ANeuron$InputFileName)),sep=".",suffix))
+	}
 	
 	if(!Force && file.exists(AMFile) ){
 		warning(paste(AMFile,"already exists; use Force=T to overwrite"))
