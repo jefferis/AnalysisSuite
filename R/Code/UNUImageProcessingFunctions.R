@@ -142,12 +142,15 @@ NrrdProject<-function(infile,outfile,axis,
 	return(TRUE)
 }
 
-NrrdFlip<-function(infile,outfile,axis,suffix=NULL,endian=c("big","little"),
+NrrdFlip<-function(infile,outfile,axes,suffix=NULL,endian=c("big","little"),
 	CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE){
-	# TODO - flip along more than one axis
+	# TODO would be nice if we could 
+	# a) have an absolute flip mode that checks the nrrd content field
+	# b) similarly checks whether output image has been flipped accordingly
+	
 	endian=match.arg(endian)
 	if (missing(outfile)) {
-		if(is.null(suffix)) suffix=paste("-flip",axis,sep="")
+		if(is.null(suffix)) suffix=paste("-flip",paste(axes,collapse=""),sep="")
 		outfile=sub("\\.nrrd$",paste(suffix,".nrrd",sep=""),infile)
 	}
 	if(!file.exists(infile)) stop("infile: ",infile," does not exist")
@@ -159,9 +162,15 @@ NrrdFlip<-function(infile,outfile,axis,suffix=NULL,endian=c("big","little"),
 	if(UseLock && !makelock(lockfile)) return (FALSE)
 	on.exit(unlink(lockfile))
 	if(is.numeric(scale)) scale=paste(scale,collapse=" ")
-	cmd=paste("unu flip -a",axis,"-i",shQuote(infile),
-		" | unu save -f nrrd -e gz -en",endian,
-		"-o",shQuote(outfile))
+	# First axis
+	cmd=paste("unu flip -a",axes[1],"-i",shQuote(infile))
+	# any additional axes
+	for(axis in axes[-1]){
+		cmd=paste(cmd,"| unu flip -a",axis)
+	}
+	# save
+	cmd=paste(cmd," | unu save -f nrrd -e gz -en",endian,"-o",shQuote(outfile))
+	
 	rval = system(cmd)
 	if(Verbose) cat(".")
 	if(rval!=0) stop("unu error ",rval," in NrrdProject")
