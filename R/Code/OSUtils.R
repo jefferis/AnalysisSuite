@@ -77,3 +77,14 @@ makehardlink=function(from,to,DryRun=FALSE,Force=FALSE){
 	if(DryRun) cat("I would run:",cmd,"\n")
 	else system(cmd)
 }
+
+swapfilenames<-function(f1,f2){
+	# quick function to swap filenames 
+	if(length(f1)>1 || length(f2)>1) return(mapply(swapfilenames,f1,f2))
+	
+	if(!all(file.exists(f1),file.exists(f2))) stop("f1 and f2 must exist")
+	
+	tmpfile=tempfile(basename(f1),dirname(f1))
+	rval=file.rename(from=f1,to=tmpfile) && file.rename(from=f2,to=f1) && file.rename(from=tmpfile,to=f2)
+	return(rval)
+}
