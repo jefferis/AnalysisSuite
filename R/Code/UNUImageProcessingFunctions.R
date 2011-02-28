@@ -141,3 +141,29 @@ NrrdProject<-function(infile,outfile,axis,
 	if(rval!=0) stop("unu error ",rval," in NrrdProject")
 	return(TRUE)
 }
+
+NrrdFlip<-function(infile,outfile,axis,suffix=NULL,endian=c("big","little"),
+	CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE){
+	# TODO - flip along more than one axis
+	endian=match.arg(endian)
+	if (missing(outfile)) {
+		if(is.null(suffix)) suffix=paste("-flip",axis,sep="")
+		outfile=sub("\\.nrrd$",paste(suffix,".nrrd",sep=""),infile)
+	}
+	if(!file.exists(infile)) stop("infile: ",infile," does not exist")
+	# return TRUE to signal output exists (we just didn't make it now)
+	if(!Force && !RunCmdForNewerInput(NULL,infile,outfile)) return (TRUE)
+	if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile),recursive = TRUE)
+	lockfile=paste(outfile,sep=".","lock")
+	# return FALSE to signal output doesn't exist
+	if(UseLock && !makelock(lockfile)) return (FALSE)
+	on.exit(unlink(lockfile))
+	if(is.numeric(scale)) scale=paste(scale,collapse=" ")
+	cmd=paste("unu flip -a",axis,"-i",shQuote(infile),
+		" | unu save -f nrrd -e gz -en",endian,
+		"-o",shQuote(outfile))
+	rval = system(cmd)
+	if(Verbose) cat(".")
+	if(rval!=0) stop("unu error ",rval," in NrrdProject")
+	return(TRUE)
+}
