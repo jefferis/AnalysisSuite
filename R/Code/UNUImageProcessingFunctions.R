@@ -135,7 +135,7 @@ NrrdProject<-function(infile,outfile,axis,
 	cmd=paste("unu resample -s",scale," = -k cheap -i",shQuote(infile),
 		"| unu project -a",axis,"-m ",measure," | unu quantize -b 8 | unu save -f png",
 		"-o",shQuote(outfile))
-	rval = system(cmd)==0
+	rval = system(cmd)
 	if(Verbose) cat(".")
 	if(UseLock) unlink(lockfile)
 	if(rval!=0) stop("unu error ",rval," in NrrdProject")
