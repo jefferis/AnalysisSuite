@@ -143,25 +143,39 @@ NrrdProject<-function(infile,outfile,axis,
 }
 
 NrrdFlip<-function(infile,outfile,axes,suffix=NULL,endian=c("big","little"),
-	CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE){
+	CreateDirs=TRUE,Verbose=TRUE,UseLock=FALSE, OverWrite=c("no","update","yes")){
 	# TODO would be nice if we could 
 	# a) have an absolute flip mode that checks the nrrd content field
 	# b) similarly checks whether output image has been flipped accordingly
+	
+	if(is.logical(OverWrite)) OverWrite=ifelse(OverWrite,"yes","no")
+	else OverWrite=match.arg(OverWrite)
 	
 	endian=match.arg(endian)
 	if (missing(outfile)) {
 		if(is.null(suffix)) suffix=paste("-flip",paste(axes,collapse=""),sep="")
 		outfile=sub("\\.nrrd$",paste(suffix,".nrrd",sep=""),infile)
 	}
+	
 	if(!file.exists(infile)) stop("infile: ",infile," does not exist")
-	# return TRUE to signal output exists (we just didn't make it now)
-	if(!Force && !RunCmdForNewerInput(NULL,infile,outfile)) return (TRUE)
+	
+	# return TRUE to signal output exists (whether or not we made it)
+	if(file.exists(outfile)){
+		if(OverWrite=="no"){
+			if(Verbose) cat("Output",outfile,"already exists; use OverWrite=\"yes\" or \"update\" to overwrite or update\n")
+			return(TRUE)
+		} else if(OverWrite=="update"){
+			# check modification times
+			if(!RunCmdForNewerInput(NULL,infile,outfile)) return (TRUE)
+		} else if(Verbose) cat("Overwriting",outfile,"because OverWrite=\"yes\"\n")
+	}
+	
 	if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile),recursive = TRUE)
 	lockfile=paste(outfile,sep=".","lock")
-	# return FALSE to signal output doesn't exist
+	# return FALSE to signal output doesn't (yet) exist
 	if(UseLock && !makelock(lockfile)) return (FALSE)
 	on.exit(unlink(lockfile))
-	if(is.numeric(scale)) scale=paste(scale,collapse=" ")
+
 	# First axis
 	cmd=paste("unu flip -a",axes[1],"-i",shQuote(infile))
 	# any additional axes
