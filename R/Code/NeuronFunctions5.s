@@ -68,12 +68,28 @@ if(!require(rgl) && !require(scatterplot3d)){
 	stop("Please install either rgl or scatterplot3d for 3d plotting")
 }   # for plotneuron3d()
 
+is.neuron<-function(n) {
+	inherits(n,"neuron") || (is.list(n) && !is.null(n$SegList))
+}
+
+is.neuronlist<-function(nl) {
+	inherits(nl,"neuronlist") ||
+		(is.list(nl) && length(nl)>1 && is.neuron(nl[[1]]))
+}
+
+MakeNeuronList<-function(l,df,AddClassToNeurons=TRUE){
+	attr(l,"df")=df
+	if(!inherits(l,"neuronlist")) class(l)<-c(class(l),"neuronlist")
+	for(i in seq(l)){
+		n=l[[i]]
+		if(!is.neuron(n)) class(n)=c("neuron",class(n))
+	}	
+}
+
 #------------------------------------------------------------------------#
 # Returns a neuron containing the segment orders for the ordered collection
 # of segments, MyNeuron$SegList 
 # DON'T KNOW WHO STILL USES THIS!
-
-is.neuron<-function(n) return(inherits(n,"neuron") || (  is.list(n) && !is.null(n$SegList)  ))
 
 SegOrders<-function(MyNeuron){
     # This assumes that the segments are in the correct order from a tree
