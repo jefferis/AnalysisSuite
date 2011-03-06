@@ -78,7 +78,7 @@ is.neuronlist<-function(nl) {
 }
 
 MakeNeuronList<-function(l,df,AddClassToNeurons=TRUE){
-	attr(l,"df")=df
+	if(!missing(df)) attr(l,"df")=df
 	if(!inherits(l,"neuronlist")) class(l)<-c(class(l),"neuronlist")
 	for(i in seq(l)){
 		n=l[[i]]
