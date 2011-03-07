@@ -80,13 +80,28 @@ is.neuronlist<-function(nl) {
 		(is.list(nl) && length(nl)>1 && is.neuron(nl[[1]]))
 }
 
-MakeNeuronList<-function(l,df,AddClassToNeurons=TRUE){
+as.neuron<-function(n){
+	if(!is.neuron(n,Strict=TRUE)) class(n)=c("neuron",class(n))
+	n
+}
+
+as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
+	# makes a list of neurons that can be used for 
+	# coordinated plots / analysis
 	if(!missing(df)) attr(l,"df")=df
+	# allow one neuron to be passed
+	if(is.neuron(l)) {
+		n<-l
+		l<-list(n)
+		names(l)<-n$NeuronName
+	}
 	if(!inherits(l,"neuronlist")) class(l)<-c(class(l),"neuronlist")
+	if(!AddClassToNeurons) return(l)
 	for(i in seq(l)){
-		n=l[[i]]
-		if(!is.neuron(n)) class(n)=c("neuron",class(n))
-	}	
+		if(!is.neuron(n,Strict=TRUE))
+			l[[i]]=as.neuron(l[[i]])
+	}
+	l
 }
 
 #------------------------------------------------------------------------#
