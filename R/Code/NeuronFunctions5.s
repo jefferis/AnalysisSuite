@@ -68,8 +68,11 @@ if(!require(rgl) && !require(scatterplot3d)){
 	stop("Please install either rgl or scatterplot3d for 3d plotting")
 }   # for plotneuron3d()
 
-is.neuron<-function(n) {
-	inherits(n,"neuron") || (is.list(n) && !is.null(n$SegList))
+is.neuron<-function(n,Strict=FALSE) {
+	# If Strict is FALSE will also return TRUE
+	# if n is a list which looks like a neuron
+	inherits(n,"neuron") ||
+		(!Strict && is.list(n) && !is.null(n$SegList))
 }
 
 is.neuronlist<-function(nl) {
