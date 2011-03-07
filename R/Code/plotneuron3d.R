@@ -1,3 +1,10 @@
+# Simplified version of original plotneuron3d function
+# and related utility functions
+
+# this means that objects of class neuron can be plotted by doing:
+# plot3d(ANeuron)
+# the plot3d generic is defined by rgl
+plot3d.neuron<-function(...) plotneuron3d.simple(...)
 
 plotneuron3d.simple<-function(ANeuron, WithLine=T,NeuronNames=FALSE,
 	WithNodes=T,WithAllPoints=F,WithText=F,HighlightLongestSegment=FALSE,PlotSubTrees=T,ClearRGL=T,NeuronList=MyNeurons,col,...){

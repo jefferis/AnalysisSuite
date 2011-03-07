@@ -85,6 +85,10 @@ as.neuron<-function(n){
 	n
 }
 
+# so you can just do:
+# plot(ANeuron)
+plot.neuron<-function(...) plotneuron2d(...)
+
 as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
 	# makes a list of neurons that can be used for 
 	# coordinated plots / analysis
