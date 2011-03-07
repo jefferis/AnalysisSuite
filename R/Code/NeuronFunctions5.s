@@ -80,6 +80,9 @@ is.neuronlist<-function(nl) {
 		(is.list(nl) && length(nl)>1 && is.neuron(nl[[1]]))
 }
 
+# so that you can make an empty neuronlist
+neuronlist <- function(...) as.neuronlist(list(...))
+
 as.neuron<-function(n){
 	if(!is.neuron(n,Strict=TRUE)) class(n)=c("neuron",class(n))
 	n
