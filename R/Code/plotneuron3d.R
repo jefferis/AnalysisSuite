@@ -140,8 +140,15 @@ set3d<-function(pos=c("front","left","back","right","ventral","dorsal"),zoom=.7,
 		m=diag(c(0,-1,0,1))
 		m[1,3]=m[3,1]=-1
 	}
+	if(pos=="ventral") {
+		m=diag(c(1,-1,-1,1))
+	}
+	if(pos=="dorsal") {
+		m=diag(c(1,1,1,1))
+	}
 	view3d(userMatrix=m,zoom=zoom,...)
 }
+
 rot3d<-function(xangle=0,yangle=0,zangle=0,initialUserMatrix=get("r3dDefaults", envir=.GlobalEnv)$userMatrix){
 	angle=max(xangle,yangle,zangle)
 	if(angle!=0) {
