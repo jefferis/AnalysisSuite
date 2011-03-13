@@ -1,4 +1,6 @@
 # Tests for reading Mark Longair's tracing format and points data
+require(RUnit)
+require(XML)
 
 test.ReadLongairNeuron.SinglePath<-function(){
 	# Test reading of Mark Longair's tracing format

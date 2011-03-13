@@ -378,7 +378,7 @@ test.ReadWrite3DDensityAmiraBinary<-function(){
 	unlink(tmpfile)
 }
 
-test.ReadWriteHxZipData<-function(){
+test.ReadHxZipData<-function(){
 	amfile=file.path(TestDir,"IO","AL-a_M.am")
 	x=Read3DDensityFromAmiraLattice(amfile)
 	t=structure(c(2038104L, 6623L, 3304L, 2046L, 1529L, 1257L, 1054L, 
