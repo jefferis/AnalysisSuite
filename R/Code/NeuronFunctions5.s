@@ -1284,3 +1284,31 @@ getBrain=function(fileNames){
 	gsub("^(.?*)\\-.*$","\\1",x)
 
 }
+
+ReadNeuronFromSWC<-function(f){
+	d=ReadSWCFile(f)
+	ParseSWCTree(d,f)
+}
+
+read.neuron<-function(f, ...){
+	# generic function to read in neuron from any kind of file we know about
+	if(!file.exists(f)) stop("Unable to read file: ",f)
+	ext=tolower(sub(".*\\.([^.]+$)","\\1",basename(f)))
+	if(ext=="asc")
+		n=ReadNeuronFromAsc(f, ...)
+	else if(ext=="swc")
+		n=ReadNeuronFromSWC(f, ...)
+	else {
+		h=readLines(f,1)
+		if(regexpr("amira",h,ignore.case=TRUE)>0)
+			n=ReadNeuronFromAM3D(f, ...)
+		else if(regexpr("xml",h,ignore.case=TRUE)>0)
+			n=ReadNeuronsFromLongairTraces(f, ...)
+		else if(regexpr("^;",h)>0)
+			n=ReadNeuronFromAsc(f, ...)
+		else stop("Unable to identify file format of file: ",f)
+	}
+	
+	if(is.neuron(n,Strict=FALSE)) as.neuron(n)
+	else n
+}
