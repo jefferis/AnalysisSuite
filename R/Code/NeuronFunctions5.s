@@ -84,6 +84,7 @@ is.neuronlist<-function(nl) {
 neuronlist <- function(...) as.neuronlist(list(...))
 
 as.neuron<-function(n){
+	if(is.null(n)) return (NULL)
 	if(!is.neuron(n,Strict=TRUE)) class(n)=c("neuron",class(n))
 	n
 }
