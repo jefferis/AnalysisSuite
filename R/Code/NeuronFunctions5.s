@@ -1322,6 +1322,7 @@ ReadNeuronFromSWC<-function(f){
 
 read.neuron<-function(f, ...){
 	# generic function to read in neuron from any kind of file we know about
+	# should return exactly one neuron on success
 	if(!file.exists(f)) stop("Unable to read file: ",f)
 	ext=tolower(sub(".*\\.([^.]+$)","\\1",basename(f)))
 	if(ext=="asc")
@@ -1333,7 +1334,7 @@ read.neuron<-function(f, ...){
 		if(regexpr("amira",h,ignore.case=TRUE)>0)
 			n=ReadNeuronFromAM3D(f, ...)
 		else if(regexpr("xml",h,ignore.case=TRUE)>0)
-			n=ReadNeuronsFromLongairTraces(f, ...)
+			n=ReadNeuronsFromLongairTraces(f, MergePaths=TRUE, ...)
 		else if(regexpr("^;",h)>0)
 			n=ReadNeuronFromAsc(f, ...)
 		else stop("Unable to identify file format of file: ",f)
