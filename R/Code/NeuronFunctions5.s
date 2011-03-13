@@ -80,6 +80,35 @@ is.neuronlist<-function(nl) {
 		(is.list(nl) && length(nl)>1 && is.neuron(nl[[1]]))
 }
 
+all.equal.neuron<-function(target,current,tolerance=1e-6,check.attributes=FALSE,
+	fieldsToCheck=c("NeuronName", "NumPoints", "StartPoint", "BranchPoints",
+		"EndPoints", "NumSegs", "SegList", "d"), fieldsToCheckIfPresent="nTrees",
+	CheckSharedFieldsOnly=FALSE, ...){
+	if(length(fieldsToCheck)==1 && is.na(fieldsToCheck))
+		fieldsToCheck=names(current)
+		
+	if(!is.neuron(target) || !is.neuron(current))
+		return ("target and current must both be neurons")
+	fieldsInCommon=intersect(names(target),names(current))
+	# figure out which of the optional fields to check are present
+	fieldsToCheckIfPresent=intersect(fieldsInCommon,fieldsToCheckIfPresent)
+	# and add those to the fields to check 
+	fieldsToCheck=unique(c(fieldsToCheck,fieldsToCheckIfPresent))
+	if(CheckSharedFieldsOnly){
+		fieldsToCheck=intersect(fieldsInCommon,fieldsToCheck)
+	} else{
+		# check all core fields
+		missingfields=setdiff(fieldsToCheck,names(current))
+		if(length(missingfields)>0)
+			return(paste("Current missing fields: ",missingfields))
+		missingfields=setdiff(fieldsToCheck,names(target))
+		if(length(missingfields)>0)
+			return(paste("Target missing fields: ",missingfields))		
+	}
+	all.equal(target[fieldsToCheck],current[fieldsToCheck],
+		tolerance=tolerance, check.attributes=check.attributes, ...)
+}
+
 # so that you can make an empty neuronlist
 neuronlist <- function(...) as.neuronlist(list(...))
 
