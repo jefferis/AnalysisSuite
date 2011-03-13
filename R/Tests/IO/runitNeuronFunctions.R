@@ -21,3 +21,13 @@ test.read.neuron<-function(){
 	
 	checkException(read.neuron(file.path(TestDir,"IO","runitNeuronFunctions.R")))
 }
+
+test.all.equal.neuron<-function(){
+	a=ReadNeuronFromAM3D(file.path(TestDir,"IO","Neurites.am"))
+	b=ReadNeuronsFromLongairTraces(file.path(TestDir,"IO","SequentiallyBranchingTrace.traces"))
+	checkTrue(all.equal(a, a))
+	checkTrue(!isTRUE(all.equal(a, b)))
+	checkTrue(!isTRUE(all.equal(a, NULL)))
+	checkTrue(!isTRUE(all.equal(a, 1)))
+	checkTrue(!isTRUE(all.equal(a, NA)))
+}
