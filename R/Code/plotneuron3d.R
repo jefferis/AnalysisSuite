@@ -149,7 +149,8 @@ set3d<-function(pos=c("front","left","back","right","ventral","dorsal"),zoom=.7,
 	view3d(userMatrix=m,zoom=zoom,...)
 }
 
-rot3d<-function(xangle=0,yangle=0,zangle=0,initialUserMatrix=get("r3dDefaults", envir=.GlobalEnv)$userMatrix){
+rot3d<-function(xangle=0,yangle=0,zangle=0,
+	initialUserMatrix=get("r3dDefaults", envir=.GlobalEnv)$userMatrix,...){
 	angle=max(xangle,yangle,zangle)
 	if(angle!=0) {
 		x=xangle/angle
@@ -157,7 +158,7 @@ rot3d<-function(xangle=0,yangle=0,zangle=0,initialUserMatrix=get("r3dDefaults", 
 		z=zangle/angle
 	}	
 	m=initialUserMatrix%*%rotationMatrix(x=x,y=y,z=z,angle=angle*2*pi/360)
-	view3d(userMatrix=m)
+	view3d(userMatrix=m,...)
 	invisible(m)
 }
 
