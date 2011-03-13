@@ -1343,3 +1343,28 @@ read.neuron<-function(f, ...){
 	if(is.neuron(n,Strict=FALSE)) as.neuron(n)
 	else n
 }
+
+read.neurons<-function(paths, patt, OmitFailures=TRUE,
+	neuronnames=basename, ...){
+	if(!is.character(paths)) stop("Expects a character vector of filenames")
+	
+	if(length(paths)==1 && file.info(paths)$isdir){
+		paths=if(missing(patt))
+			dir(paths,full=TRUE)
+		else
+			dir(paths,patt=patt,full=TRUE)
+	}
+	
+	nl=neuronlist()
+	for(f in paths){
+		n=try(read.neuron(f))
+		if(inherits(n,'try-error')) n=NA
+		nl[[length(nl)+1]]=n
+	}
+	if(is.function(neuronnames))
+		names(nl)=neuronnames(paths)
+	else
+		names(nl)=neuronnames
+	if(OmitFailures) nl=nl[!is.na(nl)]
+	nl
+}
