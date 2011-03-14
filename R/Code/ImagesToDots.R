@@ -2,6 +2,8 @@
 # dot-based representations
 # Based on Nick Masse's matlab code (esp extract_properties.m)
 
+require(RANN)
+
 DotProperties<-function(points,k=20){
 	npoints=nrow(points)
 	if(npoints<k) stop("Too few points to calculate properties")
@@ -35,6 +37,78 @@ DotProperties<-function(points,k=20){
 		vect[i,]=v1d1$vectors[,1]
 	}
 	return(list(alpha=alpha,vect=vect))
+}
+
+ind2coord<-function(inds, dims, voxdims, axperm=NULL){
+	# ind2coord find XYZ coords corresponding to 1D indices into a 3D image
+	# 
+	# Usage: coords = ind2coord(dims, inds, voxdims, [axperm])
+	# 
+	# Input:
+	# inds    - indices into an image array 
+	#           (either 1d when dims must be present or a logical array)
+	# dims    - dimensions of 3d image array
+	# voxdims - vector of 3 voxel dimensions (width, height, depth, dx,dy,dz)
+	# axperm  - 3-vector containing reordering of axes, negatives imply flip
+	# 
+	# coords  - 3xN XYZ triples 
+	# 
+	# Permutations and Flips:
+	# -----------------------
+	# axperm = [1 2 3]  do nothing
+	# axperm = [-1 2 3] flip the points along the array's first axis
+	# axperm = [-2 1 3] flip 1st axis and then swap 1st and 2nd
+	# 
+	# axperm = [1 -2 3] fixes coords from images loaded by readpic
+	# axperm = [2 1 3] fixes coords from images loaded by imread (eg tif)
+	# 
+	# See also coord2ind, ind2sub
+	
+	# FIXME - see xyzpos.gjdens for details of handling voxels 
+	# amira or imagej style (cell vs node in nrrd terminology)
+
+	if(is.array(inds) && missing(voxdims)) {
+		voxdims=dims
+		dims=dim(inds)
+	}
+	if(length(dims) != 3 )
+		stop('coords2ind only handles 3d data')
+	if(length(voxdims)!=length(dims))
+		stop('number of voxel dimensions must match dimensionality of data')
+	
+	if(is.array(inds))
+		pixcoords = which(x > 0, arr.ind=TRUE)
+	else if(is.logical(inds)){
+		# 1d logical
+		indnumbers=which(x > 0)
+		pixcoords=arrayInd(indnumbers,.dim=dims)
+	} else {
+		# numbers 
+		pixcoords=arrayInd(inds,.dim=dims)
+	}
+		
+	
+	if(nrow(pixcoords)==0) return(NULL)
+	
+	if(!is.null(axperm)){
+		stop("axis permutation is not yet implemented")
+		# flip and swap axes if required
+		# for i=1:3
+		# 	# NB (pix)coords are 0 indexed whereas subscripts are 1 indexed,
+		# 	# so we subtract 1 implicitly or explixicitly below
+		# 	if(axperm(i)<0)
+		# 		# flip axis (NB siz(i)-1-pixcoords would give 1-indexed flip)
+		# 		pixcoords(i,:)=siz(i)-pixcoords(i,:);
+		# 	else
+		# 		pixcoords(i,:)=pixcoords(i,:)-1;
+		# 	end
+		# end
+		# pixcoords=pixcoords(abs(axperm),:);
+	}
+
+	# then convert from pixel coords to physical coords
+	# transpose to allow multiplication, then back again to give 3 cols
+	t(t(pixcoords)*voxdims)
 }
 
 # stop()
