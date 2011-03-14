@@ -10,15 +10,15 @@ DotProperties<-function(points,k=20){
 	vect=matrix(0,ncol=3,nrow=npoints)
 
 	nns=nn2(points,points,k=k)
+	# transpose points to 3xN because can because
+	# R arithemtic of matric /vector operates column-wise
+	pointst=t(points)
 	for(i in 1:npoints){
 		indNN=nns$nn.idx[i,]
 		
-		# transpose points to 3xN because can because
-		# R arithemtic of matric /vector operates column-wise
-		pt=t(points[indNN,])
+		pt=pointst[,indNN]
+		cent_pts=pt-rowMeans(pt)
 		
-		center_mass=rowMeans(pt)
-		cent_pts=pt-center_mass
 		AB=cent_pts[c(1:3,1:3,1:3),] # ab all 9
 		CD=cent_pts[c(1,1,1,2,2,2,3,3,3),] # cd all 9
 		inertia=rowSums(AB*CD)
