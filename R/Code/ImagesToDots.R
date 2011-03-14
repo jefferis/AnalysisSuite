@@ -21,7 +21,7 @@ DotProperties<-function(points,k=20){
 				matrix(center_mass[c(1,1,1,2,2,2,3,3,3)],ncol=9,nrow=k,byrow=T))
 		)
 		
-		v1d1=eigen(matrix(inertia,ncol=3,byrow=T))
+		v1d1=eigen(matrix(inertia,ncol=3,byrow=T),symmetric=TRUE)
 		alpha[i]=(v1d1$values[1]-v1d1$values[2])/sum(v1d1$values)
 		vect[i,]=v1d1$vectors[,1]
 	}
