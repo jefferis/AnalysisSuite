@@ -26,7 +26,11 @@ DotProperties<-function(points,k=20){
 		inertia[1,3]<-inertia[3,1]<-sum(cpt[1,]*cpt[3,])
 		inertia[2,3]<-inertia[3,2]<-sum(cpt[2,]*cpt[3,])
 		
-		v1d1=eigen(inertia,symmetric=TRUE)
+		# call internal LAPACK routine of eigen directly
+		z<-.Call("La_rs", inertia, only.values=FALSE, PACKAGE = "base")
+		ord <- rev(seq_along(z$values))
+		v1d1=list(values = z$values[ord], vectors = z$vectors[,ord, drop = FALSE])
+
 		alpha[i]=(v1d1$values[1]-v1d1$values[2])/sum(v1d1$values)
 		vect[i,]=v1d1$vectors[,1]
 	}
