@@ -10,20 +10,22 @@ DotProperties<-function(points,k=20){
 	vect=matrix(0,ncol=3,nrow=npoints)
 
 	nns=nn2(points,points,k=k)
-	# transpose points to 3xN because can because
-	# R arithemtic of matric /vector operates column-wise
+	# transpose points to 3xN because 
+	# R arithemtic of matric / vector operates column-wise
 	pointst=t(points)
 	for(i in 1:npoints){
 		indNN=nns$nn.idx[i,]
 		
 		pt=pointst[,indNN]
-		cent_pts=pt-rowMeans(pt)
+		cpt=pt-rowMeans(pt)
 		
-		AB=cent_pts[c(1:3,1:3,1:3),] # ab all 9
-		CD=cent_pts[c(1,1,1,2,2,2,3,3,3),] # cd all 9
-		inertia=rowSums(AB*CD)
+		inertia=matrix(0,ncol=3,nrow=3,byrow=T)
+		diag(inertia)=rowSums(cpt^2)
+		inertia[1,2]<-inertia[2,1]<-sum(cpt[1,]*cpt[2,])
+		inertia[1,3]<-inertia[3,1]<-sum(cpt[1,]*cpt[3,])
+		inertia[2,3]<-inertia[3,2]<-sum(cpt[2,]*cpt[3,])
 		
-		v1d1=eigen(matrix(inertia,ncol=3,byrow=T),symmetric=TRUE)
+		v1d1=eigen(inertia,symmetric=TRUE)
 		alpha[i]=(v1d1$values[1]-v1d1$values[2])/sum(v1d1$values)
 		vect[i,]=v1d1$vectors[,1]
 	}
