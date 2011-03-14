@@ -12,14 +12,16 @@ DotProperties<-function(points,k=20){
 	nns=nn2(points,points,k=k)
 	for(i in 1:npoints){
 		indNN=nns$nn.idx[i,]
-		center_mass=colMeans(points[indNN,])
 		
-		inertia=colSums(
-			(points[indNN,c(1:3,1:3,1:3)] - 
-				matrix(center_mass,ncol=9,nrow=k,byrow=T)) *
-			(points[indNN,c(1,1,1,2,2,2,3,3,3)] - 
-				matrix(center_mass[c(1,1,1,2,2,2,3,3,3)],ncol=9,nrow=k,byrow=T))
-		)
+		# transpose points to 3xN because can because
+		# R arithemtic of matric /vector operates column-wise
+		pt=t(points[indNN,])
+		
+		center_mass=rowMeans(pt)
+		cent_pts=pt-center_mass
+		AB=cent_pts[c(1:3,1:3,1:3),] # ab all 9
+		CD=cent_pts[c(1,1,1,2,2,2,3,3,3),] # cd all 9
+		inertia=rowSums(AB*CD)
 		
 		v1d1=eigen(matrix(inertia,ncol=3,byrow=T),symmetric=TRUE)
 		alpha[i]=(v1d1$values[1]-v1d1$values[2])/sum(v1d1$values)
