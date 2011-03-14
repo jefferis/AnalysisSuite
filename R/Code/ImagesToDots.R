@@ -5,7 +5,8 @@
 DotProperties<-function(points,k=20){
 	npoints=nrow(points)
 	if(npoints<k) stop("Too few points to calculate properties")
-
+	if(ncol(npoints)!=3) stop("points must be a N x 3 matrix")
+	
 	alpha=rep(0,npoints)
 	vect=matrix(0,ncol=3,nrow=npoints)
 
@@ -19,7 +20,7 @@ DotProperties<-function(points,k=20){
 		pt=pointst[,indNN]
 		cpt=pt-rowMeans(pt)
 		
-		inertia=matrix(0,ncol=3,nrow=3,byrow=T)
+		inertia=matrix(0,ncol=3,nrow=3)
 		diag(inertia)=rowSums(cpt^2)
 		inertia[1,2]<-inertia[2,1]<-sum(cpt[1,]*cpt[2,])
 		inertia[1,3]<-inertia[3,1]<-sum(cpt[1,]*cpt[3,])
