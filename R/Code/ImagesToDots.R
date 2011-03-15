@@ -39,6 +39,25 @@ DotProperties<-function(points,k=20){
 	return(list(alpha=alpha,vect=vect))
 }
 
+ind2coord<-function(inds, ...) UseMethod("ind2coord")
+
+ind2coord.array<-function(inds, ...){
+	dims=dim(inds)
+	args=list(...)
+	if(!is.null(args$voxdims)){
+		# do nothing
+	} else if(is.null(args$voxdims) && is.gjdens(inds)){
+		args$voxdims=voxdim.gjdens(inds)
+	} else
+		stop("no voxdims supplied and inds has no physical dimension attributes")
+
+	if(is.null(args$origin) && is.gjdens(inds))
+		args$origin=matrix(getBoundingBox(x),nrow=2)[1,]
+	else
+		args$origin=rep(0,length(dims))
+	ind2coord.default(inds, dims=dims, args)
+}
+
 ind2coord.default<-function(inds, dims, voxdims, origin, axperm=NULL){
 	# ind2coord find XYZ coords corresponding to 1D indices into a 3D image
 	# 
@@ -67,10 +86,6 @@ ind2coord.default<-function(inds, dims, voxdims, origin, axperm=NULL){
 	# FIXME - see xyzpos.gjdens for details of handling voxels 
 	# amira or imagej style (cell vs node in nrrd terminology)
 
-	if(is.array(inds) && missing(voxdims)) {
-		voxdims=dims
-		dims=dim(inds)
-	}
 	if(length(dims) != 3 )
 		stop('coords2ind only handles 3d data')
 	if(length(voxdims)!=length(dims))
