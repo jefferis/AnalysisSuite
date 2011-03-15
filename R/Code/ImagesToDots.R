@@ -43,17 +43,26 @@ ind2coord<-function(inds, ...) UseMethod("ind2coord")
 
 ind2coord.array<-function(inds, voxdims, origin, ...){
 	dims=dim(inds)
+	# can supply a gjdens object as 2nd param - which will then
+	# provide origin, voxdims
 	if(missing(voxdims)){
 		if(is.gjdens(inds))
 			voxdims=voxdim.gjdens(inds)
 		else
 			stop("no voxdims supplied and inds has no physical dimension attributes")
+	} else if(is.gjdens(voxdims)){
+		if(missing(origin))
+			origin=matrix(getBoundingBox(voxdims),nrow=2)[1,]
+		voxdims=voxdim.gjdens(voxdims)
 	}
 
-	if(missing(origin) && is.gjdens(inds))
-		origin=matrix(getBoundingBox(inds),nrow=2)[1,]
-	else
-		origin=rep(0,length(dims))
+	if(missing(origin)){
+		if(is.gjdens(inds))
+			origin=matrix(getBoundingBox(inds),nrow=2)[1,]
+		else
+			origin=rep(0,length(dims))
+	}
+
 	ind2coord.default(inds, dims=dims, voxdims=voxdims, origin=origin, ...)
 }
 
@@ -87,10 +96,10 @@ ind2coord.default<-function(inds, dims, voxdims, origin, axperm=NULL){
 
 	if(length(dims) != 3 )
 		stop('coords2ind only handles 3d data')
-	if(length(voxdims)!=length(dims))
-		stop('number of voxel dimensions must match dimensionality of data')
 	if(is.matrix(voxdims))
 		voxdims=as.numeric(voxdims)
+	if(length(voxdims)!=length(dims))
+		stop('number of voxel dimensions must match dimensionality of data')
 
 	if(is.array(inds)){
 		if(is.logical(inds))
