@@ -135,10 +135,13 @@ ind2coord.default<-function(inds, dims, voxdims, origin, axperm=NULL){
 
 	# then convert from pixel coords to physical coords
 	# transpose to allow multiplication, then back again to give 3 cols
-	if(missing(origin))
+	
+	rval = if(missing(origin))
 		t(t(pixcoords)*voxdims)
 	else
 		t(t(pixcoords)*voxdims+origin)
+	colnames(rval)=c("X","Y","Z")
+	rval
 }
 
 # stop()
