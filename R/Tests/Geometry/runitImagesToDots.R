@@ -33,4 +33,19 @@ test.ind2coord<-function(){
 	i2c.r=ind2coord(c(1,1034,10001,100001),c(1024,768,100),c(0.3,0.4,1))
 	
 	checkEqualsNumeric(i2c.matlab,i2c.r,tol=1e-6)
+	
+	lh=Read3DDensityFromAmiraLattice("/GD/projects/AnalysisSuite/R/Data/LHMask.am")
+	x=ind2coord(lh)
+	y=ind2coord(lh>0,voxdims=lh)
+	checkEqualsNumeric(x,y,tol=1e-6)
+	
+	xinds=c(1223L, 4282L, 4907L, 5978L, 10327L, 12151L, 13042L, 19879L, 
+	23842L, 27664L)
+	x.correct=structure(c(133.5, 141.9, 127.9, 126.5, 127.9, 129.3, 129.3, 
+	139.1, 137.7, 139.1, 87.3, 98.5, 92.9, 99.9, 111.1, 95.7, 90.1, 
+	97.1, 73.3, 90.1, 13.3, 18.9, 20.3, 21.7, 27.3, 30.1, 31.5, 41.3, 
+	48.3, 56.7), .Dim = c(10L, 3L), .Dimnames = list(NULL, c("X", 
+	"Y", "Z")))
+	
+	checkEqualsNumeric(x[xinds,],x.correct)
 }
