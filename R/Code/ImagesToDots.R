@@ -39,7 +39,7 @@ DotProperties<-function(points,k=20){
 	return(list(alpha=alpha,vect=vect))
 }
 
-ind2coord<-function(inds, dims, voxdims, axperm=NULL){
+ind2coord.default<-function(inds, dims, voxdims, origin, axperm=NULL){
 	# ind2coord find XYZ coords corresponding to 1D indices into a 3D image
 	# 
 	# Usage: coords = ind2coord(dims, inds, voxdims, [axperm])
@@ -86,7 +86,6 @@ ind2coord<-function(inds, dims, voxdims, axperm=NULL){
 		# numbers 
 		pixcoords=arrayInd(inds,.dim=dims)
 	}
-		
 	
 	if(nrow(pixcoords)==0) return(NULL)
 	
@@ -108,7 +107,10 @@ ind2coord<-function(inds, dims, voxdims, axperm=NULL){
 
 	# then convert from pixel coords to physical coords
 	# transpose to allow multiplication, then back again to give 3 cols
-	t(t(pixcoords)*voxdims)
+	if(missing(origin))
+		t(t(pixcoords)*voxdims)
+	else
+		t(t(pixcoords)*voxdims+origin)
 }
 
 # stop()
