@@ -89,13 +89,18 @@ ind2coord.default<-function(inds, dims, voxdims, origin, axperm=NULL){
 		stop('coords2ind only handles 3d data')
 	if(length(voxdims)!=length(dims))
 		stop('number of voxel dimensions must match dimensionality of data')
-	
-	if(is.array(inds))
-		pixcoords = which(inds > 0, arr.ind=TRUE)
-	else if(is.logical(inds)){
+	if(is.matrix(voxdims))
+		voxdims=as.numeric(voxdims)
+
+	if(is.array(inds)){
+		if(is.logical(inds))
+			pixcoords = which(inds, arr.ind=TRUE)
+		else if(is.integer(inds) || is.raw(inds))
+			pixcoords = which(inds>0, arr.ind=TRUE)
+		else stop("cannot handle numeric arrays - make a logical")
+	} else if(is.logical(inds)){
 		# 1d logical
-		indnumbers=which(inds > 0)
-		pixcoords=arrayInd(indnumbers,.dim=dims)
+		pixcoords=arrayInd(which(inds),.dim=dims)
 	} else {
 		# numbers 
 		pixcoords=arrayInd(inds,.dim=dims)
