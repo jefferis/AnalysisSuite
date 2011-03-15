@@ -70,8 +70,9 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 	return(NULL)
 }
 
-Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,AttachFullHeader=FALSE,origin){
-
+Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,AttachFullHeader=FALSE,
+	ReadByteAsRaw=c("unsigned","all","none"),origin){
+	ReadByteAsRaw=match.arg(ReadByteAsRaw)
 	fc=file(filename,'rb')
 	h=ReadNrrdHeader(fc,CloseConnection=FALSE)
 		
@@ -80,6 +81,9 @@ Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,AttachFullHeader=FALSE,or
 	"float", "double", "block")),
 			size=c(1,1,2,2,4,4,8,8,4,8,NA),what=I(c(rep("integer",8),rep("numeric",2),"raw")),
 			signed=c(rep(c(T,F),4),rep(T,3)))
+	if(ReadByteAsRaw=="all") dataTypes$what[1:2]='raw'
+	else if(ReadByteAsRaw=="unsigned") dataTypes$what[2]='raw'
+	
 	i=which(dataTypes$name==.standardNrrdType(h$type))
 	if(length(i)!=1){
 		close(fc)
