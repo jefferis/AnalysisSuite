@@ -41,21 +41,20 @@ DotProperties<-function(points,k=20){
 
 ind2coord<-function(inds, ...) UseMethod("ind2coord")
 
-ind2coord.array<-function(inds, ...){
+ind2coord.array<-function(inds, voxdims, origin, ...){
 	dims=dim(inds)
-	args=list(...)
-	if(!is.null(args$voxdims)){
-		# do nothing
-	} else if(is.null(args$voxdims) && is.gjdens(inds)){
-		args$voxdims=voxdim.gjdens(inds)
-	} else
-		stop("no voxdims supplied and inds has no physical dimension attributes")
+	if(missing(voxdims)){
+		if(is.gjdens(inds))
+			voxdims=voxdim.gjdens(inds)
+		else
+			stop("no voxdims supplied and inds has no physical dimension attributes")
+	}
 
-	if(is.null(args$origin) && is.gjdens(inds))
-		args$origin=matrix(getBoundingBox(x),nrow=2)[1,]
+	if(missing(origin) && is.gjdens(inds))
+		origin=matrix(getBoundingBox(inds),nrow=2)[1,]
 	else
-		args$origin=rep(0,length(dims))
-	ind2coord.default(inds, dims=dims, args)
+		origin=rep(0,length(dims))
+	ind2coord.default(inds, dims=dims, voxdims=voxdims, origin=origin, ...)
 }
 
 ind2coord.default<-function(inds, dims, voxdims, origin, axperm=NULL){
