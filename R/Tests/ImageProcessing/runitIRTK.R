@@ -56,7 +56,8 @@ test.ExactAffineLandmarksRegistration<-function(){
 	irtk.preg(testLandmarks,dofout=dofout,xformtype='affine')
 	xformcalc=irtk.dof2mat(dofout, Invert=TRUE)
 	
-	print(mat34.to.TRSZ(xform) )
+	if(exists('mat34.to.TRSZ')) # not worth loading AnalyzeFMRI for this
+		print(mat34.to.TRSZ(xform) )
 	
 	# check that we get back the same affine transform
 	checkEqualsNumeric(xformcalc,xform,
