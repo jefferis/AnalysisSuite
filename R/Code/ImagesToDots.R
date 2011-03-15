@@ -77,10 +77,10 @@ ind2coord<-function(inds, dims, voxdims, axperm=NULL){
 		stop('number of voxel dimensions must match dimensionality of data')
 	
 	if(is.array(inds))
-		pixcoords = which(x > 0, arr.ind=TRUE)
+		pixcoords = which(inds > 0, arr.ind=TRUE)
 	else if(is.logical(inds)){
 		# 1d logical
-		indnumbers=which(x > 0)
+		indnumbers=which(inds > 0)
 		pixcoords=arrayInd(indnumbers,.dim=dims)
 	} else {
 		# numbers 
