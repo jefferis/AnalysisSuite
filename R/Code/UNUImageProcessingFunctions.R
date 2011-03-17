@@ -41,7 +41,11 @@ NrrdMinMax<-function(filename,...){
 
 NrrdResample<-function(infile,outfile,size,otherargs=NULL,...){
 	if(is.integer(size)) size=paste("--size",paste(size,collapse=" "))
-	else size=paste("--size",paste("x",size,sep="",collapse=" "))
+	else {
+		size=paste("--size",paste("x",size,sep="",collapse=" "))
+		# eg size=c(0.5,0.5,NA) => "--size x0.5 x0.5 ="
+		size=sub("xNA","=",size)
+	}
 	 
 	.callunu("resample",paste(size, paste(otherargs,collapse=" "),
 	 	"-i",shQuote(infile),"-o",shQuote(outfile)),...)
