@@ -34,7 +34,7 @@ Nrrd2op<-function(infiles,outfile,fun=c("max","min","+", "-", "x", "/"),
 }
 
 NrrdMinMax<-function(filename,...){
-	minmax=.callunu("minmax",shQuote(filename),...)
+	minmax=.callunu("minmax",shQuote(filename),intern=TRUE,...)
 	if(length(minmax)==0) return(c(NA,NA))
 	as.numeric(sub("(min|max): ","",minmax))
 }
@@ -47,8 +47,10 @@ NrrdResample<-function(infile,outfile,size,otherargs=NULL,...){
 	 	"-i",shQuote(infile),"-o",shQuote(outfile)),...)
 }
 
-.callunu<-function(cmd,args,unu="unu",...){
-	system(paste(unu,cmd,paste(args,collapse=" ")),intern=TRUE,...)
+.callunu<-function(cmd,args,unu="unu",DryRun=TRUE,...){
+	fullcmd=paste(unu,cmd,paste(args,collapse=" "))
+	if(DryRun) print(fullcmd)
+	else system(fullcmd,...)
 }
 
 NrrdHisto<-function(infile,outfile=sub("\\.([^.]+)$",".histo.\\1",infile),maskfile,bins,min,max,...){
