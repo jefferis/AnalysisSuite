@@ -64,8 +64,8 @@ NrrdResample<-function(infile,outfile,size,otherargs=NULL,gzip=TRUE,
 				sub("\\.nrrd$",paste(suffix,"\\.nrrd",sep=""),basename(infile)))
 	}
 
-	# return TRUE to signal output exists (we just didn't make it now)
-	if(!Force && !RunCmdForNewerInput(NULL,infile,outfile)) return (TRUE)
+	# return outfile to signal output exists (we just didn't make it now)
+	if(!Force && !RunCmdForNewerInput(NULL,infile,outfile)) return (outfile)
 	# NB createdirs only makes sense if we have directly specified outfile
 	if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile),recursive = TRUE)
 	lockfile=paste(outfile,sep=".","lock")
