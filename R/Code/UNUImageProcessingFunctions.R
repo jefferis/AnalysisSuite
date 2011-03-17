@@ -39,7 +39,11 @@ NrrdMinMax<-function(filename,...){
 	as.numeric(sub("(min|max): ","",minmax))
 }
 
-NrrdResample<-function(infile,outfile,size,otherargs=NULL,...){
+NrrdResample<-function(infile,outfile,size,otherargs=NULL,gzip=TRUE,
+	suffix=NULL,CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE,...){
+
+	if(!file.exists(infile)) stop("infile: ",infile," does not exist")
+
 	if(is.integer(size)) size=paste("--size",paste(size,collapse=" "))
 	else {
 		size=paste("--size",paste("x",size,sep="",collapse=" "))
@@ -47,8 +51,38 @@ NrrdResample<-function(infile,outfile,size,otherargs=NULL,...){
 		size=sub("xNA","=",size)
 	}
 	 
-	.callunu("resample",paste(size, paste(otherargs,collapse=" "),
-	 	"-i",shQuote(infile),"-o",shQuote(outfile)),...)
+	if (missing(outfile)) {
+		# we only want to add a default suffix if we are putting the output
+		# file into the same directory
+		if(is.null(suffix))
+			suffix=gsub(" ","",sub("--size","",size))
+		outfile=sub("\\.nrrd$",paste(suffix,"\\.nrrd",sep=""),infile)
+	} else {
+		# here we have been passed an output directory rather than a file
+		if(file.exists(outfile) && file.info(outfile)$isdir)
+			outfile=file.path(outfile,
+				sub("\\.nrrd$",paste(suffix,"\\.nrrd",sep=""),basename(infile)))
+	}
+
+	# return TRUE to signal output exists (we just didn't make it now)
+	if(!Force && !RunCmdForNewerInput(NULL,infile,outfile)) return (TRUE)
+	# NB createdirs only makes sense if we have directly specified outfile
+	if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile),recursive = TRUE)
+	lockfile=paste(outfile,sep=".","lock")
+	# return FALSE to signal output doens't exist
+	if(UseLock){
+		if(makelock(lockfile))
+			on.exit(unlink(lockfile))
+		else
+			return(FALSE)
+	}
+
+	cmdargs=paste(size, paste(otherargs,collapse=" "),"-i",shQuote(infile))
+	if(gzip)
+		cmdargs=paste(cmdargs,"| unu save -f nrrd -e gzip")
+	rval=.callunu("resample",paste(cmdargs,"-o",shQuote(outfile)),...)
+	if(rval!=0) stop("error ",rval," in unu resample")
+	return(outfile)
 }
 
 .callunu<-function(cmd,args,unu="unu",DryRun=FALSE,...){
