@@ -51,9 +51,12 @@ NrrdResample<-function(infile,outfile,size,otherargs=NULL,...){
 	 	"-i",shQuote(infile),"-o",shQuote(outfile)),...)
 }
 
-.callunu<-function(cmd,args,unu="unu",DryRun=TRUE,...){
+.callunu<-function(cmd,args,unu="unu",DryRun=FALSE,...){
 	fullcmd=paste(unu,cmd,paste(args,collapse=" "))
-	if(DryRun) print(fullcmd)
+	if(DryRun) {
+		cat(fullcmd,"\n",sep="")
+		return(0)
+	}
 	else system(fullcmd,...)
 }
 
