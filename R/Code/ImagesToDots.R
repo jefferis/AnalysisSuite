@@ -158,7 +158,12 @@ DotPropertiesFromNrrd<-function(f,...){
 	x=Read3DDensityFromNrrd(f)
 	l=list()
 	l$points=ind2coord(x)
-	DotProperties(l$points,...)
+	l=DotProperties(l$points,...)
+	attr(l,'file')=f
+	fi=file.info(f)
+	attr(l,'mtime')=fi$mtime
+	attr(l,'size')=fi$size
+	l
 }
 
 WeightedNNBasedLinesetMatching.dotprops<-function(dp1,dp2,...){
