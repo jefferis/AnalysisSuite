@@ -44,7 +44,9 @@ DotProperties<-function(points,k=20){
 		alpha[i]=(v1d1$values[1]-v1d1$values[2])/sum(v1d1$values)
 		vect[i,]=v1d1$vectors[,1]
 	}
-	return(list(points=points,alpha=alpha,vect=vect))
+	rlist=list(points=points,alpha=alpha,vect=vect)
+	attr(rlist,'k')=k
+	return(as.dotprops(rlist))
 }
 
 ind2coord<-function(inds, ...) UseMethod("ind2coord")
