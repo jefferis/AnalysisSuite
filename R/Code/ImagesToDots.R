@@ -154,17 +154,18 @@ ind2coord.default<-function(inds, dims, voxdims, origin, axperm=NULL){
 	rval
 }
 
-DotPropertiesFromNrrd<-function(f){
+DotPropertiesFromNrrd<-function(f,...){
 	x=Read3DDensityFromNrrd(f)
 	l=list()
 	l$points=ind2coord(x)
-	DotProperties(l$points)
+	DotProperties(l$points,...)
 }
 
 WeightedNNBasedLinesetMatching.dotprops<-function(dp1,dp2,...){
 	WeightedNNBasedLinesetMatching(dp1$points,dp2$points,dvs1=dp1$vect,dvs2=dp2$vect,...)
 }
 
+plot3d.dotprops
 
 # stop()
 # 
