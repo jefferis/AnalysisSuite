@@ -12,6 +12,23 @@ as.dotprops<-function(dp){
 	dp
 }
 
+plot3d.dotprops<-function(dp,PlotPoints=TRUE,PlotVectors=TRUE,
+	scalevecs=5.0, UseAlpha=FALSE,...){
+	# rgl's generic plot3d will dispatch on this
+	rlist=list()
+	if(PlotPoints)
+		rlist$points=points3d(dp$points,...)
+	if(PlotVectors){
+		halfvect=dp$vect/2*scalevecs
+		if(UseAlpha) halfvect=halfvect*dp$alpha
+		starts=dp$points-halfvect
+		stops=dp$points+halfvect
+		interleaved=matrix(t(cbind(starts,stops)),ncol=3,byrow=T)
+		segments=segments3d(interleaved,...)
+	}
+	invisible(rlist)
+}
+
 DotProperties<-function(points,k=20){
 	npoints=nrow(points)
 	if(npoints<k) stop("Too few points to calculate properties")
