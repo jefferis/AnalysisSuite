@@ -4,6 +4,14 @@
 
 require(RANN)
 
+is.dotprops<-function(dp) inherits(dp,"dotprops")
+
+as.dotprops<-function(dp){
+	if(is.null(dp)) return (NULL)
+	if(!is.dotprops(dp)) class(dp)=c("dotprops",class(dp))
+	dp
+}
+
 DotProperties<-function(points,k=20){
 	npoints=nrow(points)
 	if(npoints<k) stop("Too few points to calculate properties")
