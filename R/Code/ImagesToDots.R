@@ -144,6 +144,26 @@ ind2coord.default<-function(inds, dims, voxdims, origin, axperm=NULL){
 	rval
 }
 
+sub2ind<-function(dims,coords){
+	# emulate matlab's sub2ind command
+
+	# convert vector containing 1 coordinate into matrix
+	if(!is.matrix(coords))
+		coords=matrix(coords,byrow=TRUE,ncol=length(coords))
+	if(length(dims)!=ncol(coords)){
+		stop("coords must have the same number of columns as dimensions in dims")
+	}
+	k=cumprod(c(1,dims[-length(dims)]))
+	ndx=1
+	for(i in 1:length(dims)){
+		v=coords[,i]
+		if(any(v<1) || any(v>dims[i]))
+			stop("index out of range")
+		ndx=ndx+(v-1)*k[i]
+	}
+	ndx
+}
+
 DotPropertiesFromNrrd<-function(f){
 	x=Read3DDensityFromNrrd(f)
 	l=list()

@@ -49,3 +49,17 @@ test.ind2coord<-function(){
 	
 	checkEqualsNumeric(x[xinds,],x.correct)
 }
+
+test.sub2ind<-function(){
+	# from matlab
+	# sub2ind([512 768 112], 300, 200, 77)
+	
+	s2i.matlab = 29986604
+	s2i = sub2ind(c(512,768,112),c(300,200,77))
+	checkEqualsNumeric(s2i.matlab,s2i)
+	
+	s2i.correct = c(19762988,19974032)
+	s2i = sub2ind(c(512,512,77),matrix(c(300,200,76,400,100,77),byrow=T,ncol=3))
+	checkEqualsNumeric(s2i.correct,s2i)
+}
+
