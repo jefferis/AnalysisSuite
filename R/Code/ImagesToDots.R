@@ -222,10 +222,12 @@ sub2ind<-function(dims,coords){
 	ndx
 }
 
-DotPropertiesFromNrrd<-function(f,...){
+DotPropertiesFromNrrd<-function(f, xformfun=NULL, ...){
 	x=Read3DDensityFromNrrd(f)
 	l=list()
 	l$points=ind2coord(x)
+	if(!is.null(xformfun))
+		l$points=xformfun(l$points)
 	l=DotProperties(l$points,...)
 	attr(l,'file')=f
 	fi=file.info(f)
