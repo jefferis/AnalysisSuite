@@ -144,6 +144,37 @@ ind2coord.default<-function(inds, dims, voxdims, origin, axperm=NULL){
 	rval
 }
 
+coord2ind<-function(coords,imsize,voxdims,aperm){
+	# finds 1d indices into 3d image array
+	# img     - 3d img array
+	# voxdims - vector of 3 voxel dimensions (width, height, depth, dx,dy,dz)
+	# coords  - 3xN XYZ triples
+	# aperm   - permutation order for axes
+	
+	if(length(imsize) != 3)
+		stop('coords2ind only handles 3d data')
+
+	if(!is.matrix(coords))
+		coords=matrix(coords,byrow=TRUE,ncol=length(coords))
+
+	# first convert from physical coords to pixel coords
+	# FIXME surely coords are 0 indexed
+	pixcoords=t(round(t(coords)/voxdims))
+
+	# make sure no points are out of range
+	pixcoords[,1]=pmin(imsize[1],max(1,pixcoords[,1]))
+	pixcoords[,2]=pmin(imsize[2],max(1,pixcoords[,2]))
+	pixcoords[,3]=pmin(imsize[3],max(1,pixcoords[,3]))
+
+	# convert to 1d indices
+	if (missing(aperm))
+		indices=sub2ind(imsize[aperm],pixcoords)
+	else {
+		indices=sub2ind(imsize[aperm],pixcoords)
+	}
+	indices
+}
+
 sub2ind<-function(dims,coords){
 	# emulate matlab's sub2ind command
 

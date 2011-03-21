@@ -50,6 +50,13 @@ test.ind2coord<-function(){
 	checkEqualsNumeric(x[xinds,],x.correct)
 }
 
+test.coord2ind<-function(){
+	# from matlab
+	c2i.matlab=1184259
+	c2i=coord2ind(c(1,3,4),imsize=c(512,768,112),voxdims=c(0.31,0.31,1.06))
+	checkEqualsNumeric(c2i.matlab,c2i)
+}
+
 test.sub2ind<-function(){
 	# from matlab
 	# sub2ind([512 768 112], 300, 200, 77)
