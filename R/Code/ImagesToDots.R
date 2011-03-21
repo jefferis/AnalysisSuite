@@ -171,6 +171,57 @@ ind2coord.default<-function(inds, dims, voxdims, origin, axperm=NULL){
 	rval
 }
 
+coord2ind<-function(coords,imsize,voxdims,aperm){
+	# finds 1d indices into 3d image array
+	# img     - 3d img array
+	# voxdims - vector of 3 voxel dimensions (width, height, depth, dx,dy,dz)
+	# coords  - 3xN XYZ triples
+	# aperm   - permutation order for axes
+	
+	if(length(imsize) != 3)
+		stop('coords2ind only handles 3d data')
+
+	if(!is.matrix(coords))
+		coords=matrix(coords,byrow=TRUE,ncol=length(coords))
+
+	# first convert from physical coords to pixel coords
+	# FIXME surely coords are 0 indexed
+	pixcoords=t(round(t(coords)/voxdims))
+
+	# make sure no points are out of range
+	pixcoords[,1]=pmin(imsize[1],max(1,pixcoords[,1]))
+	pixcoords[,2]=pmin(imsize[2],max(1,pixcoords[,2]))
+	pixcoords[,3]=pmin(imsize[3],max(1,pixcoords[,3]))
+
+	# convert to 1d indices
+	if (missing(aperm))
+		indices=sub2ind(imsize[aperm],pixcoords)
+	else {
+		indices=sub2ind(imsize[aperm],pixcoords)
+	}
+	indices
+}
+
+sub2ind<-function(dims,coords){
+	# emulate matlab's sub2ind command
+
+	# convert vector containing 1 coordinate into matrix
+	if(!is.matrix(coords))
+		coords=matrix(coords,byrow=TRUE,ncol=length(coords))
+	if(length(dims)!=ncol(coords)){
+		stop("coords must have the same number of columns as dimensions in dims")
+	}
+	k=cumprod(c(1,dims[-length(dims)]))
+	ndx=1
+	for(i in 1:length(dims)){
+		v=coords[,i]
+		if(any(v<1) || any(v>dims[i]))
+			stop("index out of range")
+		ndx=ndx+(v-1)*k[i]
+	}
+	ndx
+}
+
 DotPropertiesFromNrrd<-function(f,...){
 	x=Read3DDensityFromNrrd(f)
 	l=list()
@@ -187,7 +238,6 @@ WeightedNNBasedLinesetMatching.dotprops<-function(dp1,dp2,...){
 	WeightedNNBasedLinesetMatching(dp1$points,dp2$points,dvs1=dp1$vect,dvs2=dp2$vect,...)
 }
 
-plot3d.dotprops
 
 # stop()
 # 

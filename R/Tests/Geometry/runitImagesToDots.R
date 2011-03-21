@@ -34,7 +34,7 @@ test.ind2coord<-function(){
 	
 	checkEqualsNumeric(i2c.matlab,i2c.r,tol=1e-6)
 	
-	lh=Read3DDensityFromAmiraLattice("/GD/projects/AnalysisSuite/R/Data/LHMask.am")
+	lh=Read3DDensityFromAmiraLattice(file.path(ObjDir,"LHMask.am"))
 	x=ind2coord(lh)
 	y=ind2coord(lh>0,voxdims=lh)
 	checkEqualsNumeric(x,y,tol=1e-6)
@@ -49,3 +49,24 @@ test.ind2coord<-function(){
 	
 	checkEqualsNumeric(x[xinds,],x.correct)
 }
+
+test.coord2ind<-function(){
+	# from matlab
+	c2i.matlab=1184259
+	c2i=coord2ind(c(1,3,4),imsize=c(512,768,112),voxdims=c(0.31,0.31,1.06))
+	checkEqualsNumeric(c2i.matlab,c2i)
+}
+
+test.sub2ind<-function(){
+	# from matlab
+	# sub2ind([512 768 112], 300, 200, 77)
+	
+	s2i.matlab = 29986604
+	s2i = sub2ind(c(512,768,112),c(300,200,77))
+	checkEqualsNumeric(s2i.matlab,s2i)
+	
+	s2i.correct = c(19762988,19974032)
+	s2i = sub2ind(c(512,512,77),matrix(c(300,200,76,400,100,77),byrow=T,ncol=3))
+	checkEqualsNumeric(s2i.correct,s2i)
+}
+
