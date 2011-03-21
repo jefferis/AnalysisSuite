@@ -34,7 +34,7 @@ test.ind2coord<-function(){
 	
 	checkEqualsNumeric(i2c.matlab,i2c.r,tol=1e-6)
 	
-	lh=Read3DDensityFromAmiraLattice("/GD/projects/AnalysisSuite/R/Data/LHMask.am")
+	lh=Read3DDensityFromAmiraLattice(file.path(ObjDir,"LHMask.am"))
 	x=ind2coord(lh)
 	y=ind2coord(lh>0,voxdims=lh)
 	checkEqualsNumeric(x,y,tol=1e-6)
