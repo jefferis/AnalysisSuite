@@ -175,8 +175,8 @@ WeightedNNBasedLinesetMatching<-function(n1,n2,dvs1=NULL,dvs2=NULL,NNDistFun=Wei
 	NNDistFun=match.fun(NNDistFun)
 	BothDirectionsFun=match.fun(BothDirectionsFun)
 	if(BothDirections){
-		f=WeightedNNBasedLinesetMatching(n1,n2,NNDistFun=NNDistFun,Verbose=Verbose,BothDirections=FALSE,...)
-		b=WeightedNNBasedLinesetMatching(n2,n1,NNDistFun=NNDistFun,Verbose=Verbose,BothDirections=FALSE,...)
+		f=WeightedNNBasedLinesetMatching(n1,n2,dvs1,dvs2,NNDistFun=NNDistFun,Verbose=Verbose,BothDirections=FALSE,...)
+		b=WeightedNNBasedLinesetMatching(n2,n1,dvs1,dvs2,NNDistFun=NNDistFun,Verbose=Verbose,BothDirections=FALSE,...)
 		if(length(f)==1 && length(b)==1) return (BothDirectionsFun(f,b))
 		if(length(dim(f))==1 && length(f)==length(b)) return (cbind(f,b))
 		return(BothDirectionsFun(f,b))
