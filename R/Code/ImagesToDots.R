@@ -231,8 +231,8 @@ DotPropertiesFromFile<-function(f, xformfun=NULL, ...){
 	} else if(ext=="swc") {
 		l$points=ReadSWCFile(f)[,c("X","Y","Z")]
 	} else if(ext=='csv') {
-		pts=read.csv(infile,header=FALSE)
-		colnames(pts)=c("X","Y","Z")
+		l$points=read.csv(f,header=FALSE)
+		colnames(l$points)=c("X","Y","Z")
 	} else 
 		stop("Cannot extract dots from file type: ",ext)
 	if(!is.null(xformfun))
