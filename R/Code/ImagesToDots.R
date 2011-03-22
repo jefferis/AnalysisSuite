@@ -222,10 +222,19 @@ sub2ind<-function(dims,coords){
 	ndx
 }
 
-DotPropertiesFromNrrd<-function(f, xformfun=NULL, ...){
-	x=Read3DDensityFromNrrd(f)
+DotPropertiesFromFile<-function(f, xformfun=NULL, ...){
+	ext=sub(".*\\.([^.]+$)","\\1",basename(f))
 	l=list()
-	l$points=ind2coord(x)
+	if(ext=="nrrd"){
+		x=Read3DDensityFromNrrd(f)
+		l$points=ind2coord(x)
+	} else if(ext=="swc") {
+		l$points=ReadSWCFile(f)[,c("X","Y","Z")]
+	} else if(ext=='csv') {
+		pts=read.csv(infile,header=FALSE)
+		colnames(pts)=c("X","Y","Z")
+	} else 
+		stop("Cannot extract dots from file type: ",ext)
 	if(!is.null(xformfun))
 		l$points=xformfun(l$points)
 	l=DotProperties(l$points,...)
