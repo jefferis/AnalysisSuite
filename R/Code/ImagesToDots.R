@@ -12,8 +12,8 @@ as.dotprops<-function(dp){
 	dp
 }
 
-plot3d.dotprops<-function(dp,PlotPoints=TRUE,PlotVectors=TRUE,
-	scalevecs=5.0, UseAlpha=FALSE,...){
+plot3d.dotprops<-function(dp,PlotPoints=FALSE,PlotVectors=TRUE,
+	scalevecs=1.0, UseAlpha=FALSE,...){
 	# rgl's generic plot3d will dispatch on this
 	rlist=list()
 	if(PlotPoints)
