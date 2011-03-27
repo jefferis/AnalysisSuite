@@ -28,7 +28,7 @@ removelock<-function(lockfile){
 	return (TRUE)
 }
 
-RunCmdForNewerInput<-function(cmd,infiles,outfile,Verbose=FALSE,...){
+RunCmdForNewerInput<-function(cmd,infiles,outfile,Verbose=FALSE,UseLock=FALSE,...){
 	if(!all(file.exists(infiles))){
 		if(Verbose) cat("some input files missing: ",infiles[!file.exists(infiles)],"\n")
 		return (FALSE)
@@ -45,6 +45,16 @@ RunCmdForNewerInput<-function(cmd,infiles,outfile,Verbose=FALSE,...){
 			cat("Newest input mtime:",max(file.info(infiles)$mtime),
 				"Output mtime:",file.info(outfile)$mtime,"\n")
 		} 
+	}
+	lockfile=paste(outfile,sep=".","lock")
+	# return FALSE to signal output doens't exist
+	if(UseLock){
+		if(makelock(lockfile))
+			on.exit(unlink(lockfile))
+		else {
+			if(Verbose) cat("Skipping",outfile,"because someone else is working on it\n")
+			return(FALSE)
+		}
 	}
 	if(!is.null(cmd)) system(cmd,...)
 	return(TRUE)
