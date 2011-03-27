@@ -35,9 +35,9 @@ RunCmdForNewerInput<-function(cmd,infiles,outfile,Verbose=FALSE,UseLock=FALSE,..
 	} else if(!file.exists(outfile)){
 		# do nothing just fall through to end
 		if(Verbose) cat("outfile: ",outfile,"missing\n")
-	} else if(max(file.info(infiles)$mtime) < file.info(outfile)$mtime){
+	} else if(max(file.info(infiles)$mtime) <= file.info(outfile)$mtime){
 		# check times
-		if(Verbose) cat("Skipping",outfile,"because input files are older; use OverWrite=\"yes\" to force\n")
+		if(Verbose) cat("Skipping",outfile,"because input files are no older; use OverWrite=\"yes\" to force\n")
 		return(FALSE)	
 	} else {
 		if(Verbose){
