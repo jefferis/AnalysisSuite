@@ -122,8 +122,5 @@ is.dir<-function(dir){
 }
 
 fix.dir<-function(dir){
-	if (!is.dir(dir)){
-		dir<-paste(dir,"/",sep="")
-	}
-	dir
+	ifelse(is.dir(dir),yes=dir,no=paste(dir,"/",sep=""))
 }
