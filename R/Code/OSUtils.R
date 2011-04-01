@@ -98,3 +98,21 @@ swapfilenames<-function(f1,f2){
 	rval=file.rename(from=f1,to=tmpfile) && file.rename(from=f2,to=f1) && file.rename(from=tmpfile,to=f2)
 	return(rval)
 }
+
+abs2rel<-function(path,stempath,StopIfNoCommonPath=FALSE){
+	# just return the part of path that is NOT in common with stempath
+	# eg if path = "/Volumes/JData/JPeople/Sebastian/images"
+	# and stempath = "/Volumes/JData/JPeople/"
+	# returns "Sebastian/images"
+	
+	path=path.expand(path)
+	stempath=path.expand(stempath)
+	
+	relpath=sub(stempath,"",path,fixed=TRUE)
+
+	warnorstopfun=if(StopIfNoCommonPath) stop else warning
+	if(relpath==path)
+		warnorstopfun("stempath: ",stempath,"is not present in: ",path)
+
+	relpath
+}
