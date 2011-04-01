@@ -102,11 +102,11 @@ swapfilenames<-function(f1,f2){
 abs2rel<-function(path,stempath,StopIfNoCommonPath=FALSE){
 	# just return the part of path that is NOT in common with stempath
 	# eg if path = "/Volumes/JData/JPeople/Sebastian/images"
-	# and stempath = "/Volumes/JData/JPeople/"
+	# and stempath = "/Volumes/JData/JPeople" (with or without slash)
 	# returns "Sebastian/images"
 	
 	path=path.expand(path)
-	stempath=path.expand(stempath)
+	stempath=fix.dir(path.expand(stempath))
 	
 	relpath=sub(stempath,"",path,fixed=TRUE)
 
