@@ -116,3 +116,14 @@ abs2rel<-function(path,stempath,StopIfNoCommonPath=FALSE){
 
 	relpath
 }
+
+is.dir<-function(dir){
+	grepl("/$",dir)
+}
+
+fix.dir<-function(dir){
+	if (!is.dir(dir)){
+		dir<-paste(dir,"/",sep="")
+	}
+	dir
+}
