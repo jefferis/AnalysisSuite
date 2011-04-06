@@ -29,6 +29,17 @@ plot3d.dotprops<-function(dp,PlotPoints=FALSE,PlotVectors=TRUE,
 	invisible(rlist)
 }
 
+subset.dotprops<-function(dp,inds){
+	if(class(inds)=='function'){
+		# a function that tells us whether a point is in or out
+		inds=inds(dp$points)
+	}
+	dp$points=dp$points[inds,]
+	dp$alpha=dp$alpha[inds]
+	dp$vect=dp$vect[inds,]
+	dp
+}
+
 DotProperties<-function(points,k=20){
 	npoints=nrow(points)
 	if(npoints<k) stop("Too few points to calculate properties")
