@@ -40,6 +40,8 @@ subset.dotprops<-function(dp,inds){
 	dp
 }
 
+length.dotprops<-function(dp) nrow(dp$points)
+
 DotProperties<-function(points,k=20){
 	npoints=nrow(points)
 	if(npoints<k) stop("Too few points to calculate properties")
