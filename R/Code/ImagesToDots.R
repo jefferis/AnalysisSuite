@@ -194,8 +194,11 @@ coord2ind<-function(coords,imdims,voxdims,aperm){
 	# voxdims - vector of 3 voxel dimensions (width, height, depth, dx,dy,dz)
 	# aperm   - permutation order for axes
 	
-	if(is.array(imdims)  && missing(voxdims)){
-		voxdims=as.numeric(voxdim.gjdens(imdims))
+	if(is.array(imdims)){
+		if(missing(voxdims))
+			voxdims=as.numeric(voxdim.gjdens(imdims))
+		if(missing(origin))
+			origin=getBoundingBox(imdims)[c(1,3,5)]
 		imdims=dim(imdims)
 	}
 	
@@ -204,6 +207,8 @@ coord2ind<-function(coords,imdims,voxdims,aperm){
 
 	if(!is.matrix(coords))
 		coords=matrix(coords,byrow=TRUE,ncol=length(coords))
+	if(!missing(origin))
+		coords=t(t(coords)-origin)
 
 	# first convert from physical coords to pixel coords
 	# FIXME surely coords are 0 indexed
