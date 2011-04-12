@@ -187,15 +187,15 @@ ind2coord.default<-function(inds, dims, voxdims, origin, axperm=NULL){
 	rval
 }
 
-coord2ind<-function(coords,imsize,voxdims,aperm){
+coord2ind<-function(coords,imdims,voxdims,aperm){
 	# finds 1d indices into 3d image array
-	# img     - 3d img array
+	# coords  - N x 3 XYZ triples
+	# imdims - dimensions of 3d img array (or the array itself)
 	# voxdims - vector of 3 voxel dimensions (width, height, depth, dx,dy,dz)
-	# coords  - 3xN XYZ triples
 	# aperm   - permutation order for axes
 	
-	if(length(imsize) != 3)
-		stop('coords2ind only handles 3d data')
+	if(length(imdims) != 3)
+		stop('coord2ind only handles 3d data')
 
 	if(!is.matrix(coords))
 		coords=matrix(coords,byrow=TRUE,ncol=length(coords))
@@ -205,17 +205,14 @@ coord2ind<-function(coords,imsize,voxdims,aperm){
 	pixcoords=t(round(t(coords)/voxdims))
 
 	# make sure no points are out of range
-	pixcoords[,1]=pmin(imsize[1],max(1,pixcoords[,1]))
-	pixcoords[,2]=pmin(imsize[2],max(1,pixcoords[,2]))
-	pixcoords[,3]=pmin(imsize[3],max(1,pixcoords[,3]))
+	pixcoords[,1]=pmin(imdims[1],max(1,pixcoords[,1]))
+	pixcoords[,2]=pmin(imdims[2],max(1,pixcoords[,2]))
+	pixcoords[,3]=pmin(imdims[3],max(1,pixcoords[,3]))
 
 	# convert to 1d indices
-	if (missing(aperm))
-		indices=sub2ind(imsize[aperm],pixcoords)
-	else {
-		indices=sub2ind(imsize[aperm],pixcoords)
-	}
-	indices
+	if (!missing(aperm))
+		imdims=imdims[aperm]
+	sub2ind(imdims,pixcoords)
 }
 
 sub2ind<-function(dims,coords){
