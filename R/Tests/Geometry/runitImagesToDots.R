@@ -61,7 +61,15 @@ test.coord2ind<-function(){
 	checkEqualsNumeric(c2i.origin,c2i)
 
 	c2i.origin=1
-	c2i=coord2ind(c(40,50,60),imdims=c(512,768,112),voxdims=c(0.31,0.31,1.06),origin=c(40,50,60))
+	c2i=coord2ind(c(40,50,60),imdims=c(512,768,112),voxdims=c(2,3,4),origin=c(40,50,60))
+	checkEqualsNumeric(c2i.origin,c2i)
+
+	c2i.origin=(80-60)/4*(768*512)+1
+	c2i=coord2ind(c(40,50,80),imdims=c(512,768,112),voxdims=c(2,3,4),origin=c(40,50,60))
+	checkEqualsNumeric(c2i.origin,c2i)
+
+	c2i.origin=(80-60)/4*(768*512)+(60-40)/2+1
+	c2i=coord2ind(c(60,50,80),imdims=c(512,768,112),voxdims=c(2,3,4),origin=c(40,50,60))
 	checkEqualsNumeric(c2i.origin,c2i)
 }
 
