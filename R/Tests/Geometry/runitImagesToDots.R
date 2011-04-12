@@ -26,9 +26,15 @@ test.ind2coord<-function(){
 	# 0.3000    3.0000  235.5000  201.9000
     # 0.4000    0.8000    4.0000   39.2000
     # 1.0000    1.0000    1.0000    1.0000
+
+	# from matlab with axperm
+	# ind2coord([1024 768 100],[1 1034,10001,100001],[0.3,0.4,1],[1 2 3])
+	#          0    2.7000  235.2000  201.6000
+	#          0    0.4000    3.6000   38.8000
+	#          0         0         0         0
     
-	i2c.matlab=t(structure(c(0.3, 0.4, 1, 3, 0.8, 1, 235.5, 4, 1, 201.9, 39.2, 
-	1), .Dim = 3:4))
+	i2c.matlab=t(structure(c(0, 0, 0, 2.7, 0.4, 0, 235.2, 3.6, 0, 201.6, 38.8, 0),
+		.Dim = 3:4))
 	
 	i2c.r=ind2coord(c(1,1034,10001,100001),c(1024,768,100),c(0.3,0.4,1))
 	
@@ -41,10 +47,10 @@ test.ind2coord<-function(){
 	
 	xinds=c(1223L, 4282L, 4907L, 5978L, 10327L, 12151L, 13042L, 19879L, 
 	23842L, 27664L)
-	x.correct=structure(c(133.5, 141.9, 127.9, 126.5, 127.9, 129.3, 129.3, 
-	139.1, 137.7, 139.1, 87.3, 98.5, 92.9, 99.9, 111.1, 95.7, 90.1, 
-	97.1, 73.3, 90.1, 13.3, 18.9, 20.3, 21.7, 27.3, 30.1, 31.5, 41.3, 
-	48.3, 56.7), .Dim = c(10L, 3L), .Dimnames = list(NULL, c("X", 
+	x.correct=structure(c(132.1, 140.5, 126.5, 125.1, 126.5, 127.9, 127.9, 
+	137.7, 136.3, 137.7, 85.9, 97.1, 91.5, 98.5, 109.7, 94.3, 88.7, 
+	95.7, 71.9, 88.7, 11.9, 17.5, 18.9, 20.3, 25.9, 28.7, 30.1, 39.9, 
+	46.9, 55.3), .Dim = c(10L, 3L), .Dimnames = list(NULL, c("X", 
 	"Y", "Z")))
 	
 	checkEqualsNumeric(x[xinds,],x.correct)
@@ -71,6 +77,15 @@ test.coord2ind<-function(){
 	c2i.origin=(80-60)/4*(768*512)+(60-40)/2+1
 	c2i=coord2ind(c(60,50,80),imdims=c(512,768,112),voxdims=c(2,3,4),origin=c(40,50,60))
 	checkEqualsNumeric(c2i.origin,c2i)
+}
+
+test.coord2ind.roundtrip<-function(){
+	lh=Read3DDensityFromAmiraLattice(file.path(ObjDir,"LHMask.am"))
+	coords=ind2coord(lh)
+	inds=coord2ind(coords,lh)
+	lhorigin=getBoundingBox(lh)[c(1,3,5)]
+	coordsagain=ind2coord(inds,dim=dim(lh),voxdim=voxdim.gjdens(lh),origin=lhorigin)
+	checkEqualsNumeric(coords,coordsagain,tol=1e-6)
 }
 
 test.sub2ind<-function(){
