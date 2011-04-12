@@ -194,6 +194,11 @@ coord2ind<-function(coords,imdims,voxdims,aperm){
 	# voxdims - vector of 3 voxel dimensions (width, height, depth, dx,dy,dz)
 	# aperm   - permutation order for axes
 	
+	if(is.array(imdims)  && missing(voxdims)){
+		voxdims=as.numeric(voxdim.gjdens(imdims))
+		imdims=dim(imdims)
+	}
+	
 	if(length(imdims) != 3)
 		stop('coord2ind only handles 3d data')
 
