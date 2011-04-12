@@ -187,7 +187,7 @@ ind2coord.default<-function(inds, dims, voxdims, origin, axperm=NULL){
 	rval
 }
 
-coord2ind<-function(coords,imdims,voxdims,aperm){
+coord2ind<-function(coords,imdims,voxdims,origin,aperm,Clamp=FALSE,CheckRanges=!Clamp){
 	# finds 1d indices into 3d image array
 	# coords  - N x 3 XYZ triples
 	# imdims - dimensions of 3d img array (or the array itself)
@@ -212,12 +212,18 @@ coord2ind<-function(coords,imdims,voxdims,aperm){
 
 	# first convert from physical coords to pixel coords
 	# FIXME surely coords are 0 indexed
-	pixcoords=t(round(t(coords)/voxdims))
+	pixcoords=t(round(t(coords)/voxdims))+1
 
 	# make sure no points are out of range
-	pixcoords[,1]=pmin(imdims[1],max(1,pixcoords[,1]))
-	pixcoords[,2]=pmin(imdims[2],max(1,pixcoords[,2]))
-	pixcoords[,3]=pmin(imdims[3],max(1,pixcoords[,3]))
+	if(Clamp){
+		pixcoords[,1]=pmin(imdims[1],pmax(1,pixcoords[,1]))
+		pixcoords[,2]=pmin(imdims[2],pmax(1,pixcoords[,2]))
+		pixcoords[,3]=pmin(imdims[3],pmax(1,pixcoords[,3]))
+	} else if(CheckRanges){
+		ranges=apply(pixcoords,2,range)
+		if(any(ranges[2,]>imdims) || any(ranges[1,]<1))
+			stop("pixcoords out of range")
+	}
 
 	# convert to 1d indices
 	if (!missing(aperm))

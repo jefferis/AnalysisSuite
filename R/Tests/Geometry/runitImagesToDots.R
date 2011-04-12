@@ -52,9 +52,17 @@ test.ind2coord<-function(){
 
 test.coord2ind<-function(){
 	# from matlab
-	c2i.matlab=1184259
-	c2i=coord2ind(c(1,3,4),imdims=c(512,768,112),voxdims=c(0.31,0.31,1.06))
-	checkEqualsNumeric(c2i.matlab,c2i)
+	# c2i.matlab=1184259
+	# c2i=coord2ind(c(1,3,4),imdims=c(512,768,112),voxdims=c(0.31,0.31,1.06))
+	# checkEqualsNumeric(c2i.matlab,c2i)
+
+	c2i.origin=1
+	c2i=coord2ind(c(0,0,0),imdims=c(512,768,112),voxdims=c(0.31,0.31,1.06))
+	checkEqualsNumeric(c2i.origin,c2i)
+
+	c2i.origin=1
+	c2i=coord2ind(c(40,50,60),imdims=c(512,768,112),voxdims=c(0.31,0.31,1.06),origin=c(40,50,60))
+	checkEqualsNumeric(c2i.origin,c2i)
 }
 
 test.sub2ind<-function(){
