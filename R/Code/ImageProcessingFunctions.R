@@ -287,5 +287,6 @@ CMTKStatistics<-function(f,exe="statistics"){
 	if(length(f)>1) sapply(f,CMTKStatistics,exe=exe)
 	rval=system2(exe,f,stdout=TRUE)
 	tc=textConnection(rval)
+	on.exit(close(tc))
 	read.table(tc,header=TRUE,skip=1)
 }
