@@ -224,7 +224,7 @@ irtk.transformedPoints<-function(xyzs=NULL,dofins,direction=c("inverse","forward
 	# so right now the transforms switch is ignored
 	
 	transforms=match.arg(transforms,several.ok=TRUE)
-	# FIXME check direction mapping for points
+
 	direction=match.arg(direction) #nb inverse implies from sample to ref
 
 	# massage xyzs input to a 3 col matrix
@@ -240,7 +240,8 @@ irtk.transformedPoints<-function(xyzs=NULL,dofins,direction=c("inverse","forward
 		stop("Must provide the same number of transform descriptors as dof files")
 	names(dofins)=transforms
 	for (t in transforms){
-		l[[t]]=irtk.transformation(xyzs,dofins[t],output=NA)
+		l[[t]]=irtk.transformation(xyzs,dofins[t],output=NA,
+			Invert=ifelse(direction=="forward",TRUE,FALSE))
 	}
 	l
 }
