@@ -46,6 +46,7 @@ length.dotprops<-function(dp) nrow(dp$points)
 str.dotprops<-function(dp,...) {class(dp)<-"list";str(dp,...)}
 
 DotProperties<-function(points,k=20){
+	if(is.neuron(points)) points=points$d[,c("X","Y","Z")]
 	npoints=nrow(points)
 	if(npoints<k) stop("Too few points to calculate properties")
 	if(ncol(points)!=3) stop("points must be a N x 3 matrix")
