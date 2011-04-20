@@ -291,11 +291,12 @@ CMTKStatistics<-function(f,exe="statistics"){
 	read.table(tc,header=TRUE,skip=1)
 }
 
-CMTKSimilarity<-function(f1,f2,exe="similarity",...){
+CMTKSimilarity<-function(f1,f2,exe="similarity",simargs=NULL,...){
 	if(length(f1)>1 || length(f2)>1){
-		return(t(mapply(CMTKSimilarity,f1,f2,MoreArgs=list(exe=exe))))
+		return(t(mapply(CMTKSimilarity,f1,f2,
+			MoreArgs=list(exe=exe,simargs=simargs))))
 	}	
-	rval=system2(exe,c(f1,f2),stdout=TRUE,...)
+	rval=system2(exe,c(f1,f2,simargs),stdout=TRUE,...)
 	scorelines=grep("^SIM",rval,val=T)
 	tc=textConnection(scorelines)
 	on.exit(close(tc))
