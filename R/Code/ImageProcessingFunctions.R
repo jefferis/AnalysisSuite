@@ -287,5 +287,19 @@ CMTKStatistics<-function(f,exe="statistics"){
 	if(length(f)>1) sapply(f,CMTKStatistics,exe=exe)
 	rval=system2(exe,f,stdout=TRUE)
 	tc=textConnection(rval)
+	on.exit(close(tc))
 	read.table(tc,header=TRUE,skip=1)
+}
+
+CMTKSimilarity<-function(f1,f2,exe="similarity",...){
+	if(length(f1)>1 || length(f2)>1){
+		return(t(mapply(CMTKSimilarity,f1,f2,MoreArgs=list(exe=exe))))
+	}	
+	rval=system2(exe,c(f1,f2),stdout=TRUE,...)
+	scorelines=grep("^SIM",rval,val=T)
+	tc=textConnection(scorelines)
+	on.exit(close(tc))
+	t=read.table(tc,header=TRUE)
+	# data.matrix(t[-1])
+	unlist(t[-1])
 }

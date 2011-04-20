@@ -29,6 +29,22 @@ plot3d.dotprops<-function(dp,PlotPoints=FALSE,PlotVectors=TRUE,
 	invisible(rlist)
 }
 
+subset.dotprops<-function(dp,inds){
+	if(class(inds)=='function'){
+		# a function that tells us whether a point is in or out
+		inds=inds(dp$points)
+	}
+	dp$points=dp$points[inds,]
+	dp$alpha=dp$alpha[inds]
+	dp$vect=dp$vect[inds,]
+	dp
+}
+
+length.dotprops<-function(dp) nrow(dp$points)
+
+# redefining length upsets str
+str.dotprops<-function(dp,...) {class(dp)<-"list";str(dp,...)}
+
 DotProperties<-function(points,k=20){
 	npoints=nrow(points)
 	if(npoints<k) stop("Too few points to calculate properties")
@@ -162,44 +178,57 @@ ind2coord.default<-function(inds, dims, voxdims, origin, axperm=NULL){
 
 	# then convert from pixel coords to physical coords
 	# transpose to allow multiplication, then back again to give 3 cols
-	
+	# note that we must subtract 1 from 1-indexed pixcoords
 	rval = if(missing(origin))
-		t(t(pixcoords)*voxdims)
+		t(t(pixcoords-1)*voxdims)
 	else
-		t(t(pixcoords)*voxdims+origin)
+		t(t(pixcoords-1)*voxdims+origin)
 	colnames(rval)=c("X","Y","Z")
 	rval
 }
 
-coord2ind<-function(coords,imsize,voxdims,aperm){
+coord2ind<-function(coords,imdims,voxdims,origin,aperm,Clamp=FALSE,CheckRanges=!Clamp){
 	# finds 1d indices into 3d image array
-	# img     - 3d img array
+	# coords  - N x 3 XYZ triples
+	# imdims - dimensions of 3d img array (or the array itself)
 	# voxdims - vector of 3 voxel dimensions (width, height, depth, dx,dy,dz)
-	# coords  - 3xN XYZ triples
 	# aperm   - permutation order for axes
 	
-	if(length(imsize) != 3)
-		stop('coords2ind only handles 3d data')
+	if(is.array(imdims)){
+		if(missing(voxdims))
+			voxdims=as.numeric(voxdim.gjdens(imdims))
+		if(missing(origin))
+			origin=getBoundingBox(imdims)[c(1,3,5)]
+		imdims=dim(imdims)
+	}
+	
+	if(length(imdims) != 3)
+		stop('coord2ind only handles 3d data')
 
 	if(!is.matrix(coords))
 		coords=matrix(coords,byrow=TRUE,ncol=length(coords))
+	if(!missing(origin))
+		coords=t(t(coords)-origin)
 
 	# first convert from physical coords to pixel coords
 	# FIXME surely coords are 0 indexed
-	pixcoords=t(round(t(coords)/voxdims))
+	pixcoords=t(round(t(coords)/voxdims))+1
 
 	# make sure no points are out of range
-	pixcoords[,1]=pmin(imsize[1],max(1,pixcoords[,1]))
-	pixcoords[,2]=pmin(imsize[2],max(1,pixcoords[,2]))
-	pixcoords[,3]=pmin(imsize[3],max(1,pixcoords[,3]))
+	if(Clamp){
+		pixcoords[,1]=pmin(imdims[1],pmax(1,pixcoords[,1]))
+		pixcoords[,2]=pmin(imdims[2],pmax(1,pixcoords[,2]))
+		pixcoords[,3]=pmin(imdims[3],pmax(1,pixcoords[,3]))
+	} else if(CheckRanges){
+		ranges=apply(pixcoords,2,range)
+		if(any(ranges[2,]>imdims) || any(ranges[1,]<1))
+			stop("pixcoords out of range")
+	}
 
 	# convert to 1d indices
-	if (missing(aperm))
-		indices=sub2ind(imsize[aperm],pixcoords)
-	else {
-		indices=sub2ind(imsize[aperm],pixcoords)
-	}
-	indices
+	if (!missing(aperm))
+		imdims=imdims[aperm]
+	sub2ind(imdims,pixcoords)
 }
 
 sub2ind<-function(dims,coords){
