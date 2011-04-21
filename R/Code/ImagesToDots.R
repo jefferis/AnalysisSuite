@@ -34,9 +34,9 @@ subset.dotprops<-function(dp,inds){
 		# a function that tells us whether a point is in or out
 		inds=inds(dp$points)
 	}
-	dp$points=dp$points[inds,]
+	dp$points=dp$points[inds,,drop=F]
 	dp$alpha=dp$alpha[inds]
-	dp$vect=dp$vect[inds,]
+	dp$vect=dp$vect[inds,,drop=F]
 	dp
 }
 
