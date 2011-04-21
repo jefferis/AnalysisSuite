@@ -24,7 +24,7 @@ plot3d.dotprops<-function(dp,PlotPoints=FALSE,PlotVectors=TRUE,
 		starts=dp$points-halfvect
 		stops=dp$points+halfvect
 		interleaved=matrix(t(cbind(starts,stops)),ncol=3,byrow=T)
-		segments=segments3d(interleaved,...)
+		rlist$segments=segments3d(interleaved,...)
 	}
 	invisible(rlist)
 }
