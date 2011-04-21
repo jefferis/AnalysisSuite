@@ -130,3 +130,8 @@ is.dir<-function(dir){
 fix.dir<-function(dir){
 	ifelse(is.dir(dir),yes=dir,no=paste(dir,"/",sep=""))
 }
+
+rsync<-function(sourceDir, destinationDir,rsyncoptions="-va"){
+	cmd<-paste("rsync",rsyncoptions,shQuote(sourceDir),shQuote(destinationDir))
+	system(cmd)
+}
