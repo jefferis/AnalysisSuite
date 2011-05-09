@@ -29,6 +29,19 @@ plot3d.dotprops<-function(dp,PlotPoints=FALSE,PlotVectors=TRUE,
 	invisible(rlist)
 }
 
+xyzmatrix<-function(x,y=NULL,z=NULL,Transpose=FALSE) {
+	# quick function that gives a generic way to extract coords from 
+	# classes that we care about and returns a matrix
+	# nb unlike xyz.coords this returns a matrix (not a list)
+	x=if(is.neuron(x)) x$d[,c("X","Y","Z")]
+	else if(is.dotprops(x)) x$points
+	else if(!is.null(z)){
+		cbind(x,y,z)
+	} else x
+	mx=data.matrix(x)
+	if(Transpose) t(mx) else mx
+}
+
 subset.dotprops<-function(dp,inds){
 	if(class(inds)=='function'){
 		# a function that tells us whether a point is in or out
@@ -46,7 +59,7 @@ length.dotprops<-function(dp) nrow(dp$points)
 str.dotprops<-function(dp,...) {class(dp)<-"list";str(dp,...)}
 
 DotProperties<-function(points,k=20){
-	if(is.neuron(points)) points=points$d[,c("X","Y","Z")]
+	points=xyzmatrix(points)
 	npoints=nrow(points)
 	if(npoints<k) stop("Too few points to calculate properties")
 	if(ncol(points)!=3) stop("points must be a N x 3 matrix")
