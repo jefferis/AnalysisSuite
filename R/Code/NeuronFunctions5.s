@@ -149,6 +149,20 @@ as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
 	l
 }
 
+subset.neuronlist<-function(nl, ReturnList=TRUE, ...){
+	# take a neuronlist and use its attached dataframe as the basis of 
+	# a subset operation. Then use rownames of the new dataframe to select
+	# neuronlist entries and return that sublist
+	# When ReturnList is F just return the indices into the list
+	df=attr(nl,'df')
+	sdf=subset(df,...)
+	if(!ReturnList) return(rownames(sdf))
+	snl=nl[rownames(sdf)]
+	mostattributes(snl)=attributes(nl)
+	attr(snl,"df")=sdf
+	snl
+}
+
 #------------------------------------------------------------------------#
 # Returns a neuron containing the segment orders for the ordered collection
 # of segments, MyNeuron$SegList 
