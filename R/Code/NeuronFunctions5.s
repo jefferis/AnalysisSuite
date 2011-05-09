@@ -125,12 +125,20 @@ plot.neuron<-function(...) plotneuron2d(...)
 as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
 	# makes a list of neurons that can be used for 
 	# coordinated plots / analysis
-	if(!missing(df)) attr(l,"df")=df
 	# allow one neuron to be passed
 	if(is.neuron(l)) {
 		n<-l
 		l<-list(n)
 		names(l)<-n$NeuronName
+	}
+	if(!missing(df)) {
+		if(nrow(df)!=length(l)) 
+			stop("data frame must have same number of rows as there are neurons")
+		attr(l,"df")=df
+		if(is.null(names(l)))
+			names(l)=rownames(df)
+		else if(any(names(l)!=rownames(df)))
+			stop("mismatch between neuronlist names and dataframe rownames")
 	}
 	if(!inherits(l,"neuronlist")) class(l)<-c(class(l),"neuronlist")
 	if(!AddClassToNeurons) return(l)
