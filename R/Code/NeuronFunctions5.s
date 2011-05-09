@@ -164,7 +164,7 @@ subset.neuronlist<-function(nl, ..., ReturnList=TRUE){
 	attribs=attributes(nl)
 	class(nl)='list'
 	nl2=nl[inds,...]
-	class(nl)=attribs$class
+	class(nl2)=attribs$class
 	df=attr(nl,'df')
 	if(!is.null(df)){
 		attr(nl2,'df')=df[inds,,...]
