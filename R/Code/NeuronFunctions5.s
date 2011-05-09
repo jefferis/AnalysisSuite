@@ -149,7 +149,7 @@ as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
 	l
 }
 
-subset.neuronlist<-function(nl, ReturnList=TRUE, ...){
+subset.neuronlist<-function(nl, ..., ReturnList=TRUE){
 	# take a neuronlist and use its attached dataframe as the basis of 
 	# a subset operation. Then use rownames of the new dataframe to select
 	# neuronlist entries and return that sublist
@@ -157,10 +157,19 @@ subset.neuronlist<-function(nl, ReturnList=TRUE, ...){
 	df=attr(nl,'df')
 	sdf=subset(df,...)
 	if(!ReturnList) return(rownames(sdf))
-	snl=nl[rownames(sdf)]
-	mostattributes(snl)=attributes(nl)
-	attr(snl,"df")=sdf
-	snl
+	nl[rownames(sdf)]
+}
+
+"[.neuronlist" <- function(nl,inds,...) {
+	attribs=attributes(nl)
+	class(nl)='list'
+	nl2=nl[inds,...]
+	class(nl)=attribs$class
+	df=attr(nl,'df')
+	if(!is.null(df)){
+		attr(nl2,'df')=df[inds,,...]
+	}
+	nl2
 }
 
 #------------------------------------------------------------------------#
