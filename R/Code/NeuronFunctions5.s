@@ -172,6 +172,15 @@ subset.neuronlist<-function(nl, ..., ReturnList=TRUE){
 	nl2
 }
 
+plot3d.neuronlist<-function(nl,subset,...){
+	if(!is.neuronlist(nl)){
+		subset=nl
+		nl=MyNeurons
+	}
+	if(!missing(subset)) nl=subset(nl,subset)
+	invisible(mapply(plot3d,nl,...))
+}
+
 #------------------------------------------------------------------------#
 # Returns a neuron containing the segment orders for the ordered collection
 # of segments, MyNeuron$SegList 
