@@ -143,7 +143,7 @@ as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
 	if(!inherits(l,"neuronlist")) class(l)<-c(class(l),"neuronlist")
 	if(!AddClassToNeurons) return(l)
 	for(i in seq(l)){
-		if(!is.neuron(n,Strict=TRUE))
+		if(!is.neuron(l[[i]],Strict=TRUE))
 			l[[i]]=as.neuron(l[[i]])
 	}
 	l
