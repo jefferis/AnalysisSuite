@@ -78,7 +78,7 @@ BinDir=file.path(RootDir,"bin")
 # IGSRegToolsDir=file.path("path to directory containing gregxform binary")
 if(file.exists(file.path(BinDir,"gregxform"))) {
 	IGSRegToolsDir=BinDir
-} else if (nchar(gregxform<-system('which gregxform',intern=TRUE))){
+} else if (isTRUE(nchar(gregxform<-system('which gregxform',intern=TRUE))>0)){
 	# identify current gregxform on path
 	IGSRegToolsDir=dirname(gregxform)
 } else if(file.exists(file.path("/Applications","IGSRegistrationTools","bin","gregxform"))) {
