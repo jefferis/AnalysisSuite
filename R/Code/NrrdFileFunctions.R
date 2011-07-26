@@ -206,6 +206,39 @@ Write3DDensityToNrrd<-function(filename,dens,enc=c("raw","text","gzip"),
 	}
 }
 
+Read3DDensityFromHanchuanRaw<-function(filename){
+	fc=file(filename,'rb')
+	on.exit(close(fc))
+	hanchuanMagic="raw_image_stack_by_hpeng"
+	magic=readChar(fc,nchars=nchar(hanchuanMagic))
+	if(magic != hanchuanMagic){
+		stop("This does not appear to be a Hanchuan RAW file.")
+	}
+	endian=readChar(fc, nchars=1)
+	if(endian=="L"){
+		endian="little"
+	}else if(endian=="B"){
+		endian="big"
+	}else{
+		stop("Unknown endianess.")
+	}
+	dataTypeSize=readBin(fc,what=integer(),n=1,size=2,endian=endian)
+	if(dataTypeSize==1){
+		what="integer"
+	}else if(dataTypeSize==2){
+		what="integer"
+	}else if(dataTypeSize==4){
+		what="numeric"
+	}else{
+		stop("Unknown datatype.")
+	}
+	dims=readBin(fc,what=integer(),n=4,size=4,endian=endian)
+	dens=readBin(fc,what=what,n=prod(dims),size=dataTypeSize,endian=endian)
+	# Keep only dimensions with more than 1 voxel.
+	dim(dens)<-dims[dims>1]
+	return(dens)
+}
+
 Write3DDensityToHanchuanRaw<-function(filename,dens,dtype=c("float","byte","ushort"),
 	endian=c('little',"big"),WriteNrrdHeader=FALSE){
 	endian=match.arg(endian)
