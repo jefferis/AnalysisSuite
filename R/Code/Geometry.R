@@ -4,6 +4,8 @@
 # need for analysis of tracing data after transformation according
 # to warps calculated from Torsten's software.
 
+require(geometry) # for convhulln
+
 #RELEASE
 #BEGINCOPYRIGHT
 ###############
@@ -245,4 +247,42 @@ Make3DBins<-function(d,n=10,dx=signif(diff(range(z$Y))/n,2),dy=dx,dz=dx){
 	#Takes a set of 3D data points and finds a set of 3D bins that
 	#encompass the range of points
 	# returns a 3D array
+}
+
+tetravol<-function(p){
+	# volume of a tetrahedron
+	if(nrow(p)!=4 || ncol(p)!=3) stop("expecting 4 point x 3 d matrix. Got a ",dim(p)," matrix")
+	# transpose
+	tabcd=t(p)
+	tabc=tabcd[,1:3]-tabcd[,4]
+	dotprod(tabc[,1],vcrossprod(tabc[,2],tabc[,3]))/6	
+}
+
+vcrossprod<-function(a,b){
+	# vector cross product
+	c(a[2]*b[3]-a[3]*b[2],
+		a[3]*b[1]-a[1]*b[3],
+		a[1]*b[2]-a[2]*b[1])
+}
+
+convhullvol<-function(xyz){
+	# volume of convex hull
+	ch=convhulln(xyz,"FA")
+	ch$vol
+}
+
+chvolintersect<-function(p1,p2,normaliseby=c("none",'first','both')){
+	normaliseby=match.arg(normaliseby)
+	# find the intersection volume of the convex hull of 2 point sets
+	# ie V(p1)+V(p2)-V(p1,p2)
+	# NB this will be negative if they don't overlap
+	if(is.dotprops(p1)) p1=p1$points
+	if(is.dotprops(p2)) p2=p2$points
+	
+	vp1=convhullvol(p1)
+	vp2=convhullvol(p2)
+	vp12=convhullvol(rbind(p1,p2))
+	intersectvol=vp1+vp2-vp12
+	denom=switch(normaliseby,none=1,first=vp1,both=vp1+vp2)
+	intersectvol/denom
 }

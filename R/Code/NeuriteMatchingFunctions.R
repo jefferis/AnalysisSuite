@@ -161,7 +161,9 @@ WeightedNNBasedLinesetDistFun.separate<-function(nndists,dotproducts,sd=3){
 	c(summaryfun(dnorm(nndists,sd=sd)/dnorm(0,sd=sd)),summaryfun(dotproducts))
 }
 
-WeightedNNBasedLinesetMatching<-function(n1,n2,dvs1=NULL,dvs2=NULL,NNDistFun=WeightedNNBasedLinesetDistFun,Verbose=FALSE,BothDirections=FALSE,BothDirectionsFun=list,...){
+WeightedNNBasedLinesetMatching<-function(n1,n2,dvs1=NULL,dvs2=NULL,
+	NNDistFun=WeightedNNBasedLinesetDistFun,Verbose=FALSE,
+	BothDirections=FALSE,BothDirectionsFun=list,OnlyClosestPoints=FALSE,...){
 	# my hybrid version
 	# returns a score based on the similarity of nearest neighbour location
 	# and the dot product of the direction vectors
@@ -186,14 +188,17 @@ WeightedNNBasedLinesetMatching<-function(n1,n2,dvs1=NULL,dvs2=NULL,NNDistFun=Wei
 	b=n2[,c("X","Y","Z")]
 	
 	nnn1=nn2(a,b,k=1)
-	#nnn2=nn2(b,a,k=1,...)
+
 	
 	idxArray=cbind(nnn1$nn.idx,seq(length(nnn1$nn.idx)))
+		
 	# Need to supply a set of pairs of points.
 	# will use the parent of each chosen point.
 	# if parent undefined, then ignore that point
 	
 	if(is.null(dvs1) || is.null(dvs2)){
+		if(OnlyClosestPoints==TRUE)
+			stop("OnlyClosestPoints is not yet implemented for neurons")
 		# Calculate the direction vectors
 		dvs=findDirectionVectorsFromParents(n1,n2,idxArray,ReturnAllIndices=TRUE,Verbose=Verbose)
 
@@ -207,6 +212,15 @@ WeightedNNBasedLinesetMatching<-function(n1,n2,dvs1=NULL,dvs2=NULL,NNDistFun=Wei
 		# nb absolute, because we don't really care about directionality here
 		dps=abs(dotprod(dvs[,1:3],dvs[,4:6]))
 	} else {
+		# OnlyClosestPoints prunes the list of query-target pairs so that no 
+		# points in the target are duplicated (points in query are already unique)
+		if(OnlyClosestPoints){
+			# sort by increasing distance between pairs
+			# remove duplicates in target
+			targetdupes=duplicated(nnn1$nn.idx[order(nnn1$nn.dist)])
+			idxArray=idxArray[!targetdupes,,drop=FALSE]
+			nnn1$nn.dists=nnn1$nn.dists[!targetdupes]
+		}
 		dps=abs(dotprod(dvs1[idxArray[,1],],dvs2[idxArray[,2],]))
 	}
 

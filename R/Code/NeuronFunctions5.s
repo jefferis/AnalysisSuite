@@ -125,20 +125,60 @@ plot.neuron<-function(...) plotneuron2d(...)
 as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
 	# makes a list of neurons that can be used for 
 	# coordinated plots / analysis
-	if(!missing(df)) attr(l,"df")=df
 	# allow one neuron to be passed
 	if(is.neuron(l)) {
 		n<-l
 		l<-list(n)
 		names(l)<-n$NeuronName
 	}
+	if(!missing(df)) {
+		if(nrow(df)!=length(l)) 
+			stop("data frame must have same number of rows as there are neurons")
+		attr(l,"df")=df
+		if(is.null(names(l)))
+			names(l)=rownames(df)
+		else if(any(names(l)!=rownames(df)))
+			stop("mismatch between neuronlist names and dataframe rownames")
+	}
 	if(!inherits(l,"neuronlist")) class(l)<-c(class(l),"neuronlist")
 	if(!AddClassToNeurons) return(l)
 	for(i in seq(l)){
-		if(!is.neuron(n,Strict=TRUE))
+		if(!is.neuron(l[[i]],Strict=TRUE))
 			l[[i]]=as.neuron(l[[i]])
 	}
 	l
+}
+
+subset.neuronlist<-function(nl, ..., ReturnList=TRUE){
+	# take a neuronlist and use its attached dataframe as the basis of 
+	# a subset operation. Then use rownames of the new dataframe to select
+	# neuronlist entries and return that sublist
+	# When ReturnList is F just return the indices into the list
+	df=attr(nl,'df')
+	sdf=subset(df,...)
+	if(!ReturnList) return(rownames(sdf))
+	nl[rownames(sdf)]
+}
+
+"[.neuronlist" <- function(nl,inds,...) {
+	attribs=attributes(nl)
+	class(nl)='list'
+	nl2=nl[inds,...]
+	class(nl2)=attribs$class
+	df=attr(nl,'df')
+	if(!is.null(df)){
+		attr(nl2,'df')=df[inds,,...]
+	}
+	nl2
+}
+
+plot3d.neuronlist<-function(nl,subset,...){
+	if(!is.neuronlist(nl)){
+		subset=nl
+		nl=MyNeurons
+	}
+	if(!missing(subset)) nl=subset(nl,subset)
+	invisible(mapply(plot3d,nl,...))
 }
 
 #------------------------------------------------------------------------#

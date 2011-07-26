@@ -4,7 +4,7 @@
 # this means that objects of class neuron can be plotted by doing:
 # plot3d(ANeuron)
 # the plot3d generic is defined by rgl
-plot3d.neuron<-function(...) plotneuron3d.simple(...)
+plot3d.neuron<-function(...,ClearRGL=FALSE) plotneuron3d.simple(...,ClearRGL=ClearRGL)
 
 plotneuron3d.simple<-function(ANeuron, WithLine=T,NeuronNames=FALSE,
 	WithNodes=T,WithAllPoints=F,WithText=F,HighlightLongestSegment=FALSE,PlotSubTrees=T,ClearRGL=T,NeuronList=MyNeurons,col,...){

@@ -24,9 +24,22 @@ plot3d.dotprops<-function(dp,PlotPoints=FALSE,PlotVectors=TRUE,
 		starts=dp$points-halfvect
 		stops=dp$points+halfvect
 		interleaved=matrix(t(cbind(starts,stops)),ncol=3,byrow=T)
-		segments=segments3d(interleaved,...)
+		rlist$segments=segments3d(interleaved,...)
 	}
 	invisible(rlist)
+}
+
+xyzmatrix<-function(x,y=NULL,z=NULL,Transpose=FALSE) {
+	# quick function that gives a generic way to extract coords from 
+	# classes that we care about and returns a matrix
+	# nb unlike xyz.coords this returns a matrix (not a list)
+	x=if(is.neuron(x)) x$d[,c("X","Y","Z")]
+	else if(is.dotprops(x)) x$points
+	else if(!is.null(z)){
+		cbind(x,y,z)
+	} else x
+	mx=data.matrix(x)
+	if(Transpose) t(mx) else mx
 }
 
 subset.dotprops<-function(dp,inds){
@@ -34,9 +47,9 @@ subset.dotprops<-function(dp,inds){
 		# a function that tells us whether a point is in or out
 		inds=inds(dp$points)
 	}
-	dp$points=dp$points[inds,]
+	dp$points=dp$points[inds,,drop=F]
 	dp$alpha=dp$alpha[inds]
-	dp$vect=dp$vect[inds,]
+	dp$vect=dp$vect[inds,,drop=F]
 	dp
 }
 
@@ -46,6 +59,7 @@ length.dotprops<-function(dp) nrow(dp$points)
 str.dotprops<-function(dp,...) {class(dp)<-"list";str(dp,...)}
 
 DotProperties<-function(points,k=20){
+	points=xyzmatrix(points)
 	npoints=nrow(points)
 	if(npoints<k) stop("Too few points to calculate properties")
 	if(ncol(points)!=3) stop("points must be a N x 3 matrix")
