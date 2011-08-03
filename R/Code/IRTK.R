@@ -67,6 +67,16 @@ irtk.dof2mat<-function(doffile,matfile,Invert=FALSE,...){
 	irtk.readmat(matfile)
 }
 
+irtk.dofinvert<-function(dofin,dofout,...){
+	# see http://www.doc.ic.ac.uk/~dr/software/usage.html#dofinvert
+	# inverts an affine IRTK format transformation 
+	if(missing(dofout)) dofout=sub("(\\.[^.]+)$","-inv\\1",dofin)
+	rval=.callirtk('dofinvert',
+		c(shQuote(dofin),shQuote(dofout)),...)
+	if(rval>0) return(NULL)
+	else return(dofout)
+}
+
 .callirtk<-function(cmd,args,irtkdir=path.expand("~/dev/registration/irtk"),Verbose=FALSE,DryRun=FALSE,...){
 	cmdline=paste(file.path(irtkdir,cmd),paste(args,collapse=" "))
 	if(Verbose || DryRun) print(cmdline)
