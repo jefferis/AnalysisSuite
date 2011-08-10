@@ -156,6 +156,25 @@ NrrdTestIntegrity<-function(infile,defaultReturnVal=TRUE){
 	return(testval==0)
 }
 
+NrrdCrc<-function(infile){
+	# gets the CRC (hash) of a gzip encoded nrrd
+	# not particularly quick though!
+	if(!file.exists(infile)) return(NA)
+	h=ReadNrrdHeader(infile)
+	if(tolower(h$encoding)%in%c("gz","gzip")) {
+		testprog='gzip'
+	} else {
+		warning("This is not a gzip encoded nrrd")
+		return(NA)
+	}
+	tmp=tempfile()
+	system(paste("unu data ",shQuote(infile)," > ",shQuote(tmp)))
+	x=system(paste("gzip -lv",shQuote(tmp)),intern=TRUE)
+	crc=try(strsplit(x[2],"[ ]+")[[1]][[2]])
+	if(inherits(crc,'try-error')) crc=NA
+	return(crc)
+}
+
 NrrdProject<-function(infile,outfile,axis,
 	measure=c("max", "min", "mean", "median", "mode", "variance", "skew",
 	"intc", "slope", "error", "sd", "product", "sum", "L1", "L2", "Linf"),
