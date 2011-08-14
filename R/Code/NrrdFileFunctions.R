@@ -9,7 +9,7 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 		stop("This does not appear to be a NRRD file: ",summary(con)$description)
 	nrrdspec=list()
 	nrrdkeyvals=vector('character')
-	while( (l<-readLines(con,1))!=""){
+	while( length(l<-readLines(con,1))>0 && l!="" ){
 		headerLines=c(headerLines,l)
 		if(substring(l,1,1)=="#") next
 		
@@ -34,7 +34,7 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 				if(length(vectorstring)>1)
 				fieldval=matrix(fieldval,byrow=TRUE,nrow=length(vectorstring))
 				close(tc)
-			} else if(!fieldname%in%c("type")){
+			} else if(!fieldname%in%c("type","datafile")){
 				if (length(grep("^[\\-+]{0,1}[0-9.]+",fieldval,perl=T))>0) what=0
 				else what=""
 				tc=textConnection(fieldval)
