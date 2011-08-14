@@ -433,6 +433,10 @@ is.nrrd<-function(f,ReturnVersion=FALSE,TrustSuffix=FALSE){
 	if(length(f)>1)
 		return(sapply(f,is.nrrd,ReturnVersion=ReturnVersion))
 	
+	if(!file.exists(f)){
+		stop("file does not exist")
+	}
+	
 	nrrd=as.raw(c(0x4e,0x52,0x52,0x44))
 	magic=readBin(f,what=nrrd,n=8)
 	if(any(magic[1:4]!=nrrd))
