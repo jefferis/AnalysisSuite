@@ -156,9 +156,14 @@ NrrdTestIntegrity<-function(infile,defaultReturnVal=TRUE){
 	return(testval==0)
 }
 
-NrrdCrc<-function(infile){
+NrrdCrc<-function(infile,UseGzip=FALSE){
 	# gets the CRC (hash) of a gzip encoded nrrd
-	# not particularly quick though!
+	# Defaults to a quick method based on
+	# knowledge of gzip file format from:
+	# http://www.gzip.org/zlib/rfc-gzip.html
+	# and assumption that there is only one member in gzip data
+	# can also use gzip but this is much slower since have to copy
+	# unu data to temporary file
 	if(!file.exists(infile)) return(NA)
 	h=ReadNrrdHeader(infile)
 	if(tolower(h$encoding)%in%c("gz","gzip")) {
@@ -167,12 +172,24 @@ NrrdCrc<-function(infile){
 		warning("This is not a gzip encoded nrrd")
 		return(NA)
 	}
-	tmp=tempfile()
-	system(paste("unu data ",shQuote(infile)," > ",shQuote(tmp)))
-	x=system(paste("gzip -lv",shQuote(tmp)),intern=TRUE)
-	crc=try(strsplit(x[2],"[ ]+")[[1]][[2]])
-	if(inherits(crc,'try-error')) crc=NA
-	return(crc)
+
+	if(UseGzip){
+		tmp=tempfile()
+		on.exit(unlink(tmp))
+		system(paste("unu data ",shQuote(infile)," > ",shQuote(tmp)))
+		x=system(paste("gzip -lv",shQuote(tmp)),intern=TRUE)
+		crc=try(strsplit(x[2],"[ ]+")[[1]][[2]])
+		if(inherits(crc,'try-error')) crc=NA		
+	} else {
+		# TODO Fix handling of nhdr files
+		nf=file(infile,open='rb')
+		on.exit(close(nf))
+		seek(nf,-8,origin='end')
+		# TODO check endian issues (what happens if CRC was from opposite endian platform?)
+		crc=readBin(nf,integer(),size=4)
+		crc=format(as.hexmode(crc),width=8)
+	}	
+	crc
 }
 
 NrrdProject<-function(infile,outfile,axis,
