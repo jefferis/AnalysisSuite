@@ -57,11 +57,12 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 }
 
 NrrdDataFiles<-function(nhdr){
+	if(length(nhdr)>1) return(sapply(nhdr,NrrdDataFiles))
 	if(!is.nrrd(nhdr)) stop("This is not a nrrd file")
 	h=ReadNrrdHeader(nhdr)
 	if(is.null(h$datafile)) return(nhdr)
 	# TODO handle relative/absolute paths, lists of data files etc
-	else return(nhdr$datafile)
+	else return(h$datafile)
 }
 
 .standardNrrdType<-function(type){
