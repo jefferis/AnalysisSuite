@@ -56,6 +56,14 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 	nrrdspec
 }
 
+NrrdDataFiles<-function(nhdr){
+	if(!is.nrrd(nhdr)) stop("This is not a nrrd file")
+	h=ReadNrrdHeader(nhdr)
+	if(is.null(h$datafile)) return(nhdr)
+	# TODO handle relative/absolute paths, lists of data files etc
+	else return(nhdr$datafile)
+}
+
 .standardNrrdType<-function(type){
 	if(type%in%c("float","double","block")) return (type)
 	if(type%in%c("signed char", "int8", "int8_t")) return("int8")
