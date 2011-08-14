@@ -413,3 +413,25 @@ AddOrReplaceNrrdHeaderField<-function(infile,outfile,fields,values,Force=FALSE,a
 	fieldname=gsub(" ","",fieldname,fixed=TRUE)
 	fieldname
 }
+
+is.nrrd<-function(f,ReturnVersion=FALSE,TrustSuffix=FALSE){
+	# TrustSuffix => expect files to end in nrrd or nhdr
+	if(TrustSuffix && ReturnVersion) 
+		stop("Cannot use return nrrd version without reading file to check nrrd magic")
+
+	if(TrustSuffix)
+		return(grepl("\\.n(hdr|rrd)$",ff,ignore.case=TRUE))
+	
+	if(length(f)>1)
+		return(sapply(f,is.nrrd,ReturnVersion=ReturnVersion))
+	
+	nrrd=as.raw(c(0x4e,0x52,0x52,0x44))
+	magic=readBin(f,what=nrrd,n=8)
+	if(any(magic[1:4]!=nrrd))
+		return (FALSE)
+
+	if(ReturnVersion)
+		return(as.integer(magic[8]))
+
+	TRUE
+}
