@@ -1,13 +1,16 @@
 ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
-	if(!inherits(filename,"connection")) con<-file(filename,open='rt')
-	else con=filename
+	nrrdspec=list()
+	if(!inherits(filename,"connection")){
+		con<-file(filename,open='rt')
+		attr(nrrdspec,"path")=filename # store filename
+	} else con=filename
+		
 	if(CloseConnection) on.exit(close(con))
 	# Look for empty line signifying end of header
 	headerLines=readLines(con,1)
 	NRRDMAGIC="NRRD000"
 	if(substring(headerLines,1,nchar(NRRDMAGIC))!=NRRDMAGIC)
 		stop("This does not appear to be a NRRD file: ",summary(con)$description)
-	nrrdspec=list()
 	nrrdkeyvals=vector('character')
 	while( length(l<-readLines(con,1))>0 && l!="" ){
 		headerLines=c(headerLines,l)
@@ -64,23 +67,21 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 	nrrdspec
 }
 
-NrrdDataFiles<-function(nhdr,nhdrpath=NULL){
+NrrdDataFiles<-function(nhdr,ReturnAbsPath=TRUE){
 	if(!is.list(nhdr)){
-		if(is.null(nhdrpath)) nhdrpath=nhdr
 		# we need to read in the nrrd header
 		if(length(nhdr)>1) return(sapply(nhdr,NrrdDataFiles))
 		if(!is.nrrd(nhdr)) stop("This is not a nrrd file")
 		h=ReadNrrdHeader(nhdr)
 		if(is.null(h$datafile)) return(nhdr)
-	} #otherwise we've been given a preloaded nrrd header as a list
-	
+	} else h=nhdr
+
 	if(length(h$datafile)>1){
 		# list of files
 		dfs=h$datafile[-1]
 		firstlineparts=unlist(strsplit(h$datafile[1],"\\s+",perl=T))
 		if(length(firstlineparts)>2) stop("invalid first line of LIST datafile specifier")
 		if(length(firstlineparts)==2) attr(dfs,'subdim')=as.integer(firstlineparts[2])
-		return(dfs)
 	} else if(grepl("%",h$datafile)){
 		# Format specifier TODO
 		firstlineparts=unlist(strsplit(h$datafile[1],"\\s+",perl=T))
@@ -90,9 +91,18 @@ NrrdDataFiles<-function(nhdr,nhdrpath=NULL){
 		dfs=sprintf(firstlineparts[1],
 			seq(from=rangespec[1],to=rangespec[2],by=rangespec[3]))
 		if(length(firstlineparts)==5) attr(dfs,'subdim')=as.integer(firstlineparts[5])
-		return(dfs)
-	} else # single file
-		return(h$datafile)
+	} else dfs=h$datafile
+	if(ReturnAbsPath){
+		# check if paths begin with /
+		relpaths=substring(dfs,1,1)!="/"
+		if(any(relpaths)){
+			nhdrpath=attr(h,"path")
+			if(is.null(nhdrpath) && ReturnAbsPath)
+				stop("Unable to identify nrrd header file location to return absolute path to data files")
+			dfs[relpaths]=file.path(dirname(nhdrpath),dfs[relpaths])
+		}
+	}
+	dfs
 }
 
 .standardNrrdType<-function(type){
