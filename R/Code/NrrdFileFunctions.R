@@ -40,6 +40,14 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 				tc=textConnection(fieldval)
 				fieldval=scan(tc,quiet=TRUE,what=what)
 				close(tc)
+			} else if(fieldname=="datafile"){
+				# TODO fix handling of complex datafile specifications
+				# See http://teem.sourceforge.net/nrrd/format.html#detached
+				if(substring(fieldval,1,4)=="LIST"){
+					# we need to keep reading in lines until we hit EOF
+					fieldval=c(fieldval,readLines(con))
+				}
+				# otherwise no special action required
 			}
 			nrrdspec[[fieldname]]=fieldval
 			
@@ -56,13 +64,35 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 	nrrdspec
 }
 
-NrrdDataFiles<-function(nhdr){
-	if(length(nhdr)>1) return(sapply(nhdr,NrrdDataFiles))
-	if(!is.nrrd(nhdr)) stop("This is not a nrrd file")
-	h=ReadNrrdHeader(nhdr)
-	if(is.null(h$datafile)) return(nhdr)
-	# TODO handle relative/absolute paths, lists of data files etc
-	else return(h$datafile)
+NrrdDataFiles<-function(nhdr,nhdrpath=NULL){
+	if(!is.list(nhdr)){
+		if(is.null(nhdrpath)) nhdrpath=nhdr
+		# we need to read in the nrrd header
+		if(length(nhdr)>1) return(sapply(nhdr,NrrdDataFiles))
+		if(!is.nrrd(nhdr)) stop("This is not a nrrd file")
+		h=ReadNrrdHeader(nhdr)
+		if(is.null(h$datafile)) return(nhdr)
+	} #otherwise we've been given a preloaded nrrd header as a list
+	
+	if(length(h$datafile)>1){
+		# list of files
+		dfs=h$datafile[-1]
+		firstlineparts=unlist(strsplit(h$datafile[1],"\\s+",perl=T))
+		if(length(firstlineparts)>2) stop("invalid first line of LIST datafile specifier")
+		if(length(firstlineparts)==2) attr(dfs,'subdim')=as.integer(firstlineparts[2])
+		return(dfs)
+	} else if(grepl("%",h$datafile)){
+		# Format specifier TODO
+		firstlineparts=unlist(strsplit(h$datafile[1],"\\s+",perl=T))
+		if(length(firstlineparts)>5 || length(firstlineparts)<4)
+			stop("invalid sprintf style datafile specifier")
+		rangespec=as.integer(firstlineparts[2:4])
+		dfs=sprintf(firstlineparts[1],
+			seq(from=rangespec[1],to=rangespec[2],by=rangespec[3]))
+		if(length(firstlineparts)==5) attr(dfs,'subdim')=as.integer(firstlineparts[5])
+		return(dfs)
+	} else # single file
+		return(h$datafile)
 }
 
 .standardNrrdType<-function(type){
