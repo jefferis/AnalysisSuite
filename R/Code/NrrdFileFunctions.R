@@ -138,7 +138,17 @@ Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,AttachFullHeader=FALSE,
 		close(fc)
 		stop("Unrecognised data type")
 	}
-	
+	if(!is.null(h$datafile)){
+		# detached nrrd
+		if(!inherits(filename,"connection"))
+			attr(h,'path')=filename
+		datafiles=NrrdDataFiles(h)
+		# TODO - handle more than one datafile!
+		if(length(datafiles)!=1) stop("Can currently only handle exactly one datafile")
+		close(fc)
+		fc=file(datafiles,open='rb')
+		filename=datafiles
+	}
 	dataLength=prod(h$sizes)
 	endian=ifelse(is.null(h$endian),.Platform$endian,h$endian)
 	if(Verbose) cat("dataLength =",dataLength,"dataType =",dataTypes$what[i],"size=",dataTypes$size[i],"\n")
