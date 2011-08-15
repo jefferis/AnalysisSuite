@@ -1,15 +1,18 @@
 ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
-	if(!inherits(filename,"connection")) con<-file(filename,open='rt')
-	else con=filename
+	nrrdspec=list()
+	if(!inherits(filename,"connection")){
+		con<-file(filename,open='rt')
+		attr(nrrdspec,"path")=filename # store filename
+	} else con=filename
+		
 	if(CloseConnection) on.exit(close(con))
 	# Look for empty line signifying end of header
 	headerLines=readLines(con,1)
 	NRRDMAGIC="NRRD000"
 	if(substring(headerLines,1,nchar(NRRDMAGIC))!=NRRDMAGIC)
 		stop("This does not appear to be a NRRD file: ",summary(con)$description)
-	nrrdspec=list()
 	nrrdkeyvals=vector('character')
-	while( (l<-readLines(con,1))!=""){
+	while( length(l<-readLines(con,1))>0 && l!="" ){
 		headerLines=c(headerLines,l)
 		if(substring(l,1,1)=="#") next
 		
@@ -34,12 +37,20 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 				if(length(vectorstring)>1)
 				fieldval=matrix(fieldval,byrow=TRUE,nrow=length(vectorstring))
 				close(tc)
-			} else if(!fieldname%in%c("type")){
+			} else if(!fieldname%in%c("type","datafile")){
 				if (length(grep("^[\\-+]{0,1}[0-9.]+",fieldval,perl=T))>0) what=0
 				else what=""
 				tc=textConnection(fieldval)
 				fieldval=scan(tc,quiet=TRUE,what=what)
 				close(tc)
+			} else if(fieldname=="datafile"){
+				# TODO fix handling of complex datafile specifications
+				# See http://teem.sourceforge.net/nrrd/format.html#detached
+				if(substring(fieldval,1,4)=="LIST"){
+					# we need to keep reading in lines until we hit EOF
+					fieldval=c(fieldval,readLines(con))
+				}
+				# otherwise no special action required
 			}
 			nrrdspec[[fieldname]]=fieldval
 			
@@ -54,6 +65,44 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 	attr(nrrdspec,'headertext')=headerLines
 	attr(nrrdspec,'keyvals')=nrrdkeyvals
 	nrrdspec
+}
+
+NrrdDataFiles<-function(nhdr,ReturnAbsPath=TRUE){
+	if(!is.list(nhdr)){
+		# we need to read in the nrrd header
+		if(length(nhdr)>1) return(sapply(nhdr,NrrdDataFiles))
+		if(!is.nrrd(nhdr)) stop("This is not a nrrd file")
+		h=ReadNrrdHeader(nhdr)
+		if(is.null(h$datafile)) return(nhdr)
+	} else h=nhdr
+
+	if(length(h$datafile)>1){
+		# list of files
+		dfs=h$datafile[-1]
+		firstlineparts=unlist(strsplit(h$datafile[1],"\\s+",perl=T))
+		if(length(firstlineparts)>2) stop("invalid first line of LIST datafile specifier")
+		if(length(firstlineparts)==2) attr(dfs,'subdim')=as.integer(firstlineparts[2])
+	} else if(grepl("%",h$datafile)){
+		# Format specifier TODO
+		firstlineparts=unlist(strsplit(h$datafile[1],"\\s+",perl=T))
+		if(length(firstlineparts)>5 || length(firstlineparts)<4)
+			stop("invalid sprintf style datafile specifier")
+		rangespec=as.integer(firstlineparts[2:4])
+		dfs=sprintf(firstlineparts[1],
+			seq(from=rangespec[1],to=rangespec[2],by=rangespec[3]))
+		if(length(firstlineparts)==5) attr(dfs,'subdim')=as.integer(firstlineparts[5])
+	} else dfs=h$datafile
+	if(ReturnAbsPath){
+		# check if paths begin with /
+		relpaths=substring(dfs,1,1)!="/"
+		if(any(relpaths)){
+			nhdrpath=attr(h,"path")
+			if(is.null(nhdrpath) && ReturnAbsPath)
+				stop("Unable to identify nrrd header file location to return absolute path to data files")
+			dfs[relpaths]=file.path(dirname(nhdrpath),dfs[relpaths])
+		}
+	}
+	dfs
 }
 
 .standardNrrdType<-function(type){
@@ -89,7 +138,17 @@ Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,AttachFullHeader=FALSE,
 		close(fc)
 		stop("Unrecognised data type")
 	}
-	
+	if(!is.null(h$datafile)){
+		# detached nrrd
+		if(!inherits(filename,"connection"))
+			attr(h,'path')=filename
+		datafiles=NrrdDataFiles(h)
+		# TODO - handle more than one datafile!
+		if(length(datafiles)!=1) stop("Can currently only handle exactly one datafile")
+		close(fc)
+		fc=file(datafiles,open='rb')
+		filename=datafiles
+	}
 	dataLength=prod(h$sizes)
 	endian=ifelse(is.null(h$endian),.Platform$endian,h$endian)
 	if(Verbose) cat("dataLength =",dataLength,"dataType =",dataTypes$what[i],"size=",dataTypes$size[i],"\n")
@@ -412,4 +471,30 @@ AddOrReplaceNrrdHeaderField<-function(infile,outfile,fields,values,Force=FALSE,a
 	if(!fieldname%in%c("space dimension","space units","space origin","space directions","measurement frame"))
 	fieldname=gsub(" ","",fieldname,fixed=TRUE)
 	fieldname
+}
+
+is.nrrd<-function(f,ReturnVersion=FALSE,TrustSuffix=FALSE){
+	# TrustSuffix => expect files to end in nrrd or nhdr
+	if(TrustSuffix && ReturnVersion) 
+		stop("Cannot use return nrrd version without reading file to check nrrd magic")
+
+	if(TrustSuffix)
+		return(grepl("\\.n(hdr|rrd)$",ff,ignore.case=TRUE))
+	
+	if(length(f)>1)
+		return(sapply(f,is.nrrd,ReturnVersion=ReturnVersion))
+	
+	if(!file.exists(f)){
+		stop("file does not exist")
+	}
+	
+	nrrd=as.raw(c(0x4e,0x52,0x52,0x44))
+	magic=readBin(f,what=nrrd,n=8)
+	if(any(magic[1:4]!=nrrd))
+		return (FALSE)
+
+	if(ReturnVersion)
+		return(as.integer(magic[8]))
+
+	TRUE
 }
