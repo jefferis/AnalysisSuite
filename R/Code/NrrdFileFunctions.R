@@ -73,10 +73,11 @@ NrrdDataFiles<-function(nhdr,ReturnAbsPath=TRUE){
 		if(length(nhdr)>1) return(sapply(nhdr,NrrdDataFiles))
 		if(!is.nrrd(nhdr)) stop("This is not a nrrd file")
 		h=ReadNrrdHeader(nhdr)
-		if(is.null(h$datafile)) return(nhdr)
 	} else h=nhdr
-
-	if(length(h$datafile)>1){
+	if(is.null(h$datafile)){
+		# straight nrrd without detached header
+		dfs=attr(h,'path')
+	} else if(length(h$datafile)>1){
 		# list of files
 		dfs=h$datafile[-1]
 		firstlineparts=unlist(strsplit(h$datafile[1],"\\s+",perl=T))
@@ -92,6 +93,7 @@ NrrdDataFiles<-function(nhdr,ReturnAbsPath=TRUE){
 			seq(from=rangespec[1],to=rangespec[2],by=rangespec[3]))
 		if(length(firstlineparts)==5) attr(dfs,'subdim')=as.integer(firstlineparts[5])
 	} else dfs=h$datafile
+	
 	if(ReturnAbsPath){
 		# check if paths begin with /
 		relpaths=substring(dfs,1,1)!="/"
