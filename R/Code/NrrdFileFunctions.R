@@ -121,12 +121,15 @@ NrrdDataFiles<-function(nhdr,ReturnAbsPath=TRUE){
 	return(NULL)
 }
 
-Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,AttachFullHeader=FALSE,
+Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,ReadData=TRUE,AttachFullHeader=!ReadData,
 	ReadByteAsRaw=c("unsigned","all","none"),origin){
 	ReadByteAsRaw=match.arg(ReadByteAsRaw)
 	fc=file(filename,'rb')
 	h=ReadNrrdHeader(fc,CloseConnection=FALSE)
-		
+	# store the path because ReadNrrdHeader couldn't do it 
+	# TODO more elegant way of dealing with paths when connection sent to ReadNrrdHeader
+	attr(h,'path')=filename
+
 	# now read the data
 	dataTypes=data.frame(name=I(c("int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64",
 	"float", "double", "block")),
@@ -155,30 +158,39 @@ Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,AttachFullHeader=FALSE,
 	endian=ifelse(is.null(h$endian),.Platform$endian,h$endian)
 	if(Verbose) cat("dataLength =",dataLength,"dataType =",dataTypes$what[i],"size=",dataTypes$size[i],"\n")
 	enc=tolower(h$encoding)
-	if(enc=="raw"){
-		d=readBin(fc,what=dataTypes$what[i],n=dataLength,size=dataTypes$size[i],
-			signed=dataTypes$signed[i],endian=endian)
-		close(fc)
-	} else if(enc%in%c("gz","gzip")) {
-		# unfortunately gzcon seems to reset the connection 
-		# rather than starting to read from the current location
-		headerlength=seek(fc)
-		close(fc)
-		tf=tempfile()
-		system(paste('tail -c +',sep="",headerlength+1," ",filename," > ",tf))
-		gzf=gzfile(tf,'rb')
-		d=readBin(gzf,what=dataTypes$what[i],n=dataLength,size=dataTypes$size[i],
-			signed=dataTypes$signed[i],endian=endian)
-		close(gzf)
-		unlink(tf)
-	} else if(enc%in%c("ascii","txt","text")){
-		if(dataTypes$what[i]=='integer') whatVal=integer(0) else whatVal=double(0)
-		d=scan(fc,what=whatVal,nmax=dataLength,quiet=TRUE)
-		close(fc)
+	if(ReadData){
+		if(enc=="raw"){
+			d=readBin(fc,what=dataTypes$what[i],n=dataLength,size=dataTypes$size[i],
+				signed=dataTypes$signed[i],endian=endian)
+			close(fc)
+		} else if(enc%in%c("gz","gzip")) {
+			# unfortunately gzcon seems to reset the connection 
+			# rather than starting to read from the current location
+			headerlength=seek(fc)
+			close(fc)
+			tf=tempfile()
+			system(paste('tail -c +',sep="",headerlength+1," ",filename," > ",tf))
+			gzf=gzfile(tf,'rb')
+			d=readBin(gzf,what=dataTypes$what[i],n=dataLength,size=dataTypes$size[i],
+				signed=dataTypes$signed[i],endian=endian)
+			close(gzf)
+			unlink(tf)
+		} else if(enc%in%c("ascii","txt","text")){
+			if(dataTypes$what[i]=='integer') whatVal=integer(0) else whatVal=double(0)
+			d=scan(fc,what=whatVal,nmax=dataLength,quiet=TRUE)
+			close(fc)
+		} else {
+			stop("nrrd encoding ",enc," is not implemented")
+		}
+		dim(d)<-h$sizes
 	} else {
-		stop("nrrd encoding ",enc," is not implemented")
+		# don't read the data, we just wanted the (full) header information
+		if(dataTypes$what[i]=='integer') d=integer(0) else d=double(0)
+		attr(d,'datablock')=list(what=dataTypes$what[i],n=dataLength,size=dataTypes$size[i],
+			signed=dataTypes$signed[i],endian=endian)
+		attr(d,'datablock')$datastartpos=seek(fc)
+		close(fc)
 	}
-	dim(d)<-h$sizes
 	if(AttachFullHeader) attr(d,"header")=h
 	
 	if('space directions'%in%names(h)){
