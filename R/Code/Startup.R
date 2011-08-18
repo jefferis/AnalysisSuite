@@ -38,7 +38,12 @@
 
 # PROJECT ROOT <---EDIT ME!
 # This should be the folder that CONTAINS the R directory
-RootDir<-path.expand(file.path("~","projects","AnalysisSuite"))
+if(!exists("RootDir")) {
+    RootDir<-path.expand(file.path("~","projects","AnalysisSuite"))
+    message("Note: Using default RootDir '", RootDir, "'")
+} else {
+    message("Note: Using custom RootDir '", RootDir, "'")
+}
 if(inherits(try(setwd(RootDir),silent=TRUE),'try-error'))
 	stop(paste("Unable to change to specified RootDir:",RootDir," Please change Code/Startup.R appropriately"))
 
