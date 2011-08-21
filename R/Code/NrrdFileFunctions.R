@@ -508,7 +508,7 @@ is.nrrd<-function(f,ReturnVersion=FALSE,TrustSuffix=FALSE){
 		return (FALSE)
 
 	if(ReturnVersion)
-		return(as.integer(magic[8]))
+		return(as.integer(magic[8])-0x30) # nb 0x30 is ASCII code for '0'
 
 	TRUE
 }
