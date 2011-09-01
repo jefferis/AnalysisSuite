@@ -154,7 +154,8 @@ subset.neuronlist<-function(nl, ..., ReturnList=TRUE){
 	# 1) use its attached dataframe as the basis of 
 	# a subset operation. Then use rownames of the new dataframe to select
 	# neuronlist entries and return that sublist
-	# OR 2) apply a function to every item in the list
+	# OR 2) apply a function to every item in the list 
+	# that returns T/F to determine inclusion in output list
 	# When ReturnList is F just return the indices into the list
 	arglist=try(pairlist(...),silent=TRUE)
 	if(!inherits(arglist,"try-error") && is.function(arglist[[1]])){
