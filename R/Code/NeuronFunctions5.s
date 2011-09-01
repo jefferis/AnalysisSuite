@@ -161,7 +161,7 @@ subset.neuronlist<-function(nl, ..., ReturnList=TRUE){
 		# we are going to apply a function to every element in neuronlist 
 		# and expect a return value
 		snl=sapply(nl,arglist[[1]])
-		if(length(arglist)>1) warning("I don't know how to handle optional function args.",
+		if(length(arglist)>1) stop("I don't know how to handle optional function args.",
 			" Use an anonymous function instead")
 		if(ReturnList) return(nl[snl])
 		else return(names(nl)[snl])
