@@ -163,14 +163,14 @@ subset.neuronlist<-function(nl, ..., ReturnList=TRUE){
 		snl=sapply(nl,arglist[[1]])
 		if(length(arglist)>1) warning("I don't know how to handle optional function args.",
 			" Use an anonymous function instead")
-		if(!ReturnList) return(names(nl)[snl])
-		else return(nl[snl])
+		if(ReturnList) return(nl[snl])
+		else return(names(nl)[snl])
 	} else {
 		df=attr(nl,'df')
 		sdf=subset(df,...)
 	}
-	if(!ReturnList) return(rownames(sdf))
-	else nl[rownames(sdf)]
+	if(ReturnList) nl[rownames(sdf)]
+	else return(rownames(sdf))
 }
 
 "[.neuronlist" <- function(nl,inds,...) {
