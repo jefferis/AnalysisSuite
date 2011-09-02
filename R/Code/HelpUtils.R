@@ -4,13 +4,15 @@
 
 #' This function provides help for roxygen commented functions
 #' that do not have conventional help (in Rd files)
+#' @param ... args passed to regular help. If that fails then first arg in list
+#'   is checked to see if it is a function that has roxygen documentation
 hlp<-function(...){
 	# try built in help first
 	x=help(...)
 	if(length(x)>0) return(eval(x))
 	# if not, see if we can get somewhere with roxygen comment
 
-	#  turn off warnings for now
+	# turn off warnings for now
 	ow=options('warn')
 	on.exit(options(warn=ow$warn))
 	options(warn=-1)
