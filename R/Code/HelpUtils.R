@@ -45,6 +45,8 @@ hlp<-function(...){
 	commentbreak=which(drcs < -1)[1]
 	helptext=srccode[rev(commentlines[seq(commentbreak)])]
 	helptext=sub("^#[']{0,1}[ ]{0,1}","",helptext)
+	helptext <- gsub("^@param (\\w+)"," {\\1}",helptext)
+	helptext <- gsub("^@(\\w+)","[\\1]",helptext)
 	cat(paste(helptext,collapse="\n"))
 	invisible(helptext)
 }
