@@ -40,7 +40,7 @@ HomeDir<-dirname(CodeDir)
 RootDir<-dirname(HomeDir)
 
 # set to FALSE if you get bored of the copyright notice
-if(TRUE) cat("Starting up Analysis Suite accompanying the paper
+if(interactive()) cat("Starting up Analysis Suite accompanying the paper
 	\"Comprehensive Maps of Drosophila Higher Olfactory Centers: 
 	Spatially Segregated Fruit and Pheromone Representation\"
 	Cell (2007), doi:10.1016/j.cell.2007.01.040
