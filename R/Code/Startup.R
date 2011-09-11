@@ -32,15 +32,12 @@
 # Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
 #################
 #ENDMAINCOPYRIGHT
- 
-# Please edit this file to match your environment 
-# (you probably just need to set RootDir)
 
-# PROJECT ROOT <---EDIT ME!
-# This should be the folder that CONTAINS the R directory
-RootDir<-path.expand(file.path("~","projects","AnalysisSuite"))
-if(inherits(try(setwd(RootDir),silent=TRUE),'try-error'))
-	stop(paste("Unable to change to specified RootDir:",RootDir," Please change Code/Startup.R appropriately"))
+# Identify location of startup script ...
+CodeDir<-dirname(attr(body(function() {}),'srcfile')$filename)
+# and use this to set other key locations
+HomeDir<-dirname(CodeDir)
+RootDir<-dirname(HomeDir)
 
 # set to FALSE if you get bored of the copyright notice
 if(TRUE) cat("Starting up Analysis Suite accompanying the paper
@@ -58,11 +55,8 @@ This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License\n\n")
 # nice to name this computer - override if you wish
 HostName=try(system("hostname",intern=TRUE, ignore.stderr=TRUE))
-# Now set HomeDir
-HomeDir=file.path(RootDir,"R")
 
-# Set up variables to hold the paths to the code etc.
-CodeDir<-file.path(HomeDir,"Code")
+# Set up paths to other important directories
 TestDir<-file.path(HomeDir,"Tests")
 
 # This directory contains the 'object' files created by R
