@@ -47,7 +47,11 @@ hlp<-function(...){
 
 	drcs=diff(commentlines)
 	commentbreak=which(drcs < -1)[1]
-	helptext=srccode[rev(commentlines[seq(commentbreak)])]
+	if(is.na(commentbreak)){
+		# roxygen comment must start from first line of file
+		helptext=srccode[seq(precedingline)]
+	}
+	else helptext=srccode[rev(commentlines[seq(commentbreak)])]
 	
 	# now format help text
 	helptext=sub("^#[']{0,1}[ ]{0,1}","",helptext)
