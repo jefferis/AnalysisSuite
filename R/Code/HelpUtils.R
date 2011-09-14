@@ -2,10 +2,14 @@
 # a package.  Idea is to extract information from roxygen comments
 # in a manner similar to halp package
 
-#' This function provides help for roxygen commented functions
-#' that do not have conventional help (in Rd files)
-#' @param ... args passed to regular help. If that fails then first arg in list
-#'   is checked to see if it is a function that has roxygen documentation
+#' Provides help for roxygen commented functions without conventional help 
+#' 
+#' If regular help fails then first arg in list is checked to see if it is a
+#' function that has roxygen documentation
+#' @param ... args passed to regular help. 
+#' @return return value of help() or invisible helptext 
+#' @author jefferis
+#' @export
 hlp<-function(...){
 	# try built in help first
 	x=help(...)
