@@ -33,6 +33,12 @@ Nrrd2op<-function(infiles,outfile,fun=c("max","min","+", "-", "x", "/"),
 	return(length(infiles))
 }
 
+#' Return range of values in nrrd file (interface to unu minmax command)
+#' @param filename nrrd file containing data
+#' @param ... passed to \link{\code{system}} function
+#' @return c(min,max) or c(NA,NA) like R's \link{\code{range}} function
+#' @author jefferis
+#' @export
 NrrdMinMax<-function(filename,...){
 	minmax=.callunu("minmax",shQuote(filename),intern=TRUE,...)
 	if(length(minmax)==0) return(c(NA,NA))
