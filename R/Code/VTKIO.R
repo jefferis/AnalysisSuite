@@ -2,8 +2,20 @@
 # currently limited to VTK point formats
 # for use with Daniel Rueckert's IRTK toolkit
 
+#' Write 3D landmarks in VTK legacy format 
+#' 
+#' default title is:
+#' Data written from R by WriteVTKLandmarks at <time>
+#'  
+#' See http://www.vtk.org/VTK/img/file-formats.pdf for details
+#' @param filename path to output file 
+#' @param d a matrix or dataframe with 3 columns
+#' @param title A description of the file contents (See details)
+#' @param datatype float (default) or double
+#' @author jefferis
+#' @export
 WriteVTKLandmarks<-function(filename,d,title,datatype=c("float","double")){
-	if(ncol(d)!=3) stop("Expect N rows x 3 cold of 3d points")
+	if(ncol(d)!=3) stop("Expect N rows x 3 cols of 3d points")
 	nummarkers=nrow(d)
 	datatype=match.arg(datatype)
 	if(missing(title)) title=paste("Data written from R by WriteVTKLandmarks at",Sys.time())
@@ -17,6 +29,16 @@ WriteVTKLandmarks<-function(filename,d,title,datatype=c("float","double")){
 	write.table(d,col.names=F,row.names=F,file=filename,append=TRUE)
 }
 
+#' Reads landmarks from a file in VTK's legacy data format
+#' 
+#' The matrix will have attributes including
+#' * file - original filename
+#' * title - description of data from VTK file
+#' * vtk_datatype - VTK data type
+#' @param filename path to VTK input file
+#' @return matrix with 3 columns and npoints rows 
+#' @author jefferis
+#' @export
 ReadVTKLandmarks<-function(filename){
 	if(!file.exists(filename)) stop("Cannot read: ",filename)
 	con=file(filename,open='rb',encoding='ASCII')
@@ -28,7 +50,7 @@ ReadVTKLandmarks<-function(filename){
 	title=readLines(con,1)
 	encoding=readLines(con,1)
 	if(regexpr("ASCII",encoding,ignore.case=TRUE)<0)
-		stop("Can only read ASCII encdoded VTK pointsets")
+		stop("Can only read ASCII encoded VTK pointsets")
 
 	datasetLine=toupper(readLines(con,1))
 	if(regexpr("^DATASET",datasetLine)<0)
@@ -59,7 +81,8 @@ ReadVTKLandmarks<-function(filename){
 		"unsigned_long", "long", "float", "double")))
 		stop("Unrecognised VTK datatype: ",datatype)
 	
-	points=scan(con,what=1.0,n=3*nummarkers,quiet=TRUE) # VTK seems to be hardcoded for 3D
+	# VTK seems to be hardcoded for 3D
+	points=scan(con,what=1.0,n=3*nummarkers,quiet=TRUE) 
 	m=matrix(points,ncol=3,byrow=T)
 	colnames(m)=c("X","Y","Z")
 	attr(m,"file")=filename
