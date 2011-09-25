@@ -28,8 +28,9 @@ hlp<-function(...,PRINT.ARGS=FALSE){
 		stop('Unable to find function')
 
 	b=body(al[[1]])
+	fun.name=as.character(substitute(...))[1]
 	if(is.null(b))
-		stop('No help or source code found for: ',as.character(al[[1]]))
+		stop('No source code found for: ',fun.name)
 
 	# we have source code, let's parse it
 	srccode=as.character(attr(b,'wholeSrcref'))
@@ -40,7 +41,7 @@ hlp<-function(...,PRINT.ARGS=FALSE){
 	functiondefline=max(grep("function",srccode[1:functionenddefline],fixed=T))
 
 	if(length(functiondefline)==0 || functiondefline==1)
-		stop('No help found in source code found for: ',as.character(al[[1]]))
+		stop('No help found in source code found for: ',fun.name)
 
 	lastline=length(srccode)
 	precedingline=functiondefline-1
@@ -48,7 +49,7 @@ hlp<-function(...,PRINT.ARGS=FALSE){
 	commentlines=rev(grep("^#' ",srccode[1:precedingline]))
 	if(!any(commentlines==precedingline))
 		# preceding line is not a comment
-		stop('No help found in source code found for: ',as.character(al[[1]]))
+		stop('No help found in source code found for: ',fun.name)
 
 	drcs=diff(commentlines)
 	commentbreak=which(drcs < -1)[1]
