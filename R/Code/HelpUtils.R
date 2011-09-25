@@ -7,10 +7,11 @@
 #' If regular help fails then first arg in list is checked to see if it is a
 #' function that has roxygen documentation
 #' @param ... args passed to regular help. 
+#' @param PRINT.ARGS uses the args function function argument list
 #' @return return value of help() or invisible helptext 
 #' @author jefferis
 #' @export
-hlp<-function(...){
+hlp<-function(...,PRINT.ARGS=FALSE){
 	# try built in help first
 	x=help(...)
 	if(length(x)>0) return(eval(x))
@@ -61,6 +62,11 @@ hlp<-function(...){
 	helptext=sub("^#[']{0,1}[ ]{0,1}","",helptext)
 	helptext <- gsub("^@param (\\w+|\\.\\.\\.)"," {\\1}",helptext)
 	helptext <- gsub("^@(\\w+)","[\\1]",helptext)
-	cat(paste(helptext,collapse="\n"))
+	if(PRINT.ARGS) {
+		cat(helptext[1],"\n")
+		al=deparse(args(al[[1]]))
+		cat(al[-length(al)],"\n")
+		cat(paste(helptext[-1],collapse="\n"))
+	} else cat(paste(helptext,collapse="\n"))
 	invisible(helptext)
 }
