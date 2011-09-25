@@ -54,13 +54,13 @@ hlp<-function(...,PRINT.ARGS=FALSE){
 	commentbreak=which(drcs < -1)[1]
 	if(is.na(commentbreak)){
 		# roxygen comment must start from first line of file
-		helptext=srccode[seq(precedingline)]
+		helptext=srccode[rev(commentlines)]
 	}
 	else helptext=srccode[rev(commentlines[seq(commentbreak)])]
 	
 	# now format help text
 	helptext=sub("^#[']{0,1}[ ]{0,1}","",helptext)
-	helptext <- gsub("^@param (\\w+|\\.\\.\\.)"," {\\1}",helptext)
+	helptext <- gsub("^@param (\\S+|\\.\\.\\.)"," {\\1}",helptext)
 	helptext <- gsub("^@(\\w+)","[\\1]",helptext)
 	if(PRINT.ARGS) {
 		cat(helptext[1],"\n")
