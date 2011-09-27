@@ -254,7 +254,11 @@ WriteIGSRegistrationFolder<-function(reglist,foldername){
 	studysublist= list(studyname=reglist$registration$reference_study)
 	attr(studysublist$studyname,"quoted")=TRUE
 	studysublist2= studysublist
-	studysublist2$studyname=reglist$registration$model_study
+        if ('model_study' %in% names(reglist$registration)) {
+            studysublist2$studyname=reglist$registration$model_study
+        } else {
+            studysublist2$studyname=reglist$registration$floating_study
+        }
 	studylist=list(studylist=list(num_sources=2),
 		source= studysublist,source=studysublist2)
 	
