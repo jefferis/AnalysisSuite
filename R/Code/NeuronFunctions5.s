@@ -149,23 +149,67 @@ as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
 	l
 }
 
-subset.neuronlist<-function(nl, ..., ReturnList=TRUE){
-	# take a neuronlist and EITHER
-	# 1) use its attached dataframe as the basis of 
-	# a subset operation. Then use rownames of the new dataframe to select
-	# neuronlist entries and return that sublist
-	# OR 2) apply a function to every item in the list 
-	# that returns T/F to determine inclusion in output list
-	# When ReturnList is F just return the indices into the list
+#' Subset a neuronlist returning either a new neuronlist or the names of chosen neurons
+#'
+#' EITHER use its attached dataframe as the basis of 
+#' a subset operation. Then use rownames of the new dataframe to select
+#' neuronlist entries and return that sublist
+#' OR apply a function to every item in the list 
+#' that returns TRUE/FASLE to determine inclusion in output list
+#'
+#' When ReturnList is F just return the indices into the list
+#' 
+#' When INDICES are specified, then use a for loop to iterate over only those
+#' members of the list. This is equivalent to myneuronlist[INDICES] but is much
+#' faster
+#'
+#' @param nl a neuronlist
+#' @param INDICES optional indices to subset neuronlist (faster for big lists)
+#' @param ReturnList whether to return the selected neurons (when T) or just their names
+#' @param ... either a function or column names in the attached dataframe
+#' @export
+#' @example
+#' #Apply a 3d search function to the first 100 neurons in the neuronlist dataset
+#' subset(dps[1:100],function(x) {length(subset(x,s3d))>0},ReturnList=F)
+#' #The same but using INDICES, which is up to 100x faster when neuronlist is large
+#' subset(dps,function(x) {length(subset(x,s3d))>0},INDICES=names(dps)[1:100])
+subset.neuronlist<-function(nl, ..., INDICES=NULL, ReturnList=is.null(INDICES)){
 	arglist=try(pairlist(...),silent=TRUE)
 	if(!inherits(arglist,"try-error") && is.function(arglist[[1]])){
 		# we are going to apply a function to every element in neuronlist 
 		# and expect a return value
-		snl=sapply(nl,arglist[[1]])
 		if(length(arglist)>1) stop("I don't know how to handle optional function args.",
 			" Use an anonymous function instead")
-		if(ReturnList) return(nl[snl])
-		else return(names(nl)[snl])
+		if(is.null(INDICES)){
+			snl=sapply(nl,arglist[[1]])
+			if(ReturnList) return(nl[snl])
+			else return(names(nl)[snl])
+		} else {
+			if(inherits(INDICES,"character")){
+				snl=logical(length(INDICES))
+				names(snl)=INDICES
+			} else if(inherits(INDICES,"logical")){
+				snl=logical(sum(INDICES))
+				names(snl)=names(nl)[INDICES]
+			} else if(inherits(INDICES,"integer")){
+				snl=logical(length(INDICES))
+				names(snl)=names(nl)[INDICES]
+			}
+			if(ReturnList) {
+				newlist=list()
+				for (n in names(snl)){
+					include=arglist[[1]](nl[[n]])
+					if(include) newlist[[n]]=nl[[n]]
+				}
+				return(newlist)
+			}
+			else{
+				for (n in names(snl)){
+					snl[n]=arglist[[1]](nl[[n]])
+				}
+				return(names(which(snl)))
+			} 
+		}
 	} else {
 		df=attr(nl,'df')
 		sdf=subset(df,...)
@@ -185,7 +229,13 @@ subset.neuronlist<-function(nl, ..., ReturnList=TRUE){
 	}
 	nl2
 }
-
+#' 3D plots of the elements in a neuronlist, optionally using a subset expression
+#'
+#' @param nl a neuron list (where omitted will use MyNeurons as default)
+#' @param subset - an expression passed to subset.neuronlist
+#' @param ... options passed on to plot3d (such as colours, line width etc)
+#' @return value of plot3d 
+#' @export
 plot3d.neuronlist<-function(nl,subset,...){
 	if(!is.neuronlist(nl)){
 		subset=nl
