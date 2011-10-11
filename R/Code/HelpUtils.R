@@ -46,7 +46,7 @@ hlp<-function(...,PRINT.ARGS=FALSE){
 	lastline=length(srccode)
 	precedingline=functiondefline-1
 	# reverse because we want to work backwards from function definition line
-	commentlines=rev(grep("^#' ",srccode[1:precedingline]))
+	commentlines=rev(grep("^#'",srccode[1:precedingline]))
 	if(!any(commentlines==precedingline))
 		# preceding line is not a comment
 		stop('No help found in source code found for: ',fun.name)
