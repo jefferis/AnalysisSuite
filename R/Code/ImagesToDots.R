@@ -42,6 +42,27 @@ xyzmatrix<-function(x,y=NULL,z=NULL,Transpose=FALSE) {
 	if(Transpose) t(mx) else mx
 }
 
+#' Find the nearest point(s) in a neuron/dotprops to a 3d point
+#'
+#' For example see how far a marked cell body location is from a cell
+#' @param dp the dotprops or neuron
+#' @param point the point 
+#' @param k, the number of nearest neighbours (default 1)
+#' @param ReturnDistance, return distance as 4th column
+#' @return the nearest point(s)
+#' @export
+#' @example
+#' nearestpoint(dps[['ChaMARCM-F000673_seg001']],c(255.883,141.301,90.7188))
+nearestpoint<-function(dp,point,k=1){
+	xyz=xyzmatrix(dp)
+	if(is.null(dim(point))){
+		if(length(point)==3) point=matrix(point,ncol=3)
+		else stop("cannot understand passed point: ",point)
+	}
+	nnl=nn2(xyz,point,k=k)
+	xyz[nnl$nn.idx,]
+}
+
 subset.dotprops<-function(dp,inds){
 	if(class(inds)=='function'){
 		# a function that tells us whether a point is in or out
