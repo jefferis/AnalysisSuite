@@ -156,6 +156,52 @@ NrrdTestIntegrity<-function(infile,defaultReturnVal=TRUE){
 	return(testval==0)
 }
 
+NrrdTestDataLength<-function(infile,defaultReturnVal=TRUE){
+	# Tests integrity of a nrrd file by checking that the data block is as long
+	# as it should be. For a gzip file, it checks that the last 4 bytes
+	# encode the length of the uncompressed data. This says nothing about the contents
+	# but does ensure that the file has not been truncated which is much the most 
+	# common problem. 
+	if(!file.exists(infile)) return(NA)
+	# need to read this full header in order to get the size in bytes of
+	# the uncompressed data
+	fullh=Read3DDensityFromNrrd(infile,ReadData=F,AttachFullHeader=T)
+	h=attr(fullh,'header')
+	if(tolower(h$encoding)%in%c("gz","gzip")) enc='gzip'
+	else if(tolower(h$encoding)=='raw') enc='raw'
+	else {
+		warning("Unable to test data length of nrrd file with encoding",h$encoding)
+		return(defaultReturnVal)
+	}
+	# figure out how many bytes we are expecting
+	dataLength=attr(fullh,"datablock")$n*attr(fullh,"datablock")$size
+	datafile=NrrdDataFiles(h)
+	if(length(datafile)>1){
+		warning("Don't yet know how to handle detached headers with more than one data file")
+		return(defaultReturnVal)
+	}
+	if(enc=='gzip'){
+		# Check gzip file
+		# last 4 bytes of gzip contain length of compressed stream
+		con=file(datafile,open='rb')
+		on.exit(close(con))
+		seek(con,-4,origin='end')
+		# how do we handle endianess?
+		uncompressedBytes=readBin(con,what=integer(),size=4,n=1)
+		if(uncompressedBytes>(2^32-1)) {
+			warning("Don't know how to check integrity of files >= 2^32 bytes")
+			return(defaultReturnVal)
+		}
+		return(dataLength==uncompressedBytes)
+	} else {
+		# TODO fix handling of detached nrrd files with raw encoding
+		start=attr(fullh,'datablock')$datastartpos
+		end=file.info(datafile)$size
+		# TODO decide what we should say if we have MORE than enough data
+		return(dataLength>=(end-start))
+	}
+}
+
 NrrdCrc<-function(infile,UseGzip=FALSE){
 	# gets the CRC (hash) of a gzip encoded nrrd
 	# Defaults to a quick method based on

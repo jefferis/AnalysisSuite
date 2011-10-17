@@ -150,14 +150,28 @@ as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
 }
 
 subset.neuronlist<-function(nl, ..., ReturnList=TRUE){
-	# take a neuronlist and use its attached dataframe as the basis of 
+	# take a neuronlist and EITHER
+	# 1) use its attached dataframe as the basis of 
 	# a subset operation. Then use rownames of the new dataframe to select
 	# neuronlist entries and return that sublist
+	# OR 2) apply a function to every item in the list 
+	# that returns T/F to determine inclusion in output list
 	# When ReturnList is F just return the indices into the list
-	df=attr(nl,'df')
-	sdf=subset(df,...)
-	if(!ReturnList) return(rownames(sdf))
-	nl[rownames(sdf)]
+	arglist=try(pairlist(...),silent=TRUE)
+	if(!inherits(arglist,"try-error") && is.function(arglist[[1]])){
+		# we are going to apply a function to every element in neuronlist 
+		# and expect a return value
+		snl=sapply(nl,arglist[[1]])
+		if(length(arglist)>1) stop("I don't know how to handle optional function args.",
+			" Use an anonymous function instead")
+		if(ReturnList) return(nl[snl])
+		else return(names(nl)[snl])
+	} else {
+		df=attr(nl,'df')
+		sdf=subset(df,...)
+	}
+	if(ReturnList) nl[rownames(sdf)]
+	else return(rownames(sdf))
 }
 
 "[.neuronlist" <- function(nl,inds,...) {
