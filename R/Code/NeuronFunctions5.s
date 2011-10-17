@@ -168,7 +168,7 @@ as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
 #' @param ReturnList whether to return the selected neurons (when T) or just their names
 #' @param ... either a function or column names in the attached dataframe
 #' @export
-#' @example
+#' @examples
 #' #Apply a 3d search function to the first 100 neurons in the neuronlist dataset
 #' subset(dps[1:100],function(x) {length(subset(x,s3d))>0},ReturnList=F)
 #' #The same but using INDICES, which is up to 100x faster when neuronlist is large

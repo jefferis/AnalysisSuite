@@ -51,7 +51,7 @@ xyzmatrix<-function(x,y=NULL,z=NULL,Transpose=FALSE) {
 #' @param ReturnDistance, return distance as 4th column
 #' @return the nearest point(s)
 #' @export
-#' @example
+#' @examples
 #' nearestpoint(dps[['ChaMARCM-F000673_seg001']],c(255.883,141.301,90.7188))
 nearestpoint<-function(dp,point,k=1){
 	xyz=xyzmatrix(dp)
