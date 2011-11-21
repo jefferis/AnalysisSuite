@@ -212,17 +212,17 @@ as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
 
 #' Subset a neuronlist returning either a new neuronlist or the names of chosen neurons
 #'
-#' EITHER use its attached dataframe as the basis of 
-#' a subset operation. Then use rownames of the new dataframe to select
-#' neuronlist entries and return that sublist
-#' OR apply a function to every item in the list 
-#' that returns TRUE/FASLE to determine inclusion in output list
+#' EITHER use its attached dataframe as the basis of subset operation. Then use
+#' rownames of the new dataframe to select neuronlist entries and return that
+#' sublist
+#' OR apply a function to every item in the list that returns TRUE/FALSE
+#' to determine inclusion in output list
 #'
-#' When ReturnList is F just return the indices into the list
-#' 
-#' When INDICES are specified, then use a for loop to iterate over only those
-#' members of the list. This is equivalent to myneuronlist[INDICES] but is much
-#' faster
+#' * When ReturnList is F just return the indices into the list
+#' * When INDICES are specified, then use a for loop to iterate over only those
+#' members of the list. This is equivalent to nl[INDICES] but is much
+#' faster for big lists when memory swapping occurs. Note that any indices not 
+#' present in nl will be dropped with a warning
 #'
 #' @param nl a neuronlist
 #' @param INDICES optional indices to subset neuronlist (faster for big lists)
@@ -255,6 +255,14 @@ subset.neuronlist<-function(nl, ..., INDICES=NULL, ReturnList=is.null(INDICES)){
 			} else if(inherits(INDICES,"integer")){
 				snl=logical(length(INDICES))
 				names(snl)=names(nl)[INDICES]
+			}
+			# trim this list of indices down in case any are not present
+			missing_names=setdiff(names(snl),names(nl))
+			if(length(missing_names)>0){
+				if(length(missing_names)>10)
+					warning("Dropping ",length(missing_names)," indices, which are not present in neuronlist")
+				else warning("Dropping indices: ",paste(missing_names,collapse=", "),"\n, which are not present in neuronlist")
+				snl=snl[intersect(names(snl),names(nl))]
 			}
 			if(ReturnList) {
 				newlist=list()
