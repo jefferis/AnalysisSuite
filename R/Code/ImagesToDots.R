@@ -63,10 +63,24 @@ nearestpoint<-function(dp,point,k=1){
 	xyz[nnl$nn.idx,]
 }
 
-subset.dotprops<-function(dp,inds){
-	if(class(inds)=='function'){
+#' Subset points in dotprops object that match given conditions
+#'
+#' Either takes a logical input, in which case this is simply applied to 
+#' the matrices that define the points, etc for the dotprops object
+#' OR a function (which is called with the 3d points array and returns T/F vector)
+#' OR another dotprops in which case prune.dotprops is called
+#' @param dp A dotprops object
+#' @param inds indices into points, function or another dotprops (see Details)
+#' @param ... Additional parameters passed to prune.dotprops (see Details)
+#' @return subsetted dotprops object
+#' @export
+#' @seealso \code{\link{prune.dotprops}}
+subset.dotprops<-function(dp,inds,...){
+	if(inherits(inds,'function')){
 		# a function that tells us whether a point is in or out
 		inds=inds(dp$points)
+	} else if(is.dotprops(inds)){
+		return(prune.dotprops(dp,inds,...))
 	}
 	dp$points=dp$points[inds,,drop=F]
 	dp$alpha=dp$alpha[inds]
