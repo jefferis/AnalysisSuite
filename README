@@ -18,10 +18,9 @@ http://dx.doi.org/10.1016/j.cell.2007.01.040
 INSTALLATION
 ------------
 
-  * You need to copy the source code to a suitable location on your hard drive
-  * edit ''R/Code/Startup.R'' according to instructions in that file
-  * Then start R
-  * source ''R/Code/Startup.R''
+  * Copy the source code to a suitable location on your hard drive
+  * Start R
+  * source ''/path/to/AnalysisSuite/R/Code/Startup.R''
   * See http://flybrain.mrc-lmb.cam.ac.uk/dokuwiki/doku.php?id=warping_manual:start for further details
 
-
+Note that as of commit 0879feb91c (September 11, 2011), it is no longer necessary to edit Startup.R to indicate its location. However the code that identifies the location of the AnalysisSuite source code depends on a recent version of R (>2.12 definitely works).
