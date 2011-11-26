@@ -275,3 +275,17 @@ findDirectionVectorsFromParents<-function(d1,d2,idxArray,ReturnAllIndices=FALSE,
 	df3=subset(df2,!duplicated(nn.idx))
 	df3[order(df3$query.idx),]
 }
+
+#' Prune dotprops object to points within maxdist of another dotprops object
+#'
+#' @param sample Neuron to be pruned
+#' @param query Neuron containing points which define 3D space to keep
+#' @param maxdist Max distance between each query point and any sample point
+#' @return return value
+#' @export
+prune.dotprops<-function(sample,query,maxdist=5){
+	qres=WeightedNNBasedLinesetMatching.dotprops(sample,query,NNDistFun=list)
+	qres=as.data.frame(qres)
+	colnames(qres)=c("d","absuv")
+	subset(query,which(qres$d<maxdist))
+}
