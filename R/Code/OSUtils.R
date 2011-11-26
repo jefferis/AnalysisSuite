@@ -28,33 +28,52 @@ removelock<-function(lockfile){
 	return (TRUE)
 }
 
-RunCmdForNewerInput<-function(cmd,infiles,outfile,Verbose=FALSE,UseLock=FALSE,...){
+#' Run a command if input files are newer than outputs
+#'
+#' cmd can be an R expression, which is evaluated if necessary,
+#' a string to be passed to \code{\link{system}} or
+#' NULL/NA in which cases the files are checked and TRUE or FALSE is returned
+#' depending on whether action is required.
+#'
+#' When UseLock=TRUE, the lock file created is called outfiles[1].lock
+#' 
+#' @param cmd An \code{\link{expression}}, a string or NA/NULL
+#' @param infiles Character vector of path to one or more input files 
+#' @param outfiles Character vector of path to one or more output files 
+#' @param Verbose Write information to consolse (Default FALSE)
+#' @param UseLock Stop other processes working on this task (Default FALSE)
+#' @return logical indicating if cmd was run or for an R expression, eval(cmd)
+#' @export
+#' @seealso \code{\link{makelock}}
+RunCmdForNewerInput<-function(cmd,infiles,outfiles,Verbose=FALSE,UseLock=FALSE,...){
 	# note that cmd can be an R expression as in 
 	# RunCmdForNewerInput(expression(myfunc("somefile")))
-	if(!all(file.exists(infiles))){
-		if(Verbose) cat("some input files missing: ",infiles[!file.exists(infiles)],"\n")
+	if(!all(fei<-file.exists(infiles))){
+		if(Verbose) cat("some input files missing: ",infiles[!fei],"\n")
 		return (FALSE)
-	} else if(!file.exists(outfile)){
+	} else if(!all(feo<-file.exists(outfiles))){
 		# do nothing just fall through to end
-		if(Verbose) cat("outfile: ",outfile,"missing\n")
-	} else if(max(file.info(infiles)$mtime) <= file.info(outfile)$mtime){
+		if(Verbose) cat("outfiles: ",outfiles[!feo],"missing\n")
+	} else if( (mit<-max(file.info(infiles)$mtime)) <=
+						 (mot<-min(file.info(outfiles)$mtime)) ){
 		# check times
 		if(Verbose) cat("Skipping",outfiles,"because input files are older\n")
 		return(FALSE)	
 	} else {
 		if(Verbose){
-			cat("Overwriting",outfile,"because 1 or more input files are newer\n")
-			cat("Newest input mtime:",max(file.info(infiles)$mtime),
-				"Output mtime:",file.info(outfile)$mtime,"\n")
+			cat("Overwriting",outfiles,"because 1 or more input files are newer\n")
+			cat("Newest input mtime:",mit,
+				"Oldest output mtime:",mot,"\n")
 		} 
 	}
-	lockfile=paste(outfile,sep=".","lock")
+	lockfile=paste(outfiles[1],sep=".","lock")
 	# return FALSE to signal output doens't exist
 	if(UseLock){
 		if(makelock(lockfile))
 			on.exit(unlink(lockfile))
 		else {
-			if(Verbose) cat("Skipping",outfile,"because someone else is working on it\n")
+			if(Verbose) cat("Skipping ",outfiles," because someone else is working on ",
+				ifelse(length(outfiles)==1,"it","them"),"\n",sep="")
 			return(FALSE)
 		}
 	}

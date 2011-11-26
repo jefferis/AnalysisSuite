@@ -65,4 +65,24 @@ test.RunCmdForNewerInput<-function(){
 
 	# missing output file 
 	checkTrue(RunCmdForNewerInput(NULL,infiles=c(tf[1],tf[4]),outfile=tf[5]))
+
+	# single older input, multiple newer outputs
+	checkEquals(FALSE,
+		RunCmdForNewerInput(NULL,infiles=tf[1],outfile=c(tf[3],tf[4])))
+
+	# multiple older inputs, multiple newer outputs
+	checkEquals(FALSE,
+		RunCmdForNewerInput(NULL,infiles=c(tf[1],tf[2]),outfile=c(tf[3],tf[4])))
+
+	# single input, multiple outputs, of which one is older
+	checkTrue(RunCmdForNewerInput(NULL,infiles=tf[3],outfile=c(tf[1],tf[4])))
+
+	# one missing output file, older inputs
+	checkTrue(RunCmdForNewerInput(NULL,infiles=c(tf[1],tf[2]),outfile=c(tf[4],tf[5])))
+
+	# multiple inputs, multiple outputs, one older
+	checkTrue(RunCmdForNewerInput(NULL,infiles=c(tf[1],tf[4]),outfile=c(tf[2],tf[3])))
+
+	# multiple inputs, multiple outputs, one older
+	checkTrue(RunCmdForNewerInput(NULL,infiles=c(tf[1],tf[4]),outfile=c(tf[2],tf[3]),Verbose=TRUE))
 }
