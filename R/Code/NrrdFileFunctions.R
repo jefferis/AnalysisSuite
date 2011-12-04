@@ -26,7 +26,9 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 			
 			fieldval=substring(l,hingepos+2,nchar(l))
 			
-			if(substring(fieldval,1,1)=="("){
+			if(fieldname=="content"){
+				# don't try and process the field values
+			} else if (substring(fieldval,1,1)=="("){
 				# this is a vector, first remove all spaces
 				fieldval=gsub(" ","",fieldval)
 				# then remove first and last brackets
