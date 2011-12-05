@@ -35,12 +35,15 @@ Nrrd2op<-function(infiles,outfile,fun=c("max","min","+", "-", "x", "/"),
 
 #' Return range of values in nrrd file (interface to unu minmax command)
 #' @param filename nrrd file containing data
+#' @param Blind8 Assume 8 bit data has range 0-255 (or -127-127), default F.
 #' @param ... passed to \link{\code{system}} function
 #' @return c(min,max) or c(NA,NA) like R's \link{\code{range}} function
 #' @author jefferis
 #' @export
-NrrdMinMax<-function(filename,...){
-	minmax=.callunu("minmax",shQuote(filename),intern=TRUE,...)
+NrrdMinMax<-function(filename, Blind8=FALSE, ...){
+	args=shQuote(filename)
+	if(Blind8) args=c(args,"-blind8 true")
+	minmax=.callunu("minmax",args,intern=TRUE,...)
 	if(length(minmax)==0) return(c(NA,NA))
 	as.numeric(sub("(min|max): ","",minmax))
 }
