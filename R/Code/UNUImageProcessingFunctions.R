@@ -256,11 +256,13 @@ NrrdCrc<-function(infile,UseGzip=FALSE,FastHeader=TRUE){
 		if(inherits(crc,'try-error')) crc=NA		
 	} else {
 		# TODO Fix handling of nhdr files
-		nf=file(infile,open='rb')
-		on.exit(close(nf),add=TRUE)
-		seek(nf,-8,origin='end')
+		if(!FastHeader){
+			con=file(infile,open='rb')
+			on.exit(close(con),add=TRUE)
+		}
+		seek(con,-8,origin='end')
 		# TODO check endian issues (what happens if CRC was from opposite endian platform?)
-		crc=readBin(nf,integer(),size=4)
+		crc=readBin(con,integer(),size=4)
 		crc=format(as.hexmode(crc),width=8)
 	}	
 	crc
