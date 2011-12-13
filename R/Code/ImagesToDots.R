@@ -12,9 +12,11 @@ as.dotprops<-function(dp){
 	dp
 }
 
-plot3d.dotprops<-function(dp,PlotPoints=FALSE,PlotVectors=TRUE,
-	scalevecs=1.0, UseAlpha=FALSE,...){
+plot3d.dotprops<-function(dp, scalevecs=1.0, alpharange=NULL,
+	PlotPoints=FALSE, PlotVectors=TRUE, UseAlpha=FALSE,...){
 	# rgl's generic plot3d will dispatch on this
+	if (!is.null(alpharange))
+		dp=subset(dp,dp$alpha<=alpharange[2] & dp$alpha>=alpharange[1])
 	rlist=list()
 	if(PlotPoints)
 		rlist$points=points3d(dp$points,...)
