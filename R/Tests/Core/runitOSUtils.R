@@ -59,6 +59,10 @@ test.RunCmdForNewerInput<-function(){
 	# single missing input file
 	checkEquals(RunCmdForNewerInput(NULL,infiles=tf[5],outfile=tf[2]),FALSE)
 
+	# empty input file vector
+	checkEquals(RunCmdForNewerInput(NULL,infiles=character(0),
+		outfile=tf[2]),FALSE)
+
 	# one input missing, another present
 	checkEquals(FALSE,
 		RunCmdForNewerInput(NULL,infiles=c(tf[1],tf[5]),outfile=tf[2]))

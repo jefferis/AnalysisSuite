@@ -48,7 +48,10 @@ removelock<-function(lockfile){
 RunCmdForNewerInput<-function(cmd,infiles,outfiles,Verbose=FALSE,UseLock=FALSE,...){
 	# note that cmd can be an R expression as in 
 	# RunCmdForNewerInput(expression(myfunc("somefile")))
-	if(!all(fei<-file.exists(infiles))){
+	if(length(infiles)==0){
+		if(Verbose) cat("no input files\n")
+		return (FALSE)
+	} else if(!all(fei<-file.exists(infiles))){
 		if(Verbose) cat("some input files missing: ",infiles[!fei],"\n")
 		return (FALSE)
 	} else if(!all(feo<-file.exists(outfiles))){
