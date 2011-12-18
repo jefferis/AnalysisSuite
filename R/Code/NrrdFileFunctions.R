@@ -473,26 +473,45 @@ FixSpaceOrigin<-function(f,origin, Verbose=TRUE, KeepOriginalModificationTime = 
 	}
 	unlink(c(tmpfile,tmpheader))	
 }
-
-AddOrReplaceNrrdHeaderField<-function(infile,outfile,fields,values,Force=FALSE,action=c("addreplace","addonly","replaceonly")){
+#' Add or replace lines in the header of a nrrd file
+#'
+#' Input is a named vector of new fields. Use unnamed fields for comments. 
+#' Quote field names with spaces (conventionally with back ticks).
+#' Note that this function will error out for invalid field names.
+#' See http://teem.sourceforge.net/nrrd/format.html for nrrd field details
+#' @param infile Path to input file
+#' @param outfile Path to output file
+#' @param newfields Named vector of fields to replace
+#' @param Force Overwrite existing file (default FALSE)
+#' @param action addreplace (Default) addonly or replaceonly
+#' @return TRUE or FALSE depending on success
+#' @export
+#' @seealso \code{\link{ReadNrrdHeader}}
+#' @examples
+#' \dontrun{
+#' AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=file.path(tmpdir,"LHMask.nrrd"),
+#'   c("# My interesting comment",`space origin`="(2,2,2)"),Force=TRUE)
+#' }
+AddOrReplaceNrrdHeaderField<-function(infile,outfile,newfields,Force=FALSE,
+	action=c("addreplace","addonly","replaceonly")){
 	# see if a given field exists and add or replace its value
 	saveontop=ifelse(infile==outfile,TRUE,FALSE)
 	if(!Force && file.exists(outfile)) stop("Use Force=TRUE to replace existing files")
 	action=match.arg(action)
-	if(length(fields)!=length(values)) stop("Must supply same number of fields and values")
 
 	inh=ReadNrrdHeader(infile)
 	oht=attr(inh,"headertext")
 	
-	for(i in seq(fields)){
-		field=fields[i]
-		if(field=="#"){
+	if(is.null(names(newfields))) names(newfields) <- rep("",length(newfields))
+	for(i in seq(newfields)){
+		field=names(newfields)[i]
+		value=newfields[i]
+		if(field==""){
 			# this is a comment
-			newFieldLine=values[i]
+			newFieldLine=value
 		} else {
 			if(!.validateNrrdFieldName(field))
 				stop("Invalid nrrd field name: ",field)
-			value=values[i]
 			newFieldLine=paste(field,": ",value,sep="")
 		}
 
