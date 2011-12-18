@@ -485,6 +485,8 @@ AddOrReplaceNrrdHeaderField<-function(infile,outfile,fields,values,Force=FALSE,a
 	
 	for(i in seq(fields)){
 		field=fields[i]
+		if(!.validateNrrdFieldName(field))
+			stop("Invalid nrrd field name: ",field)
 		value=values[i]
 		newFieldLine=paste(field,": ",value,sep="")
 		oht=attr(inh,"headertext")
@@ -516,9 +518,9 @@ AddOrReplaceNrrdHeaderField<-function(infile,outfile,fields,values,Force=FALSE,a
 	rval=system(paste("unu data",shQuote(infile),"| cat",tmpheader,"- >",shQuote(outfile)))
 	unlink(tmpheader)
 	if(rval!=0){
-		if(saveontop) unlink(outfile)
+		if(saveontop) unlink(outfile) # cleanup temporary nrrd
+		stop("Error ",rval," saving file to: ",outfile)
 	}
-	stop("Error ",rval," saving file to: ",outfile)
 	# else success
 	if(saveontop) file.rename(outfile,infile)
 	return(TRUE)

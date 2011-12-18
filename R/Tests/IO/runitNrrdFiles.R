@@ -4,15 +4,23 @@
 test.AddOrReplaceNrrdHeaderField<-function(){
 	tmpdir=tempfile()
 	dir.create(tmpdir)
+	on.exit(unlink(tmpdir,recursive=TRUE))
 	lhmaskfile=file.path(ObjDir,"LHMask.nrrd")
-	AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=file.path(tmpdir,"LHMask.nrrd"),"space origin","(0,0,0)")
-	AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=file.path(tmpdir,"LHMask.nrrd"),"fakefield","(1,2,3)",Force=TRUE)
+	
+	# check we error out when providing a bad field
+	checkException(
+		AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=file.path(tmpdir,"LHMask.nrrd"),"fakefield","(1,2,3)"),
+		silent=TRUE)
+	
+	AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=file.path(tmpdir,"LHMask.nrrd"),"space origin","(2,2,2)")
 	h=ReadNrrdHeader(file.path(tmpdir,"LHMask.nrrd"))
-	newSpaceOrigin=c(0,0,0)
-	fakefield=c(1,2,3)
-	checkEqualsNumeric(h$`space origin`,newSpaceOrigin,msg="Mismatch with expected image origin (physical coords)",tol=1e-6)
-	checkEqualsNumeric(h$`fakefield`,fakefield,msg="Mismatch with fake field",tol=1e-6)
-	unlink(tmpdir,recursive=TRUE)
+	newSpaceOrigin=c(2,2,2)
+	checkEqualsNumeric(h$`space origin`,newSpaceOrigin,msg="Mismatch with replaced image origin (physical coords)",tol=1e-6)
+	
+	AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=file.path(tmpdir,"LHMask.nrrd"),"sample units","ppm",Force=TRUE)
+	h=ReadNrrdHeader(file.path(tmpdir,"LHMask.nrrd"))
+	sampleunits="ppm"
+	checkEquals(h$`sampleunits`,sampleunits,msg="Mismatch with added field (sample units)")
 }
 
 test.AddOrReplaceNrrdHeaderFieldInPlace<-function(){
@@ -27,14 +35,14 @@ test.AddOrReplaceNrrdHeaderFieldInPlace<-function(){
 	# Check that we error out when trying to overwrite without Force = TRUE
 	checkException(
 		AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=lhmaskfile,"space origin","(0,0,0)"),
-		silent=T)
+		silent=TRUE)
 	# Check replacement 
 	AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=lhmaskfile,"space origin","(2,2,2)",Force=TRUE)
-	AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=lhmaskfile,"fakefield","(1,2,3)",Force=TRUE)
+	checkException(
+		AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=file.path(tmpdir,"LHMask.nrrd"),"fakefield","(1,2,3)"),
+		silent=TRUE)
 	h=ReadNrrdHeader(lhmaskfile)
 	horig=ReadNrrdHeader(origlhmaskfile)
 	newSpaceOrigin=c(2,2,2)
-	fakefield=c(1,2,3)
 	checkEqualsNumeric(h$`space origin`,newSpaceOrigin,msg="Mismatch with expected image origin (physical coords)",tol=1e-6)
-	checkEqualsNumeric(h$`fakefield`,fakefield,msg="Mismatch with fake field",tol=1e-6)
 }
