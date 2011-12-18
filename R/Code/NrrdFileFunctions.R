@@ -478,10 +478,11 @@ AddOrReplaceNrrdHeaderField<-function(infile,outfile,fields,values,Force=FALSE,a
 	# see if a given field exists and add or replace its value
 	saveontop=ifelse(infile==outfile,TRUE,FALSE)
 	if(!Force && file.exists(outfile)) stop("Use Force=TRUE to replace existing files")
-	inh=ReadNrrdHeader(infile)
 	action=match.arg(action)
-	
 	if(length(fields)!=length(values)) stop("Must supply same number of fields and values")
+
+	inh=ReadNrrdHeader(infile)
+	oht=attr(inh,"headertext")
 	
 	for(i in seq(fields)){
 		field=fields[i]
@@ -489,7 +490,6 @@ AddOrReplaceNrrdHeaderField<-function(infile,outfile,fields,values,Force=FALSE,a
 			stop("Invalid nrrd field name: ",field)
 		value=values[i]
 		newFieldLine=paste(field,": ",value,sep="")
-		oht=attr(inh,"headertext")
 
 		if(field%in%names(inh)) {
 			# replace existing field

@@ -21,6 +21,13 @@ test.AddOrReplaceNrrdHeaderField<-function(){
 	h=ReadNrrdHeader(file.path(tmpdir,"LHMask.nrrd"))
 	sampleunits="ppm"
 	checkEquals(h$`sampleunits`,sampleunits,msg="Mismatch with added field (sample units)")
+
+	# change both at same time
+	AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=file.path(tmpdir,"LHMask.nrrd"),
+		c("space origin","sample units"),c("(2,2,2)","ppm"),Force=TRUE)
+	h=ReadNrrdHeader(file.path(tmpdir,"LHMask.nrrd"))
+	checkEquals(h$`sampleunits`,sampleunits,msg="Mismatch with added field (sample units)")
+	checkEqualsNumeric(h$`space origin`,newSpaceOrigin,msg="Mismatch with replaced image origin (physical coords)",tol=1e-6)
 }
 
 test.AddOrReplaceNrrdHeaderFieldInPlace<-function(){
