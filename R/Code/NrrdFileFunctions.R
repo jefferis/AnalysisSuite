@@ -486,10 +486,15 @@ AddOrReplaceNrrdHeaderField<-function(infile,outfile,fields,values,Force=FALSE,a
 	
 	for(i in seq(fields)){
 		field=fields[i]
-		if(!.validateNrrdFieldName(field))
-			stop("Invalid nrrd field name: ",field)
-		value=values[i]
-		newFieldLine=paste(field,": ",value,sep="")
+		if(field=="#"){
+			# this is a comment
+			newFieldLine=values[i]
+		} else {
+			if(!.validateNrrdFieldName(field))
+				stop("Invalid nrrd field name: ",field)
+			value=values[i]
+			newFieldLine=paste(field,": ",value,sep="")
+		}
 
 		if(field%in%names(inh)) {
 			# replace existing field
@@ -500,7 +505,7 @@ AddOrReplaceNrrdHeaderField<-function(infile,outfile,fields,values,Force=FALSE,a
 			oht=sub(paste(field,": .*",sep=""),newFieldLine,oht)
 		} else {
 			if(action=="replaceonly") {
-				warning("Unable to replace field in replaceonly mode")
+				warning("Unable to add field in replaceonly mode")
 				return(FALSE)
 			}
 			# just append

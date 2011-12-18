@@ -28,6 +28,18 @@ test.AddOrReplaceNrrdHeaderField<-function(){
 	h=ReadNrrdHeader(file.path(tmpdir,"LHMask.nrrd"))
 	checkEquals(h$`sampleunits`,sampleunits,msg="Mismatch with added field (sample units)")
 	checkEqualsNumeric(h$`space origin`,newSpaceOrigin,msg="Mismatch with replaced image origin (physical coords)",tol=1e-6)
+	
+	# add a comment
+	AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=file.path(tmpdir,"LHMask.nrrd"),
+		"#","# My interesting comment",Force=TRUE)
+	h=ReadNrrdHeader(file.path(tmpdir,"LHMask.nrrd"))
+	checkTrue(any(grepl("My interesting comment",attr(h,'headertext'))))
+	# ... and a field at the same time
+	AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=file.path(tmpdir,"LHMask.nrrd"),
+		c("#","space origin"),c("# My interesting comment","(2,2,2)"),Force=TRUE)
+	h=ReadNrrdHeader(file.path(tmpdir,"LHMask.nrrd"))
+	checkTrue(any(grepl("My interesting comment",attr(h,'headertext'))))
+	checkEqualsNumeric(h$`space origin`,newSpaceOrigin,msg="Mismatch with replaced image origin (physical coords)",tol=1e-6)
 }
 
 test.AddOrReplaceNrrdHeaderFieldInPlace<-function(){
