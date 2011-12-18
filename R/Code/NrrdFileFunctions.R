@@ -476,7 +476,7 @@ FixSpaceOrigin<-function(f,origin, Verbose=TRUE, KeepOriginalModificationTime = 
 
 AddOrReplaceNrrdHeaderField<-function(infile,outfile,fields,values,Force=FALSE,action=c("addreplace","addonly","replaceonly")){
 	# see if a given field exists and add or replace its value
-	if (infile==outfile) stop("AddOrReplaceNrrdHeaderField: Cannot currently save on top of existing file")
+	saveontop=ifelse(infile==outfile,TRUE,FALSE)
 	if(!Force && file.exists(outfile)) stop("Use Force=TRUE to replace existing files")
 	inh=ReadNrrdHeader(infile)
 	action=match.arg(action)
@@ -503,15 +503,25 @@ AddOrReplaceNrrdHeaderField<-function(infile,outfile,fields,values,Force=FALSE,a
 			}
 			# just append
 			oht=c(oht,newFieldLine)
-		}		
+		}
 	}
 	
 	# add a blank line
 	oht=c(oht,"")
 	tmpheader=tempfile()
 	writeLines(oht,tmpheader)
-	system(paste("unu data",shQuote(infile),"| cat",tmpheader,"- >",shQuote(outfile)))
+	if(saveontop){
+		outfile=tempfile(pattern=basename(infile),tmpdir=dirname(infile))
+	}
+	rval=system(paste("unu data",shQuote(infile),"| cat",tmpheader,"- >",shQuote(outfile)))
 	unlink(tmpheader)
+	if(rval!=0){
+		if(saveontop) unlink(outfile)
+	}
+	stop("Error ",rval," saving file to: ",outfile)
+	# else success
+	if(saveontop) file.rename(outfile,infile)
+	return(TRUE)
 }
 
 .standardNrrdFieldName<-function(fieldname)
