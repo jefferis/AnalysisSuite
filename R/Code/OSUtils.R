@@ -45,6 +45,9 @@ removelock<-function(lockfile){
 #' @return logical indicating if cmd was run or for an R expression, eval(cmd)
 #' @export
 #' @seealso \code{\link{makelock}}
+#' @examples \dontrun{
+#' RunCmdForNewerInput(expression(myfunc("somefile")))
+#' }
 RunCmdForNewerInput<-function(cmd,infiles,outfiles,Verbose=FALSE,UseLock=FALSE,...){
 	# note that cmd can be an R expression as in 
 	# RunCmdForNewerInput(expression(myfunc("somefile")))
@@ -65,12 +68,12 @@ RunCmdForNewerInput<-function(cmd,infiles,outfiles,Verbose=FALSE,UseLock=FALSE,.
 	} else {
 		if(Verbose){
 			cat("Overwriting",outfiles,"because 1 or more input files are newer\n")
-			cat("Newest input mtime:",mit,
-				"Oldest output mtime:",mot,"\n")
+			cat("Newest input mtime:",strftime(mit),
+				"Oldest output mtime:",strftime(mot),"\n")
 		} 
 	}
 	lockfile=paste(outfiles[1],sep=".","lock")
-	# return FALSE to signal output doens't exist
+	# return FALSE to signal output doesn't exist
 	if(UseLock){
 		if(makelock(lockfile))
 			on.exit(unlink(lockfile))

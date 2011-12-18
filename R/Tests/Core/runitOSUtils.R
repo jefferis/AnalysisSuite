@@ -14,7 +14,7 @@ test.abs2rel<-function(x)
 	checkEquals(testans,realans)
 		
 	checkException(abs2rel("/some/other/path","/Volumes/JData/JPeople/",
-		StopIfNoCommonPath=TRUE))
+		StopIfNoCommonPath=TRUE),silent=TRUE)
 	
 	testans=abs2rel("/some/other/path","/Volumes/JData/JPeople/")
 	realans="/some/other/path"
