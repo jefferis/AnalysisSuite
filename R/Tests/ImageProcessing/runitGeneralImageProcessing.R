@@ -3,9 +3,9 @@ test.ReadWriteIdentityRegistration<-function(){
 		.Dim = c(5L, 3L), .Dimnames = list(c("xlate", "rotate", "scale", "shear", "center"),
 		 c("X", "Y", "Z")))
 	f=WriteIdentityRegistration()
+	on.exit(unlink(f,recursive=TRUE))
 	x=ReadIGSRegistration(f)
 	checkEqualsNumeric(ireg,do.call(rbind,x$affine_xform))
-	unlink(f)
 }
 
 test.AutoCropNrrd<-function(){
