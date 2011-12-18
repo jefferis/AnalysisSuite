@@ -524,11 +524,27 @@ AddOrReplaceNrrdHeaderField<-function(infile,outfile,fields,values,Force=FALSE,a
 	return(TRUE)
 }
 
-.standardNrrdFieldName<-function(fieldname)
+.validateNrrdFieldName<-function(fieldname) {
+	fieldname=.standardNrrdFieldName(fieldname)
+	
+	all(fieldname %in% c("space", "space dimension", "space units", "space origin", 
+	"space directions", "measurement frame", "dimension", "type", 
+	"blocksize", "encoding", "endian", "content", "min", "max", "oldmin", 
+	"oldmax", "datafile", "lineskip", "byteskip", "number", "sampleunits", 
+	"sizes", "spacings", "thicknesses", "axismins", "axismaxs", "centers", 
+	"labels", "units", "kinds"))
+}
+
+.standardNrrdFieldName<-function(fieldname,Validate=FALSE)
 {
-	if(length(fieldname)>1) return(sapply(fieldname,.standardNrrdFieldName))
+	if(length(fieldname)>1) return(sapply(fieldname,.standardNrrdFieldName,Validate=Validate))
 	if(!fieldname%in%c("space dimension","space units","space origin","space directions","measurement frame"))
-	fieldname=gsub(" ","",fieldname,fixed=TRUE)
+		fieldname=gsub(" ","",fieldname,fixed=TRUE)
+	if(Validate){
+		# check that we have been given a valid field
+		if(!.validateNrrdFieldName(fieldname))
+			stop("Invalid nrrd field: ",fieldname)
+	}
 	fieldname
 }
 
