@@ -164,19 +164,22 @@ rsync<-function(sourceDir, destinationDir,rsyncoptions="-va"){
 #' Use unix touch utility to change file's timestamp
 #' 
 #' If neither a time or a reference file is provided then the current time is 
-#' used. If the file does not already exist, it is created.  
+#' used. If the file does not already exist, it is created unless Create=FALSE.  
 #' @param file Path to file to modify
 #' @param time Absolute time in POSIXct format as 
 #' @param reference Path to a reference file
 #' @param timestoupdate "access" or "modification" (default both)
+#' @param Create Logical indicating whether to create file (default TRUE)
 #' @return TRUE or FALSE according to success
 #' @author jefferis
 #' @export
-touch<-function(file,time,reference,timestoupdate=c("access","modification")){
+touch<-function(file,time,reference,timestoupdate=c("access","modification"),
+    Create=TRUE){
 	if(.Platform$OS.type!="unix") {
 		warning("touch relies on the existence of a system touch command")
 		return(FALSE)
 	}
+  if(!Create && !file.exists(file)) stop("Create=F and ",file," does not exist") 
 	if(!missing(time) && !missing(reference))
 		stop("Please supply either a time or a reference file but not both")
 	args=paste("-",substr(timestoupdate,1,1),sep="")

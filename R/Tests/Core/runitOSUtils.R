@@ -94,19 +94,26 @@ test.RunCmdForNewerInput<-function(){
 test.touch<-function(){
 	tf=replicate(2,tempfile())
 	on.exit(unlink(tf))
-	touch(tf[1])
+  
+  checkException(touch(tf[1],Create=FALSE),
+      "Throws exception if Create=FALSE and file does not exist",silent = TRUE)
+	
+  checkTrue(touch(tf[1]))
 	checkTrue(file.exists(tf[1]),"touching a file without other argument creates it")
-	touch(tf[2])
-	t1=ISOdatetime(2001, 1, 1, 12, 12, 12)
+	checkTrue(touch(tf[2]))
+  
+  t1=ISOdatetime(2001, 1, 1, 12, 12, 12)
 	t2=ISOdatetime(2011, 1, 1, 12, 12, 12)
-	touch(tf[1],t1)
-	touch(tf[2],t2)
+	checkTrue(touch(tf[1],t1))
+	checkTrue(touch(tf[2],t2,Create=FALSE),
+      "Check no error when Create=FALSE and target file exists")
 	fis=file.info(tf)
 	fis$mtime
 	checkEqualsNumeric(fis$mtime[1],t1,"Change to a specific time")
 	checkEqualsNumeric(fis$mtime[2],t2,"Change to a specific time")
+  
   # Change modification time to that of a reference file, leaving access intact
-  touch(tf[2],reference = tf[1],timestoupdate = "modification")
+  checkTrue(touch(tf[2],reference = tf[1],timestoupdate = "modification"))
   fis2=file.info(tf[2])
 	checkEqualsNumeric(fis2$mtime,fis$mtime[1],"Change mtime to that of a refernce file")
   checkEqualsNumeric(fis2$atime,fis$atime[2],"Leave atime intact") 
