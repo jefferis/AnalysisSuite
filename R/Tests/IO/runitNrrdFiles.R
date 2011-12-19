@@ -74,3 +74,30 @@ test.AddOrReplaceNrrdHeaderFieldInPlace<-function(){
 	newSpaceOrigin=c(2,2,2)
 	checkEqualsNumeric(h$`space origin`,newSpaceOrigin,msg="Mismatch with expected image origin (physical coords)",tol=1e-6)
 }
+
+test.NrrdMakeDetachedHeaderForNrrd<-function(){
+	tmpdir=tempfile()
+	dir.create(tmpdir)
+	on.exit(unlink(tmpdir,recursive=TRUE))
+	
+	origlhmaskfile=file.path(ObjDir,"LHMask.nrrd")
+	lhmaskfile=file.path(tmpdir,basename(origlhmaskfile))
+	file.copy(origlhmaskfile,lhmaskfile)
+	
+	nhdrvec=NrrdMakeDetachedHeaderForNrrd(lhmaskfile,NA)
+  checkTrue(!file.exists(file.path(tmpdir,"LHMask.nrrd.nhdr")),
+      "Don't write header if we nhdr=NA")
+  checkTrue(is.character(nhdrvec),"Check that we get a character vector back")
+	NrrdMakeDetachedHeaderForNrrd(lhmaskfile)
+  NrrdMakeDetachedHeaderForNrrd(origlhmaskfile,file.path(tmpdir,'LHMask-orig.nhdr'))
+	h=ReadNrrdHeader(file.path(tmpdir,"LHMask.nrrd.nhdr"))
+  h2=ReadNrrdHeader(file.path(tmpdir,"LHMask-orig.nhdr"))
+  # minmax provides a simple way to check that file can still be read
+  checkEqualsNumeric(NrrdMinMax(file.path(tmpdir,"LHMask.nrrd.nhdr")),c(0,1),
+      "Check that nhdr can be read and produces correct minmax")
+  checkEquals(h$datafile,basename(lhmaskfile),
+      "Check relative path for detached header right next to data file")
+  checkEquals(h2$datafile,origlhmaskfile,
+      "Check absolute path for detached header not next to data file")
+  
+}

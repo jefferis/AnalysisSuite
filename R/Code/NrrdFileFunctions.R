@@ -599,3 +599,24 @@ is.nrrd<-function(f,ReturnVersion=FALSE,TrustSuffix=FALSE){
 
 	TRUE
 }
+
+#' Make a detached header for a specified nrrd file
+#'
+#' If nhdr is not supplied defaults to <nrrd>.nhdr.
+#' If nhdr=NA then new header is returned but not written.
+#' @param nrrd Full path to a nrrd file
+#' @param nhdr Full path nhdr file to be written
+#' @return invisbly returned character vector with new header
+#' @export
+NrrdMakeDetachedHeaderForNrrd<-function(nrrd,nhdr=paste(nrrd,sep='.','nhdr')){
+	h=ReadNrrdHeader(nrrd)
+	# drop the directory if the nhdr will be next to the nrrd
+	if(is.na(nhdr) || dirname(nrrd)==dirname(nhdr))
+		nrrd=basename(nrrd)
+	oht=attr(h,'headertext')
+	# line skip should be length of old header + 1 for the blank line before data 
+	nht=c(oht,paste("line skip:",length(oht)+1))
+	nht=c(nht,paste("datafile:",nrrd))
+	if(!is.na(nhdr)) writeLines(nht,nhdr)
+	invisible(nht)
+}
