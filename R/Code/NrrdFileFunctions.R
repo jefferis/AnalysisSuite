@@ -483,6 +483,7 @@ FixSpaceOrigin<-function(f,origin, Verbose=TRUE, KeepOriginalModificationTime = 
 #' @param outfile Path to output file
 #' @param newfields Named vector of fields to replace
 #' @param Force Overwrite existing file (default FALSE)
+#' @param Detached Write a detached header insted of a nrrd (default FALSE)
 #' @param action addreplace (Default) addonly or replaceonly
 #' @return TRUE or FALSE depending on success
 #' @export
@@ -493,14 +494,23 @@ FixSpaceOrigin<-function(f,origin, Verbose=TRUE, KeepOriginalModificationTime = 
 #'   c("# My interesting comment",`space origin`="(2,2,2)"),Force=TRUE)
 #' }
 AddOrReplaceNrrdHeaderField<-function(infile,outfile,newfields,Force=FALSE,
-	action=c("addreplace","addonly","replaceonly")){
+	Detached=FALSE,action=c("addreplace","addonly","replaceonly")){
 	# see if a given field exists and add or replace its value
 	saveontop=ifelse(infile==outfile,TRUE,FALSE)
 	if(!Force && file.exists(outfile)) stop("Use Force=TRUE to replace existing files")
+  if(saveontop && Detached) stop("Unable to save a detached header on top of its nrrd file")
 	action=match.arg(action)
 
-	inh=ReadNrrdHeader(infile)
-	oht=attr(inh,"headertext")
+	if(Detached){
+		# make a detached header for the original file but don't write it
+    tempheader=tempfile(tmpdir=dirname(outfile))
+		oht=NrrdMakeDetachedHeaderForNrrd(infile,tempheader)
+    inh=ReadNrrdHeader(tempheader)
+    unlink(tempheader)
+	} else {
+		inh=ReadNrrdHeader(infile)
+		oht=attr(inh,"headertext")
+	}
 	
 	if(is.null(names(newfields))) names(newfields) <- rep("",length(newfields))
 	for(i in seq(newfields)){
@@ -533,14 +543,19 @@ AddOrReplaceNrrdHeaderField<-function(infile,outfile,newfields,Force=FALSE,
 	}
 	
 	# add a blank line
-	oht=c(oht,"")
-	tmpheader=tempfile()
-	writeLines(oht,tmpheader)
+  if(Detached){
+    writeLines(oht,outfile)
+    return(TRUE)
+  } 
+  oht=c(oht,"")
+	headerfile=tempfile()
+
+  writeLines(oht,headerfile)
 	if(saveontop){
 		outfile=tempfile(pattern=basename(infile),tmpdir=dirname(infile))
 	}
-	rval=system(paste("unu data",shQuote(infile),"| cat",tmpheader,"- >",shQuote(outfile)))
-	unlink(tmpheader)
+	rval=system(paste("unu data",shQuote(infile),"| cat",headerfile,"- >",shQuote(outfile)))
+	unlink(headerfile)
 	if(rval!=0){
 		if(saveontop) unlink(outfile) # cleanup temporary nrrd
 		stop("Error ",rval," saving file to: ",outfile)

@@ -75,6 +75,24 @@ test.AddOrReplaceNrrdHeaderFieldInPlace<-function(){
 	checkEqualsNumeric(h$`space origin`,newSpaceOrigin,msg="Mismatch with expected image origin (physical coords)",tol=1e-6)
 }
 
+test.AddOrReplaceNrrdHeaderFieldDetached<-function(){
+	tmpdir=tempfile()
+	dir.create(tmpdir)
+	on.exit(unlink(tmpdir,recursive=TRUE))
+	
+	origlhmaskfile=file.path(ObjDir,"LHMask.nrrd")
+	lhmaskfile=file.path(tmpdir,basename(origlhmaskfile))
+	file.copy(origlhmaskfile,lhmaskfile)
+	
+	# Write a detached header file
+	AddOrReplaceNrrdHeaderField(lhmaskfile,outfile=paste(lhmaskfile,'-det.nhdr',sep=""),
+      c(content=NrrdCrc(lhmaskfile)),Detached = TRUE)
+  
+  # minmax provides a simple way to check that file can still be read
+  checkEqualsNumeric(NrrdMinMax(paste(lhmaskfile,'-det.nhdr',sep="")),c(0,1),
+      "Check that nhdr can be read and produces correct minmax")
+}
+
 test.NrrdMakeDetachedHeaderForNrrd<-function(){
 	tmpdir=tempfile()
 	dir.create(tmpdir)
