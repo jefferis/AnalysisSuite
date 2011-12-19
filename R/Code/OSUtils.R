@@ -160,3 +160,37 @@ rsync<-function(sourceDir, destinationDir,rsyncoptions="-va"){
 	cmd<-paste("rsync",rsyncoptions,shQuote(sourceDir),shQuote(destinationDir))
 	system(cmd)
 }
+
+#' Use unix touch utility to change file's timestamp
+#' 
+#' If neither a time or a reference file is provided then the current time is 
+#' used. If the file does not already exist, it is created.  
+#' @param file Path to file to modify
+#' @param time Absolute time in POSIXct format as 
+#' @param reference Path to a reference file
+#' @param timestoupdate "access" or "modification" (default both)
+#' @return TRUE or FALSE according to success
+#' @author jefferis
+#' @export
+touch<-function(file,time,reference,timestoupdate=c("access","modification")){
+	if(.Platform$OS.type!="unix") {
+		warning("touch relies on the existence of a system touch command")
+		return(FALSE)
+	}
+	if(!missing(time) && !missing(reference))
+		stop("Please supply either a time or a reference file but not both")
+	args=paste("-",substr(timestoupdate,1,1),sep="")
+	if(!missing(time)){
+		if(!is.character(time)) time=strftime(time,"%Y%m%d%H%M.%S")
+		args=c(args,"-t",time)
+	} else if(missing(reference)) {
+		# use current time
+	} else {
+		# use reference file to supply time
+		if(!file.exists(reference)) stop("reference file: ",reference," missing")
+		args=c(args,"-r",shQuote(reference))
+	}
+	
+	cmd=paste("touch",paste(args,collapse=" "),shQuote(file))
+	return(system(cmd)==0)
+}
