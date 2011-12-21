@@ -48,11 +48,17 @@ NrrdMinMax<-function(filename, Blind8=FALSE, ...){
 	as.numeric(sub("(min|max): ","",minmax))
 }
 
-NrrdResample<-function(infile,outfile,size,otherargs=NULL,gzip=TRUE,
+NrrdResample<-function(infile,outfile,size,voxdims=NULL,otherargs=NULL,gzip=TRUE,
 	suffix=NULL,CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE,...){
 
 	if(!file.exists(infile)) stop("infile: ",infile," does not exist")
-
+	if(!is.null(voxdims)){
+		# we have a target voxel size instead of a standard size specification
+		# first fetch existing voxel size
+		h=ReadNrrdHeader(infile)
+		origvd=diag(h$`space directions`)
+		size=origvd/voxdims
+	}
 	if(is.integer(size)) size=paste("--size",paste(size,collapse=" "))
 	else {
 		size=paste("--size",paste("x",size,sep="",collapse=" "))
