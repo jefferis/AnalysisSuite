@@ -48,9 +48,40 @@ NrrdMinMax<-function(filename, Blind8=FALSE, ...){
 	as.numeric(sub("(min|max): ","",minmax))
 }
 
-NrrdResample<-function(infile,outfile,size,voxdims=NULL,otherargs=NULL,gzip=TRUE,
-	suffix=NULL,CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE,...){
+#' Resample a nrrd with simple or complex filters
+#'
+#' wraps unu resample
+#' unu resample defaults to cell centering in the asbence of information, but I 
+#' prefer node. 
+#' 
+#' * downsampling a **cell** image (e.g. x2) will result in 
+#'   * an origin shift **iff** an origin was specified in the input file
+#'   * a change in the space directions that is not an exact multiple of the downsampling factor 
+#' * downsampling a node image (e.g. x2) will result in:
+#'   * no change in origin
+#'   * a doubling in the space directions field
+#' @param infile 
+#' @param outfile 
+#' @param size Scale factor, numeric vector, NA=> don't touch
+#' @param voxdims Target voxel dimensions
+#' @param centering Whether to assume node or cell centering if not specified
+#'   in input file.
+#' @param otherargs Passed to unu resample
+#' @param gzip 
+#' @param suffix 
+#' @param CreateDirs 
+#' @param Verbose 
+#' @param Force 
+#' @param UseLock 
+#' @param ... Additional params passed to .callunu
+#' @return 
+#' @author jefferis
+#' @export
+NrrdResample<-function(infile,outfile,size,voxdims=NULL,
+		centering=c("cell","node"),otherargs=NULL,gzip=TRUE, suffix=NULL,
+		CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE,...){
 
+	centering=match.arg(centering)
 	if(!file.exists(infile)) stop("infile: ",infile," does not exist")
 	if(!is.null(voxdims)){
 		# we have a target voxel size instead of a standard size specification
@@ -92,7 +123,7 @@ NrrdResample<-function(infile,outfile,size,voxdims=NULL,otherargs=NULL,gzip=TRUE
 		else
 			return(FALSE)
 	}
-
+	otherargs=c(otherargs,"--center",centering)
 	cmdargs=paste(size, paste(otherargs,collapse=" "),"-i",shQuote(infile))
 	if(gzip)
 		cmdargs=paste(cmdargs,"| unu save -f nrrd -e gzip")
