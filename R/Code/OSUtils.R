@@ -36,21 +36,28 @@ removelock<-function(lockfile){
 #' depending on whether action is required.
 #'
 #' When UseLock=TRUE, the lock file created is called outfiles[1].lock
+#'
+#' When ReturnInputTimes=TRUE, the input mtimes are returned as an attribute of
+#' a logical value (if available).
 #' 
 #' @param cmd An \code{\link{expression}}, a string or NA/NULL
 #' @param infiles Character vector of path to one or more input files 
 #' @param outfiles Character vector of path to one or more output files 
 #' @param Verbose Write information to consolse (Default FALSE)
 #' @param UseLock Stop other processes working on this task (Default FALSE)
+#' @param ReturnInputTimes Return mtimes of input files (default FALSE)
+#' @param ... additional parameters passed to \code{\link{system}} call.
 #' @return logical indicating if cmd was run or for an R expression, eval(cmd)
 #' @export
 #' @seealso \code{\link{makelock}}
 #' @examples \dontrun{
 #' RunCmdForNewerInput(expression(myfunc("somefile")))
 #' }
-RunCmdForNewerInput<-function(cmd,infiles,outfiles,Verbose=FALSE,UseLock=FALSE,...){
+RunCmdForNewerInput<-function(cmd,infiles,outfiles,Verbose=FALSE,UseLock=FALSE,
+    ReturnInputTimes=FALSE,...){
 	# note that cmd can be an R expression as in 
 	# RunCmdForNewerInput(expression(myfunc("somefile")))
+  fisi=NULL
 	if(length(infiles)==0){
 		if(Verbose) cat("no input files\n")
 		return (FALSE)
@@ -60,8 +67,8 @@ RunCmdForNewerInput<-function(cmd,infiles,outfiles,Verbose=FALSE,UseLock=FALSE,.
 	} else if(!all(feo<-file.exists(outfiles))){
 		# do nothing just fall through to end
 		if(Verbose) cat("outfiles: ",outfiles[!feo],"missing\n")
-	} else if( (mit<-max(file.info(infiles)$mtime)) <=
-						 (mot<-min(file.info(outfiles)$mtime)) ){
+	} else if( (mit<-max(fisi<-file.info(infiles)$mtime)) <=
+						 (mot<-min(fiso<-file.info(outfiles)$mtime)) ){
 		# check times
 		if(Verbose) cat("Skipping",outfiles,"because input files are older\n")
 		return(FALSE)	
@@ -88,7 +95,9 @@ RunCmdForNewerInput<-function(cmd,infiles,outfiles,Verbose=FALSE,UseLock=FALSE,.
 	} else if(is.character(cmd)){
 		system(cmd,...)
 	}
-	return(TRUE)
+  if(ReturnInputTimes && !is.null(fisi))
+    return(structure(TRUE,fisi=fisi))
+  else return(TRUE)
 }
 
 ncpus<-function(default=1){
