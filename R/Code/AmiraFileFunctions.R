@@ -845,7 +845,8 @@ ReadNeuronFromAM3D<-function(AM3DFile,Components="Axon",OldNeuron=NULL,ReOrient=
 
 
 WriteNeuronToAM<-function(ANeuron,AMFile=NULL,
-	suffix="am",Force=F,MakeDir=T,WriteAllSubTrees=TRUE,ScaleSubTreeNumsTo1=TRUE){
+	suffix="am",Force=F,MakeDir=T,WriteAllSubTrees=TRUE,ScaleSubTreeNumsTo1=TRUE,
+  WriteRadius=TRUE){
 	# write out a neuron in the basic AmiraMesh format which is the native format
 	# of amira for linesets (as opposed to the specialised skeletonize AM3D)
 	# WriteAllSubTrees will write out all the stored subtrees in a neuron 
@@ -909,11 +910,17 @@ WriteNeuronToAM<-function(ANeuron,AMFile=NULL,
 	cat("Parameters {\n",file=fc)
 	cat("    ContentType \"HxLineSet\"\n",file=fc)
 	cat("}\n\n",file=fc)
-
+  sectionNumbers=c(Coordinates=1,LineIdx=2)
 	cat("Vertices { float[3] Coordinates } = @1\n",file=fc)
-	cat("Vertices { float Data } = @2\n",file=fc)
-	cat("Lines { int LineIdx } = @3\n",file=fc)
-	if(WriteAllSubTrees) cat("Vertices { float Data2 } =@4\n",file=fc)
+  if(WriteRadius){
+    cat("Vertices { float Data } = @2\n",file=fc)
+    sectionNumbers=c(Coordinates=1,Data=2,LineIdx=3)
+  }
+	cat("Lines { int LineIdx } = @",sectionNumbers['LineIdx'],"\n",sep="",file=fc)
+	if(WriteAllSubTrees) {
+    sectionNumbers=c(sectionNumbers,Data2=max(sectionNumbers)+1)
+    cat("Vertices { float Data2 } =@",sectionNumbers['Data2'],"\n",sep="",file=fc)
+  }
 	cat("\n",file=fc)
 	
 	# Write the 3D coords
@@ -921,22 +928,21 @@ WriteNeuronToAM<-function(ANeuron,AMFile=NULL,
 	#write(t(ANeuron$d[,c("X","Y","Z")]),ncolumns=3,file=fc)
 	write.table(ANeuron$d[chosenVertices,c("X","Y","Z")],col.names=F,row.names=F,file=fc)
 	
+  
 	# Write the Radii
-	cat("\n@2 #",nVertices,"width values\n",file=fc)
-	# NB Divide width by 2
-	#write(ANeuron$d$W/2,ncolumns=1,file=fc)
-	#write.matrix(ANeuron$d$W/2,file=fc)
-	write.table(ANeuron$d$W[chosenVertices]/2,col.names=F,row.names=F,file=fc)
-
+  if(WriteRadius){
+      cat("\n@",sectionNumbers['Data']," # ",nVertices," width values\n",sep="",file=fc)
+      # NB Divide width by 2
+      write.table(ANeuron$d$W[chosenVertices]/2,col.names=F,row.names=F,file=fc,na='NaN')
+  }
+  
 	# Write the segment information
-	cat("\n@3 #",nLinePoints,"line segements\n",file=fc)
+	cat("\n@",sectionNumbers['LineIdx']," #",nLinePoints,"line segments\n",sep="",file=fc)
 	# nb have to -1 from each point because amira is 0 indexed
 	# AND add -1 to each segment as a terminator
 	tmp=lapply(SegList,function(x) cat(x-1,"-1 \n",file=fc) )
-	#tmp=do.call("paste",ANeuron$SegList)
-	#writeLines(tmp,con=fc)
 	if(WriteAllSubTrees) {
-		cat("\n@4 # subtrees\n",file=fc)
+    cat("\n@",sectionNumbers['Data2']," # subtrees\n",sep="",file=fc)
 		if(ScaleSubTreeNumsTo1) ANeuron$d$SubTree=ANeuron$d$SubTree/max(ANeuron$d$SubTree)
 		write.table(ANeuron$d$SubTree,col.names=F,row.names=F,file=fc)
 	}
