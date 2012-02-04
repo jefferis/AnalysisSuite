@@ -1700,3 +1700,53 @@ WriteGenericAmiramesh<-function(filename,d,ContentType){
 		cat("\n",file=filename,append=TRUE)
 	}		
 }
+
+ReadNeuronFromAM<-function(amfile){
+  amdata=ReadAmiramesh(amfile)
+  if(!all(c("Coordinates","LineIdx")%in%names(amdata)))
+    stop("Cannot find required data sections")
+  
+  coords=as.data.frame(amdata$Coordinates)
+  colnames(coords)=c("X","Y","Z")
+  
+  # See if we can find some raduis data in one of the other data sections
+  radiusData=amdata[!names(amdata)%in%c("Coordinates","LineIdx")]
+  lad=length(radiusData)
+  if(lad==0){
+    warning("No width data for neuron:",amfile)
+    coords[,"W"]=NA
+  } else if (lad==1) {
+    # assume Amira provides radius
+    coords[,"W"]=radiusData[[1]]*2
+  } else if (lad>1) {
+    warning("Assuming that Data section ",lad," (",names(radiusData)[lad],") specifies radius")
+    coords[,"W"]=radiusData[[lad]]*2
+  }
+  
+  coords=cbind(PointNo=seq(1:nrow(coords)),Label=2,coords)
+  
+  # extract points that define lines (and immediately convert to 1-indexed)
+  lpts = amdata$LineIdx+1
+  lpts[lpts==0]=NA
+  terms=which(is.na(lpts))
+  segs=rep(1:length(terms),diff(c(0,terms)))
+  segs[is.na(lpts)]=NA
+  SegList=split(lpts,segs)
+  names(SegList)<-NULL
+  
+  SegEndPoints=sapply(SegList,function(s) c(s[1],s[length(s)]))
+  t=table(unlist(SegEndPoints))
+  as.neuron(list(
+          NeuronName=NeuronNameFromFileName(amfile),
+          InputFileName=amfile,
+          CreatedAt=Sys.time(),
+          NodeName=Sys.info()["nodename"],
+          InputFileStat=file.info(amfile)[1,],
+          InputFileMD5=md5sum(path.expand(amfile)),
+          NumPoints=nrow(coords),
+          StartPoint=lpts[1],
+          EndPoints=as.integer(names(which(t==1))),
+          BranchPoints=as.integer(names(which(t>1))),
+          NumSegs=length(SegList),
+          SegList=SegList,d=coords))
+}
