@@ -74,7 +74,7 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
 	} else {
 		close(con)
 		#print(parsedHeader)
-		filedata=.ReadAmiramesh.ASCIIData(filename,parsedHeader,DataSectionsToRead,Verbose=Verbose)
+		filedata=.ReadAmiramesh.ASCIIDataFully(filename,parsedHeader,DataSectionsToRead,Verbose=Verbose)
 		#cat(length(filedata))
 	}
 
