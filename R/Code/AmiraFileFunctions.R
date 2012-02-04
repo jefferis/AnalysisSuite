@@ -150,6 +150,50 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
 	return(l)		
 }
 
+#' Read ASCII AmiraMesh data without assuming anything about line spacing
+#' between sections
+#' @param filename file (or connection) to read
+#' @param df dataframe containing details of data in file
+#' @param DataSectionsToRead character vector containing names of sections
+#' @param Verbose Print status messages
+#' @return list of named data chunks
+#' @author jefferis
+.ReadAmiramesh.ASCIIDataFully<-function(filename,df,DataSectionsToRead,Verbose=TRUE){
+  l=list()
+#  df=subset(df,DataName%in%DataSectionsToRead)
+  df=df[order(df$DataPos),]
+  if(is.connection(filename)) 
+    con=filename
+  else {
+    con=file(filename,open='rb')
+    on.exit(close(con))
+  }
+  readLines(con, df$LineOffsets[1]-1)
+  for(i in seq(len=nrow(df))){
+    # read some lines until we get to a data section
+    nskip=0
+    while( substring(t<-readLines(con,1),1,1)!="@"){nskip=nskip+1}
+    if(Verbose) cat("Skipped",nskip,"lines to reach next data section")
+    if(df$DataLength[i]>0){
+      if(Verbose) cat("Reading ",df$DataLength[i],"lines in file",filename,"\n")
+      
+      if(df$RType[i]=="integer") whatval=integer(0) else whatval=numeric(0)
+      datachunk=scan(con,what=whatval,n=df$SimpleDataLength[i],quiet=!Verbose)
+      # store data if required
+      if(df$DataName[i]%in%DataSectionsToRead){
+        # convert to matrix if required
+        if(df$SubLength[i]>1){
+          datachunk=matrix(datachunk,ncol=df$SubLength[i],byrow=TRUE)
+        }
+        l[[df$DataName[i]]]=datachunk
+      }
+    } else {
+      if(Verbose) cat("Skipping empty data section",df$DataName[i],"\n")
+    }
+  }
+  return(l)
+}
+
 ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 	headerLines=NULL
 	if(!inherits(con,"connection")) con<-file(con,open='rt')
