@@ -980,12 +980,14 @@ WritePointsToAM<-function(d,AMFile=NULL,suffix="am",Force=F,MakeDir=T){
 		warning(paste("Unable to write to file",AMFile))
 		return()
 	}
-
-	if(is.null(colnames(d))){
-		if(ncol(d)!=3) stop("Unable to identify X,Y,Z coordinates")
-		colnames(d)=c("X","Y","Z")
+  
+  # assign column names 
+  if(ncol(d)==3){
+    colnames(d)=c("X","Y","Z")
+  } else if(is.null(colnames(d))){
+		stop("Unable to identify X,Y,Z coordinates")
 	} else {
-		colnames(d)=c("X","Y","Z")
+      d=d[,c("X","Y","Z")]
 	}
 	
 	cat("Writing to",AMFile,"\n")
