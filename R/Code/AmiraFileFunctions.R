@@ -1601,14 +1601,6 @@ DecodeRLEBytes<-function(d,uncompressedLength){
 	rval
 }
 
-ReadRLEBytes<-function(con,length,offset=0){
-	# Expects a connection + length/offset
-	if(!is.connection(con)) con=file(con,open='rb')
-	skip(con,offset)
-	ba=readBin(con,n=length,what=raw(),size=1,signed=T)
-	return(DecodeRLEBytes(ba))
-}
-
 ReadAmiraLandmarks<-function(filename,Verbose=FALSE,CoordinatesOnly=TRUE){
 	r=ReadAmiramesh(filename,AttachFullHeader=TRUE,Verbose=Verbose,Simplify=FALSE)
 	headerLines=attr(r,"header")
