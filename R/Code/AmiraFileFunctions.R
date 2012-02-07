@@ -162,7 +162,7 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
   l=list()
 #  df=subset(df,DataName%in%DataSectionsToRead)
   df=df[order(df$DataPos),]
-  if(is.connection(filename)) 
+  if(inherits(filename,'connection')) 
     con=filename
   else {
     con=file(filename,open='rb')
