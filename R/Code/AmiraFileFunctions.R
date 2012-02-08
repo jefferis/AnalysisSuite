@@ -406,8 +406,12 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 	# function to read in the basic data from the 
 	# files produced by the Amira Skeletonize plugin
 	
-	# 	# Check for header confirming file type
-	firstLine=readLines(filename,n=1)
+	# Check for header confirming file type
+  con=file(filename,open='rt')
+	firstLine=readLines(con,n=1)
+  conclass=summary(con)$class
+  close(con)
+  
 	if(!any(grep("#\\s+amiramesh",firstLine,ignore.case=T))){
 		warning(paste(filename,"does not appear to be an AmiraMesh 3D file"))
 		return(NULL)
@@ -415,10 +419,13 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 	filetype=ifelse(any(grep("binary",firstLine,ignore.case=T)),"binary","ascii")
 	if(length(grep("LITTLE.ENDIAN",firstLine,ignore.case=TRUE))>0) endian="little"
 	else endian='big'
+  
+  if(filetype=='binary' && conclass == 'gzfile')
+    stop("Cannot read gzipped binary amiramesh format files")
 	
 	# Read Header
 	headerLines=NULL
-	con=file(filename,open='rb')
+	con=file(filename,open=ifelse(filetype=="binary",'rb','rt'))
 	#	while( (thisLine<-readLines(con,1))!="@1"){
 	while( !isTRUE(charmatch("@1",thisLine<-readLines(con,1))==1) ){
 		headerLines=c(headerLines,thisLine)
