@@ -1498,15 +1498,24 @@ read.neuron<-function(f, ...){
 	# should return exactly one neuron on success
 	if(!file.exists(f)) stop("Unable to read file: ",f)
 	ext=tolower(sub(".*\\.([^.]+$)","\\1",basename(f)))
+  
 	if(ext=="asc")
 		n=ReadNeuronFromAsc(f, ...)
 	else if(ext=="swc")
 		n=ReadNeuronFromSWC(f, ...)
 	else {
-		h=readLines(f,1)
-		if(regexpr("amira",h,ignore.case=TRUE)>0)
-			n=ReadNeuronFromAM3D(f, ...)
-		else if(regexpr("xml",h,ignore.case=TRUE)>0)
+    h=readLines(f,1) # nb readLines can cope with gzipped data
+    
+		if(regexpr("amira",h,ignore.case=TRUE)>0){
+      # check to see what kind of amiramesh neuron we have
+      ftype=try(ReadAmiramesh.Header(f)$Parameters$ContentType[1])
+      if(inherits(ftype,'try-error') || is.null(ftype))
+        stop("Unable to indentify amiramesh neuron")
+      else if(ftype=='HxLineSet')
+        n=ReadNeuronFromAM(f, ...)
+      else 
+        n=ReadNeuronFromAM3D(f, ...)
+    } else if(regexpr("xml",h,ignore.case=TRUE)>0)
 			n=ReadNeuronsFromLongairTraces(f, MergePaths=TRUE, ...)
 		else if(regexpr("^;",h)>0)
 			n=ReadNeuronFromAsc(f, ...)
