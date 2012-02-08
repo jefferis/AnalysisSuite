@@ -196,7 +196,7 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
 }
 
 ReadAmiramesh.Header<-function(con,Verbose=TRUE,
-    CloseConnection=!inherits(con,'connection')){
+    CloseConnection=TRUE){
 	headerLines=NULL
 	if(!inherits(con,"connection")) con<-file(con,open='rt')
 	if(CloseConnection) on.exit(close(con))
