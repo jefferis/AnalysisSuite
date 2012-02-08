@@ -410,7 +410,6 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
   con=file(filename,open='rt')
 	firstLine=readLines(con,n=1)
   conclass=summary(con)$class
-  close(con)
   
 	if(!any(grep("#\\s+amiramesh",firstLine,ignore.case=T))){
 		warning(paste(filename,"does not appear to be an AmiraMesh 3D file"))
@@ -420,12 +419,17 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 	if(length(grep("LITTLE.ENDIAN",firstLine,ignore.case=TRUE))>0) endian="little"
 	else endian='big'
   
-  if(filetype=='binary' && conclass == 'gzfile')
-    stop("Cannot read gzipped binary amiramesh format files")
+  if(filetype=='binary'){
+    if(conclass == 'gzfile')
+      stop("Cannot read gzipped binary amiramesh format files")
+    # else need to reopen connection to regular binary file
+    close(con)
+    con=file(filename,open='rb')
+  }
 	
 	# Read Header
-	headerLines=NULL
-	con=file(filename,open=ifelse(filetype=="binary",'rb','rt'))
+  # nb have to start from scratch if binary, or save first line if text
+	headerLines <- if(filetype=="ascii") firstLine else NULL
 	#	while( (thisLine<-readLines(con,1))!="@1"){
 	while( !isTRUE(charmatch("@1",thisLine<-readLines(con,1))==1) ){
 		headerLines=c(headerLines,thisLine)
