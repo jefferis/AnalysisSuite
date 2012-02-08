@@ -1,4 +1,4 @@
-# QhullInterface.s
+# QhullInterface.R
 ##################
 # functions to prepare make a call to qhull
 # via David Marchette's interface (only on unix)
@@ -37,9 +37,9 @@
 #################
 #ENDMAINCOPYRIGHT
 
-# source(file.path(CodeDir,"QhullInterface.s"))
+# source(file.path(CodeDir,"QhullInterface.R"))
 
-source(file.path(CodeDir,"MarchetteQhullInterface.s"))
+source(file.path(CodeDir,"MarchetteQhullInterface.R"))
 
 # FindLHNeuronVolumes
 FindLHNeuronVolumes<-function(ANeuron){

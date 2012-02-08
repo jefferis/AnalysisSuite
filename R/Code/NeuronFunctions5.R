@@ -1,8 +1,8 @@
-# NeuronFunctions5.s
+# NeuronFunctions5.R
 # #################################
 # This file contains general functions for handling Neurons:
 # It has been shortened since version 4 by the removal of ParseSWCTree
-# ReadSWCFile and reroot which have been moved to a new file SWCFunction.s
+# ReadSWCFile and reroot which have been moved to a new file SWCFunction.R
 # Plot fns need to be updated to handle MB data
 # - Have done this more or less I think need to verify esp File Plots
 # #################################
@@ -61,8 +61,8 @@
 # GetNeuronName<-function(Nnum,mask=1:length(MyNeurons)){
 # GetNeuronNum<-function(Nnames,mask=1:length(MyNeurons)){
 
-# source("Greg Data:AnalysingTraceFiles:R:NeuronFunctions5.s")
-# source(file.path(CodeDir,"NeuronFunctions5.s"))
+# source("Greg Data:AnalysingTraceFiles:R:NeuronFunctions5.R")
+# source(file.path(CodeDir,"NeuronFunctions5.R"))
 
 if(!require(rgl) && !require(scatterplot3d)){
 	stop("Please install either rgl or scatterplot3d for 3d plotting")
@@ -1411,7 +1411,7 @@ NeuronNameFromFileName<-function(FileName){
 
 # Guesses the likely input path of a neuron
 # based on its input file name and Cell Type and the current setting
-# of TraceFileDir (from Startup.s)
+# of TraceFileDir (from Startup.R)
 InputFilePath<-function(ANeuron){
     if (is.character(ANeuron)){
 	ANeuron<-MyNeurons[[GetNeuronNum(ANeuron)]]

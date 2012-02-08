@@ -4,7 +4,7 @@
 # Functions to parse AmiraMesh 3D format - the native
 # ouput of the skeletonize plugin and to read and write the density
 # data in Amira file formats.
-# At the moment depends on SWCFunctions.s since the amiramesh 
+# At the moment depends on SWCFunctions.R since the amiramesh 
 # data format can be easily converted to SWC.  However there
 # is some redundancy in this approach
 
@@ -44,7 +44,7 @@
 
 # require(MASS)  # for write.matrix - call removed
 require(tools) # for md5sum
-#source(file.path(CodeDir,"SWCFunctions.s"))
+#source(file.path(CodeDir,"SWCFunctions.R"))
 source(file.path(CodeDir,"GraphTheory.R"))
 
 ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFullHeader=FALSE,Simplify=TRUE,endian){

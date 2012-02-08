@@ -1,4 +1,4 @@
-# MarchetteQhullInterface.s
+# MarchetteQhullInterface.R
 ###########################
 # Code provided by David Marchette to call qhull
 # and then read in results
