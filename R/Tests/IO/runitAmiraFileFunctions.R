@@ -525,3 +525,19 @@ test.ReadAmiraTutorialSurfaceData<-function(){
 		"Failed to read lobus.surf")
 }
 }
+
+test.readGzipAmirameshNeuron<-function(){
+  am3d=read.neuron(file.path(TestDir,"IO","testneuron_am3d.am"))
+  checkException(read.neuron(file.path(TestDir,"IO","testneuron_am3d.am.gz")),
+      silent=TRUE)
+  am3da=read.neuron(file.path(TestDir,"IO","testneuron_am3d_ascii.am"))
+  checkEquals(am3d,am3da)
+  am3daz=read.neuron(file.path(TestDir,"IO","testneuron_am3d_ascii.am.gz"))
+  checkEquals(am3d,am3daz)
+  
+  fcl=read.neuron(file.path(TestDir,"IO","testneuron_fclineset.am"))
+  fclz=read.neuron(file.path(TestDir,"IO","testneuron_fclineset.am.gz"))
+  checkEquals(fcl,fclz)
+  
+}
+
