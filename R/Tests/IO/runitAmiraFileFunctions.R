@@ -527,6 +527,8 @@ test.ReadAmiraTutorialSurfaceData<-function(){
 }
 
 test.readGzipAmirameshNeuron<-function(){
+  closeAllConnections()
+  nopencons.start=length(showConnections())
   am3d=read.neuron(file.path(TestDir,"IO","testneuron_am3d.am"))
   checkException(read.neuron(file.path(TestDir,"IO","testneuron_am3d.am.gz")),
       silent=TRUE)
@@ -538,6 +540,7 @@ test.readGzipAmirameshNeuron<-function(){
   fcl=read.neuron(file.path(TestDir,"IO","testneuron_fclineset.am"))
   fclz=read.neuron(file.path(TestDir,"IO","testneuron_fclineset.am.gz"))
   checkEquals(fcl,fclz)
-  
+  nopencons.end=length(showConnections())
+  checkEquals(nopencons.end,nopencons.start,"Managed to leave a connection open")
 }
 
