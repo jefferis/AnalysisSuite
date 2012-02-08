@@ -165,7 +165,8 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
   if(inherits(filename,'connection')) 
     con=filename
   else {
-    con=file(filename,open='rb')
+    # rt is essential to ensure that readLines behaves with gzipped files
+    con=file(filename,open='rt')
     on.exit(close(con))
   }
   readLines(con, df$LineOffsets[1]-1)
@@ -194,7 +195,8 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
   return(l)
 }
 
-ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
+ReadAmiramesh.Header<-function(con,Verbose=TRUE,
+    CloseConnection=!inherits(con,'connection')){
 	headerLines=NULL
 	if(!inherits(con,"connection")) con<-file(con,open='rt')
 	if(CloseConnection) on.exit(close(con))
