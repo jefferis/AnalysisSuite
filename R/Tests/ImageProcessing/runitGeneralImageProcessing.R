@@ -11,7 +11,7 @@ test.ReadWriteIdentityRegistration<-function(){
 test.AutoCropNrrd<-function(){
 	tmpdir=tempfile()
 	dir.create(tmpdir)
-	lhmaskfile=file.path(ObjDir,"LHMask.nrrd")
+	lhmaskfile=file.path(TestDir,"Data","LHMask.nrrd")
 	AutoCropNrrd(lhmaskfile,outfile=file.path(tmpdir,"LHMask.nrrd"))
 	h=ReadNrrdHeader(file.path(tmpdir,"LHMask.nrrd"))
 	imageSize=c(44,42,40)

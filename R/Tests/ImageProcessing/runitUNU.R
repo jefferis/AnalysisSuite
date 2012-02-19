@@ -3,7 +3,7 @@ test.NrrdFlip<-function(){
 	dir.create(tmpdir)
 	on.exit(unlink(tmpdir,recursive=TRUE))
 
-	origlhmaskfile=file.path(ObjDir,"LHMask.nrrd")
+	origlhmaskfile=file.path(TestDir,"Data","LHMask.nrrd")
 	lhmaskfile=file.path(tmpdir,"LHMask.nrrd")
 	# make a copy of the file, ensuring that it has content field
 	AddOrReplaceNrrdHeaderField(origlhmaskfile,lhmaskfile,

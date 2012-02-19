@@ -5,7 +5,7 @@ test.AddOrReplaceNrrdHeaderField<-function(){
 	tmpdir=tempfile()
 	dir.create(tmpdir)
 	on.exit(unlink(tmpdir,recursive=TRUE))
-	lhmaskfile=file.path(ObjDir,"LHMask.nrrd")
+	lhmaskfile=file.path(TestDir,"Data","LHMask.nrrd")
 	
 	# check we error out when providing a bad field
 	checkException(
@@ -56,7 +56,7 @@ test.AddOrReplaceNrrdHeaderFieldInPlace<-function(){
 	dir.create(tmpdir)
 	on.exit(unlink(tmpdir,recursive=TRUE))
 	
-	origlhmaskfile=file.path(ObjDir,"LHMask.nrrd")
+	origlhmaskfile=file.path(TestDir,"Data","LHMask.nrrd")
 	lhmaskfile=file.path(tmpdir,basename(origlhmaskfile))
 	file.copy(origlhmaskfile,lhmaskfile)
 	
@@ -80,7 +80,7 @@ test.AddOrReplaceNrrdHeaderFieldDetached<-function(){
 	dir.create(tmpdir)
 	on.exit(unlink(tmpdir,recursive=TRUE))
 	
-	origlhmaskfile=file.path(ObjDir,"LHMask.nrrd")
+	origlhmaskfile=file.path(TestDir,"Data","LHMask.nrrd")
 	lhmaskfile=file.path(tmpdir,basename(origlhmaskfile))
 	file.copy(origlhmaskfile,lhmaskfile)
 	
@@ -98,7 +98,7 @@ test.NrrdMakeDetachedHeaderForNrrd<-function(){
 	dir.create(tmpdir)
 	on.exit(unlink(tmpdir,recursive=TRUE))
 	
-	origlhmaskfile=file.path(ObjDir,"LHMask.nrrd")
+	origlhmaskfile=file.path(TestDir,"Data","LHMask.nrrd")
 	lhmaskfile=file.path(tmpdir,basename(origlhmaskfile))
 	file.copy(origlhmaskfile,lhmaskfile)
 	
