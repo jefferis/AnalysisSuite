@@ -86,10 +86,7 @@ NrrdResample<-function(infile,outfile,size,voxdims=NULL,
 	if(!is.null(voxdims)){
 		# we have a target voxel size instead of a standard size specification
 		# first fetch existing voxel size
-		h=ReadNrrdHeader(infile)
-		origvd=diag(h$`space directions`)
-		# occasionally will get -ve space dirs
-		size=abs(origvd/voxdims)
+		size=NrrdVoxDims(infile)/voxdims
 	}
 	if(is.integer(size)) size=paste("--size",paste(size,collapse=" "))
 	else {
