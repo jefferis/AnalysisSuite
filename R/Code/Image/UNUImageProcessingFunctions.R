@@ -51,6 +51,10 @@ NrrdMinMax<-function(filename, Blind8=FALSE, ...){
 #' Resample a nrrd with simple or complex filters
 #'
 #' wraps unu resample
+#' 
+#' When size is explicitly an integer (e.g. c(512L,512L,100L) then it is 
+#' assumed to represent the size of the desired output in pixels.
+#' 
 #' unu resample defaults to cell centering in the asbence of information, but I 
 #' prefer node. 
 #' 
@@ -62,7 +66,8 @@ NrrdMinMax<-function(filename, Blind8=FALSE, ...){
 #'   * a doubling in the space directions field
 #' @param infile 
 #' @param outfile 
-#' @param size Scale factor, numeric vector, NA=> don't touch
+#' @param size Numeric vector of scale factors (NA=> don't touch) or 
+#'   integer vector of pixel dimensions. 
 #' @param voxdims Target voxel dimensions
 #' @param centering Whether to assume node or cell centering if not specified
 #'   in input file.
