@@ -621,7 +621,7 @@ is.nrrd<-function(f,ReturnVersion=FALSE,TrustSuffix=FALSE){
 #' If nhdr=NA then new header is returned but not written.
 #' @param nrrd Full path to a nrrd file
 #' @param nhdr Full path nhdr file to be written
-#' @return invisbly returned character vector with new header
+#' @return invisibly returned character vector with new header
 #' @export
 NrrdMakeDetachedHeaderForNrrd<-function(nrrd,nhdr=paste(nrrd,sep='.','nhdr')){
 	h=ReadNrrdHeader(nrrd)
