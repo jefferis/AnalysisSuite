@@ -638,24 +638,30 @@ NrrdMakeDetachedHeaderForNrrd<-function(nrrd,nhdr=paste(nrrd,sep='.','nhdr')){
 
 #' Return voxel dimensions (by default absolute voxel dimensions)
 #' 
-#' @param f path to nrrd/nhdr file
+#' NB Can handle off diagonal terms in space directions matrix, 
+#' BUT assumes that space direction vectors are orthogonal. 
+#' @param f path to nrrd/nhdr file or a list containing a nrrd header
 #' @param ReturnAbsoluteDims Defaults to returning absolute value of dims even if
 #'        there are any negative space directions
 #' @return voxel dimensions as numeric vector
 #' @author jefferis
+#' @seealso \link{\code{ReadNrrdHeader}}
 #' @export
 NrrdVoxDims<-function(f,ReturnAbsoluteDims=TRUE){
-	h=ReadNrrdHeader(f)
-	if(!is.null(h$`space directions`))
-		vd=diag(h$`space directions`)
-	else if(!is.null(h$`spacings`))
-		vd=h$`spacings`
-	else {
+	if(is.character(f))
+		h=ReadNrrdHeader(f)
+	else
+		h=f
+	if('space directions'%in%names(h)){
+		voxdims=rowSums(sqrt(h[['space directions']]^2))
+	} else if ('spacings'%in%names(h)){
+		voxdims=h[["spacings"]]
+	} else {
 		warning("Unable to find voxel dimensions in nrrd: ",f)
 		vd=rep(NA,h$dimension)
 	}
 	
-	# occasionally will get -ve space dirs
-	if(ReturnAbsoluteDims) abs(vd)
-	else vd
+	# Sometimes get -ve space dirs, take abs if requested
+	if(ReturnAbsoluteDims) abs(voxdims)
+	else voxdims
 }
