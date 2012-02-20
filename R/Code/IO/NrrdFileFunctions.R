@@ -194,19 +194,17 @@ Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,ReadData=TRUE,AttachFullH
 		close(fc)
 	}
 	if(AttachFullHeader) attr(d,"header")=h
-	
-	if('space directions'%in%names(h)){
-		voxdims=rowSums(sqrt(h[['space directions']]^2))
-	} else if ('spacings'%in%names(h)){
-		voxdims=h[["spacings"]]
-	} else {
-		# no pixel size info, so just return
+	voxdims<-NrrdVoxDims(h,ReturnAbsoluteDims = FALSE)
+	if(any(is.na(voxdims))){
+		# missing pixel size info, so just return
 		return(d)
 	}
 	latticeBoundingBox=rbind(c(0,0,0),(h$sizes-1)*voxdims)
 	if(!missing(origin)){
 		latticeBoundingBox=t(origin+t(latticeBoundingBox))
 	} else if('space origin'%in%names(h)){
+		# FIXME should space origin interpretation depend on node vs cell?
+	  # (and we are assuming that we will be working as node in R)
 		latticeBoundingBox=t(h[['space origin']]+t(latticeBoundingBox))
 	}
 	attr(d,"BoundingBox")<-as.vector(latticeBoundingBox)
