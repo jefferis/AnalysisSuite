@@ -45,8 +45,8 @@
 
 # Source ... For MakeStartEndList function
 # (nb original version in this file had an error)
-source(file.path(CodeDir,"ArbourDensity3D.R")) 
-source(file.path(CodeDir,"dist3D_Segment_to_Segment.R")) 
+#source(file.path(CodeDir,"ArbourDensity3D.R")) 
+#source(file.path(CodeDir,"dist3D_Segment_to_Segment.R")) 
 
 #@+others
 #@+node:jefferis.20060305214152.2:PotentialSynapses.neuron

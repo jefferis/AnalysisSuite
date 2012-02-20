@@ -42,10 +42,7 @@
 
 # source(file.path(CodeDir,"AmiraFileFunctions.R"))
 
-# require(MASS)  # for write.matrix - call removed
 require(tools) # for md5sum
-#source(file.path(CodeDir,"SWCFunctions.R"))
-source(file.path(CodeDir,"GraphTheory.R"))
 
 ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFullHeader=FALSE,Simplify=TRUE,endian){
 	# attempt to write a generic amiramesh reader

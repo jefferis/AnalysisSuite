@@ -51,10 +51,6 @@
 # [0, 0, 1, 0]
 # [0, 0, 0, 1]
 
-# For functions to read registration files
-source(file.path(CodeDir,"ReadIGSFiles.R"))
-
-
 matI=as.matrix( rbind(
 		c(1,0,0,0),
 		c(0,1,0,0),
