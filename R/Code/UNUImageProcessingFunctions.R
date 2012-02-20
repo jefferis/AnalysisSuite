@@ -258,6 +258,11 @@ NrrdCrc<-function(infile,UseGzip=FALSE,FastHeader=TRUE){
 	# can also use gzip but this is much slower since have to copy
 	# unu data to temporary file
 	if(!file.exists(infile)) return(NA)
+
+	ext=tolower(sub(".*\\.([^.]+)$","\\1",basename(infile)))
+	if(ext=='nhdr') FastHeader=FALSE
+
+	h=NULL
 	if(FastHeader){
 		# quick and dirty reading of header
 		con<-file(infile,'rb')
@@ -294,7 +299,14 @@ NrrdCrc<-function(infile,UseGzip=FALSE,FastHeader=TRUE){
 		if(inherits(crc,'try-error')) crc=NA		
 	} else {
 		# TODO Fix handling of nhdr files
-		if(!FastHeader){
+		if(!is.null(h) && !is.null(h$datafile)){
+			if(length(h$datafile)>1)
+				stop("Don't know how to handle more than 1 datafile")
+			if(dirname(h$datafile)==".")
+				h$datafile=file.path(dirname(infile),h$datafile)
+			con=file(h$datafile,open='rb')
+			on.exit(close(con),add=TRUE)
+		} else if(!FastHeader){
 			con=file(infile,open='rb')
 			on.exit(close(con),add=TRUE)
 		}
