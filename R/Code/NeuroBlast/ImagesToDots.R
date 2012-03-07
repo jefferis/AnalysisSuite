@@ -325,6 +325,32 @@ DotPropertiesFromFile<-function(f, xformfun=NULL, ...){
 	l
 }
 
+#' Transform dot property object using specified registration
+#'
+#' @param dp dotprops object to transform
+#' @param reg affine/warping registration file/folder
+#' @param k Number of neighbour points to use when recalculating dot properties
+#' @param RecalculateDotProps Whether to recalculate tangent vector etc after 
+#'   applying transformation
+#' @param ... additional arguments passed to transformedPoints
+#' @return return points
+#' @export
+#' @seealso \code{\link{transformedPoints}}
+transform.dotprops<-function(dp,reg,k, RecalculateDotProps=T,na.action=c('warn','drop','error'),...) {
+	na.action=match.arg(na.action)
+	pointst=transformedPoints(xyzs=dp$points,warpfile=reg,transforms='warp',...)[['warp']]
+	naPoints=is.na(pointst[,1])
+	if(any(naPoints)){
+		if(na.action=='warn')
+			warn("Dropping ",sum(naPoints),' points')
+		else if (na.action=='error')
+			stop("Error: Failed to transform ",sum(naPoints),' points')
+		
+		pointst=pointst[!naPoints,]
+	}
+	dpn=DotProperties(pointst,k)
+}
+
 WeightedNNBasedLinesetMatching.dotprops<-function(dp1,dp2,...){
 	WeightedNNBasedLinesetMatching(dp1$points,dp2$points,dvs1=dp1$vect,dvs2=dp2$vect,...)
 }
