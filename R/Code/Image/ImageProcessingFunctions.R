@@ -283,12 +283,29 @@ SimplifyLabelFile<-function(f,omitMaterials="CellBody",includeMaterials=NULL)
 	d
 }
 
-CMTKStatistics<-function(f,exe="statistics"){
-	if(length(f)>1) sapply(f,CMTKStatistics,exe=exe)
-	rval=system2(exe,f,stdout=TRUE)
+#' Calculate image statistics for a nrrd or other CMTK compatible file
+#'
+#' When given a mask returns a table that includes the number of non-zero voxels
+#' in the main image for every level of label in the mask image
+#' @param f Path to image file (any CMTK compatible format)
+#' @param mask Optional path to a mask file
+#' @param masktype Whether mask should be treated as label field or binary mask
+#'        (default label)
+#' @return return dataframe describing results
+#' @export
+#' @examples
+#' #CMTKStatistics('someneuron.nrrd',mask='neuropilregionmask.nrrd')
+CMTKStatistics<-function(f,mask,masktype=c("label","binary"),exe="statistics"){
+	masktype=match.arg(masktype)
+	if(length(f)>1) return(sapply(f,CMTKStatistics,mask=mask,masktype=masktype,exe=exe))
+	args=f
+	if(!missing(mask)){
+		args=c(ifelse(masktype=='label','--Mask','--mask'),mask,args)
+	}
+	rval=system2(exe,args,stdout=TRUE)
 	tc=textConnection(rval)
 	on.exit(close(tc))
-	read.table(tc,header=TRUE,skip=1)
+	read.table(tc,header=TRUE,skip=1,comment.char="")
 }
 
 CMTKSimilarity<-function(floating,reference,exe="similarity",simargs=NULL,...){
