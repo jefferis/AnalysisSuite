@@ -305,7 +305,11 @@ CMTKStatistics<-function(f,mask,masktype=c("label","binary"),exe="statistics"){
 	rval=system2(exe,args,stdout=TRUE)
 	tc=textConnection(rval)
 	on.exit(close(tc))
-	read.table(tc,header=TRUE,skip=1,comment.char="")
+	t=try(read.table(tc,header=TRUE,skip=1,comment.char=""))
+	if(inherits(t,'try-error')){
+		t=read.table(tc,header=FALSE,skip=2,comment.char="")
+	}
+	t
 }
 
 CMTKSimilarity<-function(floating,reference,exe="similarity",simargs=NULL,...){
