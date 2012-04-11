@@ -385,7 +385,7 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,
 				items=scan(tc,what="",quiet=TRUE)[-1]
 				close(tc)
 				attr(items,"quoted")=TRUE
-			}q
+			}
 		}
 		# set the list element!
 		if(CheckLabel)
