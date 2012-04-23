@@ -186,7 +186,7 @@ $this proc setCloneColour { clone r g b } {
 		$clone range setValue 1 [expr $upperrange - 1]
 		$clone range setValue 1 $upperrange
 		$clone colormap setDefaultColor $r $g $b
-		$clone colormap setDefaultAlpha 0.500000
+		$clone colormap setDefaultAlpha 0.35
 		$clone fire
 	}
 }
@@ -233,6 +233,20 @@ $this proc setAllCloneAlphaScales { alpha } {
 	set glomActive ""
 	foreach clone [$this getVar glomActive] {
 		$this setCloneAlphaScale $clone $alpha
+	}
+}
+
+$this proc setCloneColormapAlpha { clone alpha } {
+	if {[exists $clone]} {
+		$clone colormap setDefaultAlpha $alpha
+		$clone fire
+	}
+}
+
+$this proc setAllCloneColormapAlphas { alpha } {
+	set glomActive ""
+	foreach clone [$this getVar glomActive] {
+		$this setCloneColormapAlpha $clone $alpha
 	}
 }
 
@@ -365,7 +379,7 @@ $this proc loadFiles {} {
 				$lineView range setValue 0 15
 				$lineView range setValue 1 255
 				$lineView colormap setDefaultColor [$this red getValue] [$this green getValue] [$this blue getValue]
-				$lineView colormap setDefaultAlpha 0.500000
+				$lineView colormap setDefaultAlpha 0.35
 				# this is required to update the Voltex
 				$lineView doIt hit
 				$lineView fire
