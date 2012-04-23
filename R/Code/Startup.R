@@ -34,7 +34,26 @@
 #ENDMAINCOPYRIGHT
 
 # Identify location of startup script ...
-CodeDir<-dirname(attr(body(function() {}),'srcfile')$filename)
+if(interactive()){
+	CodeDir<-dirname(attr(body(function() {}),'srcfile')$filename)
+} else {
+	if(exists("RootDir")){
+		# somebody has already defined a variable called RootDir, which is assumed to be the root dir of AnalysisSuite
+		CodeDir<-file.path(RootDir,"R","Code")
+	} else {
+		# guess!
+		CodeDir=path.expand("~/projects/AnalysisSuite/R/Code")
+	}
+	if(!file.exists(CodeDir)){
+		stop("Unable to locate AnalysisSuite. I was looking in: ",CodeDir,
+		". You must either\n",
+		" 1) Put AnalysisSuite there/symlink it\n",
+		" 2) Or run R in --interactive mode\n",
+		" 3) Define a variable called RootDir in your R session that points to the AnalysisSute directory\n",
+		" 4) Or hard code location in your copy of AnalysisSuite!\n")
+	}
+}
+
 # and use this to set other key locations
 HomeDir<-dirname(CodeDir)
 RootDir<-dirname(HomeDir)
