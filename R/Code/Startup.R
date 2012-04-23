@@ -113,7 +113,7 @@ ExamplesDir=file.path(HomeDir,"examples")
 FigDir=file.path(HomeDir,"fig")
 FigOutDir=file.path(HomeDir,"figout")
 
-sourcelist<-list.files(path=CodeDir,patt="\\.[sR]$")
+sourcelist<-list.files(path=CodeDir,patt="\\.[sR]$",recursive=TRUE)
 sourcelist<-setdiff(sourcelist,"Startup.R")
 SourcePaths<-file.path(CodeDir,sourcelist)
 for (MyPath in SourcePaths) {

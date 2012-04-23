@@ -4,7 +4,7 @@
 # Functions to parse AmiraMesh 3D format - the native
 # ouput of the skeletonize plugin and to read and write the density
 # data in Amira file formats.
-# At the moment depends on SWCFunctions.s since the amiramesh 
+# At the moment depends on SWCFunctions.R since the amiramesh 
 # data format can be easily converted to SWC.  However there
 # is some redundancy in this approach
 
@@ -42,10 +42,7 @@
 
 # source(file.path(CodeDir,"AmiraFileFunctions.R"))
 
-# require(MASS)  # for write.matrix - call removed
 require(tools) # for md5sum
-#source(file.path(CodeDir,"SWCFunctions.s"))
-source(file.path(CodeDir,"GraphTheory.R"))
 
 ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFullHeader=FALSE,Simplify=TRUE,endian){
 	# attempt to write a generic amiramesh reader
@@ -74,7 +71,7 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
 	} else {
 		close(con)
 		#print(parsedHeader)
-		filedata=.ReadAmiramesh.ASCIIData(filename,parsedHeader,DataSectionsToRead,Verbose=Verbose)
+		filedata=.ReadAmiramesh.ASCIIDataFully(filename,parsedHeader,DataSectionsToRead,Verbose=Verbose)
 		#cat(length(filedata))
 	}
 
@@ -150,7 +147,53 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
 	return(l)		
 }
 
-ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
+#' Read ASCII AmiraMesh data without assuming anything about line spacing
+#' between sections
+#' @param filename file (or connection) to read
+#' @param df dataframe containing details of data in file
+#' @param DataSectionsToRead character vector containing names of sections
+#' @param Verbose Print status messages
+#' @return list of named data chunks
+#' @author jefferis
+.ReadAmiramesh.ASCIIDataFully<-function(filename,df,DataSectionsToRead,Verbose=TRUE){
+  l=list()
+#  df=subset(df,DataName%in%DataSectionsToRead)
+  df=df[order(df$DataPos),]
+  if(inherits(filename,'connection')) 
+    con=filename
+  else {
+    # rt is essential to ensure that readLines behaves with gzipped files
+    con=file(filename,open='rt')
+    on.exit(close(con))
+  }
+  readLines(con, df$LineOffsets[1]-1)
+  for(i in seq(len=nrow(df))){
+    # read some lines until we get to a data section
+    nskip=0
+    while( substring(t<-readLines(con,1),1,1)!="@"){nskip=nskip+1}
+    if(Verbose) cat("Skipped",nskip,"lines to reach next data section")
+    if(df$DataLength[i]>0){
+      if(Verbose) cat("Reading ",df$DataLength[i],"lines in file",filename,"\n")
+      
+      if(df$RType[i]=="integer") whatval=integer(0) else whatval=numeric(0)
+      datachunk=scan(con,what=whatval,n=df$SimpleDataLength[i],quiet=!Verbose)
+      # store data if required
+      if(df$DataName[i]%in%DataSectionsToRead){
+        # convert to matrix if required
+        if(df$SubLength[i]>1){
+          datachunk=matrix(datachunk,ncol=df$SubLength[i],byrow=TRUE)
+        }
+        l[[df$DataName[i]]]=datachunk
+      }
+    } else {
+      if(Verbose) cat("Skipping empty data section",df$DataName[i],"\n")
+    }
+  }
+  return(l)
+}
+
+ReadAmiramesh.Header<-function(con,Verbose=TRUE,
+    CloseConnection=TRUE){
 	headerLines=NULL
 	if(!inherits(con,"connection")) con<-file(con,open='rt')
 	if(CloseConnection) on.exit(close(con))
@@ -360,8 +403,11 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 	# function to read in the basic data from the 
 	# files produced by the Amira Skeletonize plugin
 	
-	# 	# Check for header confirming file type
-	firstLine=readLines(filename,n=1)
+	# Check for header confirming file type
+  con=file(filename,open='rt')
+	firstLine=readLines(con,n=1)
+  conclass=summary(con)$class
+  
 	if(!any(grep("#\\s+amiramesh",firstLine,ignore.case=T))){
 		warning(paste(filename,"does not appear to be an AmiraMesh 3D file"))
 		return(NULL)
@@ -369,10 +415,18 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 	filetype=ifelse(any(grep("binary",firstLine,ignore.case=T)),"binary","ascii")
 	if(length(grep("LITTLE.ENDIAN",firstLine,ignore.case=TRUE))>0) endian="little"
 	else endian='big'
+  
+  if(filetype=='binary'){
+    if(conclass == 'gzfile')
+      stop("Cannot read gzipped binary amiramesh format files")
+    # else need to reopen connection to regular binary file
+    close(con)
+    con=file(filename,open='rb')
+  }
 	
 	# Read Header
-	headerLines=NULL
-	con=file(filename,open='rb')
+  # nb have to start from scratch if binary, or save first line if text
+	headerLines <- if(filetype=="ascii") firstLine else NULL
 	#	while( (thisLine<-readLines(con,1))!="@1"){
 	while( !isTRUE(charmatch("@1",thisLine<-readLines(con,1))==1) ){
 		headerLines=c(headerLines,thisLine)
@@ -801,7 +855,8 @@ ReadNeuronFromAM3D<-function(AM3DFile,Components="Axon",OldNeuron=NULL,ReOrient=
 
 
 WriteNeuronToAM<-function(ANeuron,AMFile=NULL,
-	suffix="am",Force=F,MakeDir=T,WriteAllSubTrees=TRUE,ScaleSubTreeNumsTo1=TRUE){
+	suffix="am",Force=F,MakeDir=T,WriteAllSubTrees=TRUE,ScaleSubTreeNumsTo1=TRUE,
+  WriteRadius=TRUE){
 	# write out a neuron in the basic AmiraMesh format which is the native format
 	# of amira for linesets (as opposed to the specialised skeletonize AM3D)
 	# WriteAllSubTrees will write out all the stored subtrees in a neuron 
@@ -865,11 +920,17 @@ WriteNeuronToAM<-function(ANeuron,AMFile=NULL,
 	cat("Parameters {\n",file=fc)
 	cat("    ContentType \"HxLineSet\"\n",file=fc)
 	cat("}\n\n",file=fc)
-
+  sectionNumbers=c(Coordinates=1,LineIdx=2)
 	cat("Vertices { float[3] Coordinates } = @1\n",file=fc)
-	cat("Vertices { float Data } = @2\n",file=fc)
-	cat("Lines { int LineIdx } = @3\n",file=fc)
-	if(WriteAllSubTrees) cat("Vertices { float Data2 } =@4\n",file=fc)
+  if(WriteRadius){
+    cat("Vertices { float Data } = @2\n",file=fc)
+    sectionNumbers=c(Coordinates=1,Data=2,LineIdx=3)
+  }
+	cat("Lines { int LineIdx } = @",sectionNumbers['LineIdx'],"\n",sep="",file=fc)
+	if(WriteAllSubTrees) {
+    sectionNumbers=c(sectionNumbers,Data2=max(sectionNumbers)+1)
+    cat("Vertices { float Data2 } =@",sectionNumbers['Data2'],"\n",sep="",file=fc)
+  }
 	cat("\n",file=fc)
 	
 	# Write the 3D coords
@@ -877,22 +938,21 @@ WriteNeuronToAM<-function(ANeuron,AMFile=NULL,
 	#write(t(ANeuron$d[,c("X","Y","Z")]),ncolumns=3,file=fc)
 	write.table(ANeuron$d[chosenVertices,c("X","Y","Z")],col.names=F,row.names=F,file=fc)
 	
+  
 	# Write the Radii
-	cat("\n@2 #",nVertices,"width values\n",file=fc)
-	# NB Divide width by 2
-	#write(ANeuron$d$W/2,ncolumns=1,file=fc)
-	#write.matrix(ANeuron$d$W/2,file=fc)
-	write.table(ANeuron$d$W[chosenVertices]/2,col.names=F,row.names=F,file=fc)
-
+  if(WriteRadius){
+      cat("\n@",sectionNumbers['Data']," # ",nVertices," width values\n",sep="",file=fc)
+      # NB Divide width by 2
+      write.table(ANeuron$d$W[chosenVertices]/2,col.names=F,row.names=F,file=fc,na='NaN')
+  }
+  
 	# Write the segment information
-	cat("\n@3 #",nLinePoints,"line segements\n",file=fc)
+	cat("\n@",sectionNumbers['LineIdx']," #",nLinePoints,"line segments\n",sep="",file=fc)
 	# nb have to -1 from each point because amira is 0 indexed
 	# AND add -1 to each segment as a terminator
 	tmp=lapply(SegList,function(x) cat(x-1,"-1 \n",file=fc) )
-	#tmp=do.call("paste",ANeuron$SegList)
-	#writeLines(tmp,con=fc)
 	if(WriteAllSubTrees) {
-		cat("\n@4 # subtrees\n",file=fc)
+    cat("\n@",sectionNumbers['Data2']," # subtrees\n",sep="",file=fc)
 		if(ScaleSubTreeNumsTo1) ANeuron$d$SubTree=ANeuron$d$SubTree/max(ANeuron$d$SubTree)
 		write.table(ANeuron$d$SubTree,col.names=F,row.names=F,file=fc)
 	}
@@ -930,12 +990,14 @@ WritePointsToAM<-function(d,AMFile=NULL,suffix="am",Force=F,MakeDir=T){
 		warning(paste("Unable to write to file",AMFile))
 		return()
 	}
-
-	if(is.null(colnames(d))){
-		if(ncol(d)!=3) stop("Unable to identify X,Y,Z coordinates")
-		colnames(d)=c("X","Y","Z")
+  
+  # assign column names 
+  if(ncol(d)==3){
+    colnames(d)=c("X","Y","Z")
+  } else if(is.null(colnames(d))){
+		stop("Unable to identify X,Y,Z coordinates")
 	} else {
-		colnames(d)=c("X","Y","Z")
+      d=d[,c("X","Y","Z")]
 	}
 	
 	cat("Writing to",AMFile,"\n")
@@ -1549,14 +1611,6 @@ DecodeRLEBytes<-function(d,uncompressedLength){
 	rval
 }
 
-ReadRLEBytes<-function(con,length,offset=0){
-	# Expects a connection + length/offset
-	if(!is.connection(con)) con=file(con,open='rb')
-	skip(con,offset)
-	ba=readBin(con,n=length,what=raw(),size=1,signed=T)
-	return(DecodeRLEBytes(ba))
-}
-
 ReadAmiraLandmarks<-function(filename,Verbose=FALSE,CoordinatesOnly=TRUE){
 	r=ReadAmiramesh(filename,AttachFullHeader=TRUE,Verbose=Verbose,Simplify=FALSE)
 	headerLines=attr(r,"header")
@@ -1647,4 +1701,54 @@ WriteGenericAmiramesh<-function(filename,d,ContentType){
 		write.table(d[[i]],row.names=FALSE,col.names=FALSE,sep="\t",file=filename,append=TRUE)
 		cat("\n",file=filename,append=TRUE)
 	}		
+}
+
+ReadNeuronFromAM<-function(amfile){
+  amdata=ReadAmiramesh(amfile)
+  if(!all(c("Coordinates","LineIdx")%in%names(amdata)))
+    stop("Cannot find required data sections")
+  
+  coords=as.data.frame(amdata$Coordinates)
+  colnames(coords)=c("X","Y","Z")
+  
+  # See if we can find some raduis data in one of the other data sections
+  radiusData=amdata[!names(amdata)%in%c("Coordinates","LineIdx")]
+  lad=length(radiusData)
+  if(lad==0){
+    warning("No width data for neuron:",amfile)
+    coords[,"W"]=NA
+  } else if (lad==1) {
+    # assume Amira provides radius
+    coords[,"W"]=radiusData[[1]]*2
+  } else if (lad>1) {
+    warning("Assuming that Data section ",lad," (",names(radiusData)[lad],") specifies radius")
+    coords[,"W"]=radiusData[[lad]]*2
+  }
+  
+  coords=cbind(PointNo=seq(1:nrow(coords)),Label=2,coords)
+  
+  # extract points that define lines (and immediately convert to 1-indexed)
+  lpts = amdata$LineIdx+1
+  lpts[lpts==0]=NA
+  terms=which(is.na(lpts))
+  segs=rep(1:length(terms),diff(c(0,terms)))
+  segs[is.na(lpts)]=NA
+  SegList=split(lpts,segs)
+  names(SegList)<-NULL
+  
+  SegEndPoints=sapply(SegList,function(s) c(s[1],s[length(s)]))
+  t=table(unlist(SegEndPoints))
+  as.neuron(list(
+          NeuronName=NeuronNameFromFileName(amfile),
+          InputFileName=amfile,
+          CreatedAt=Sys.time(),
+          NodeName=Sys.info()["nodename"],
+          InputFileStat=file.info(amfile)[1,],
+          InputFileMD5=md5sum(path.expand(amfile)),
+          NumPoints=nrow(coords),
+          StartPoint=lpts[1],
+          EndPoints=as.integer(names(which(t==1))),
+          BranchPoints=as.integer(names(which(t>1))),
+          NumSegs=length(SegList),
+          SegList=SegList,d=coords))
 }

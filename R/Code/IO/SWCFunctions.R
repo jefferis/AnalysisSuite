@@ -1,4 +1,4 @@
-# SWCFunctions.s
+# SWCFunctions.R
 # #################################
 # This file contains functions for reading in Neurons 
 # in SWC format.  These have been superseded by functions
@@ -41,7 +41,7 @@
 #################
 #ENDMAINCOPYRIGHT
 
-# source(file.path(CodeDir,"SWCFunctions.s"))
+# source(file.path(CodeDir,"SWCFunctions.R"))
 
 # A typical use would be:
 # MyNeuron<-ParseSWCTree(ReadSWCFile("A:File:Path:JL2R.swc"),"JL2R")

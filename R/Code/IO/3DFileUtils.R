@@ -1,4 +1,4 @@
-# 3DFileUtils.s
+# 3DFileUtils.R
 # #############
 # These routines write out a neuron into a POV file
 # suitable for use with the POV ray tracer
@@ -8,7 +8,7 @@
 # Finally there is also a routine to convert a SWC file directly to
 # POV format
 # ########
-# depends on NeuronFunctions4.s
+# depends on NeuronFunctions4.R
 # GSXEJ 020301
 
 #RELEASE
@@ -43,7 +43,7 @@
 #################
 #ENDMAINCOPYRIGHT
 
-# source(file.path(CodeDir,"3DFileUtils.s"))
+# source(file.path(CodeDir,"3DFileUtils.R"))
 
 # This works except for the fact that it writes "C" instead of C in the outfile
 # OK - fixed that problem - I needed the quote=F option in write.table

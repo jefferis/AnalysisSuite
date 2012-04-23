@@ -1,4 +1,4 @@
-# NeuronKeyPoints.s
+# NeuronKeyPoints.R
 # The functions in this file should allow 
 # the key points of the neuron to be picked out 
 # by the user.
@@ -39,7 +39,7 @@
 #################
 #ENDMAINCOPYRIGHT
 
-# Depends on functions in NeuronFunctions3.s
+# Depends on functions in NeuronFunctions3.R
 # 
 # Neuron Long.GetKeyPoints<-function(ANeuron2){
 # Neuron GetKeyPoints<-function(ANeuron2){
@@ -48,7 +48,7 @@
 # MBPoints AskForMBPoints<-function(ANeuron)
 # LHBranchPoint AskForLHBranchPoint<-function(ANeuron)
 
-# source(file.path(CodeDir,"NeuronKeyPoints2.s"))
+# source(file.path(CodeDir,"NeuronKeyPoints2.R"))
 
 
 # GetKeyPointsofSomeNeurons

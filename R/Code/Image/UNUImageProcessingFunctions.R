@@ -35,21 +35,64 @@ Nrrd2op<-function(infiles,outfile,fun=c("max","min","+", "-", "x", "/"),
 
 #' Return range of values in nrrd file (interface to unu minmax command)
 #' @param filename nrrd file containing data
+#' @param Blind8 Assume 8 bit data has range 0-255 (or -127-127), default F.
 #' @param ... passed to \link{\code{system}} function
 #' @return c(min,max) or c(NA,NA) like R's \link{\code{range}} function
 #' @author jefferis
 #' @export
-NrrdMinMax<-function(filename,...){
-	minmax=.callunu("minmax",shQuote(filename),intern=TRUE,...)
+NrrdMinMax<-function(filename, Blind8=FALSE, ...){
+	args=shQuote(filename)
+	if(Blind8) args=c(args,"-blind8 true")
+	minmax=.callunu("minmax",args,intern=TRUE,...)
 	if(length(minmax)==0) return(c(NA,NA))
 	as.numeric(sub("(min|max): ","",minmax))
 }
 
-NrrdResample<-function(infile,outfile,size,otherargs=NULL,gzip=TRUE,
-	suffix=NULL,CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE,...){
+#' Resample a nrrd with simple or complex filters
+#'
+#' wraps unu resample
+#' 
+#' When size is explicitly an integer (e.g. c(512L,512L,100L) then it is 
+#' assumed to represent the size of the desired output in pixels.
+#' 
+#' unu resample defaults to cell centering in the asbence of information, but I 
+#' prefer node. 
+#' 
+#' * downsampling a **cell** image (e.g. x2) will result in 
+#'   * an origin shift **iff** an origin was specified in the input file
+#'   * a change in the space directions that is not an exact multiple of the downsampling factor 
+#' * downsampling a node image (e.g. x2) will result in:
+#'   * no change in origin
+#'   * a doubling in the space directions field
+#' @param infile 
+#' @param outfile 
+#' @param size Numeric vector of scale factors (NA=> don't touch) or 
+#'   integer vector of pixel dimensions. 
+#' @param voxdims Target voxel dimensions
+#' @param centering Whether to assume node or cell centering if not specified
+#'   in input file.
+#' @param otherargs Passed to unu resample
+#' @param gzip 
+#' @param suffix 
+#' @param CreateDirs 
+#' @param Verbose 
+#' @param Force 
+#' @param UseLock 
+#' @param ... Additional params passed to .callunu
+#' @return 
+#' @author jefferis
+#' @export
+NrrdResample<-function(infile,outfile,size,voxdims=NULL,
+		centering=c("cell","node"),otherargs=NULL,gzip=TRUE, suffix=NULL,
+		CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE,...){
 
+	centering=match.arg(centering)
 	if(!file.exists(infile)) stop("infile: ",infile," does not exist")
-
+	if(!is.null(voxdims)){
+		# we have a target voxel size instead of a standard size specification
+		# first fetch existing voxel size
+		size=NrrdVoxDims(infile)/voxdims
+	}
 	if(is.integer(size)) size=paste("--size",paste(size,collapse=" "))
 	else {
 		size=paste("--size",paste("x",size,sep="",collapse=" "))
@@ -82,7 +125,7 @@ NrrdResample<-function(infile,outfile,size,otherargs=NULL,gzip=TRUE,
 		else
 			return(FALSE)
 	}
-
+	otherargs=c(otherargs,"--center",centering)
 	cmdargs=paste(size, paste(otherargs,collapse=" "),"-i",shQuote(infile))
 	if(gzip)
 		cmdargs=paste(cmdargs,"| unu save -f nrrd -e gzip")
@@ -208,7 +251,7 @@ NrrdTestDataLength<-function(infile,defaultReturnVal=TRUE){
 	}
 }
 
-NrrdCrc<-function(infile,UseGzip=FALSE){
+NrrdCrc<-function(infile,UseGzip=FALSE,FastHeader=TRUE){
 	# gets the CRC (hash) of a gzip encoded nrrd
 	# Defaults to a quick method based on
 	# knowledge of gzip file format from:
@@ -217,28 +260,61 @@ NrrdCrc<-function(infile,UseGzip=FALSE){
 	# can also use gzip but this is much slower since have to copy
 	# unu data to temporary file
 	if(!file.exists(infile)) return(NA)
-	h=ReadNrrdHeader(infile)
-	if(tolower(h$encoding)%in%c("gz","gzip")) {
-		testprog='gzip'
+
+	ext=tolower(sub(".*\\.([^.]+)$","\\1",basename(infile)))
+	if(ext=='nhdr') FastHeader=FALSE
+
+	h=NULL
+	if(FastHeader){
+		# quick and dirty reading of header
+		con<-file(infile,'rb')
+		on.exit(close(con))
+		magic=readBin(con,what=raw(),5)
+		if(!isTRUE(all.equal(magic,as.raw(c(0x4e, 0x52, 0x52, 0x44, 0x30))))){
+			warning("This is not a nrrd")
+			return(NA)
+		}
+		while( length(l<-readLines(con,1))>0 && l!="" ){
+			if(nchar(l)>12 && substr(l,1,10)=="encoding"){
+				if(substr(encoding,11,12)!="gz"){
+					warning("This is not a gzip encoded nrrd")
+					return(NA)
+				}
+			}
+		}
 	} else {
-		warning("This is not a gzip encoded nrrd")
-		return(NA)
+		h=ReadNrrdHeader(infile)
+		if(tolower(h$encoding)%in%c("gz","gzip")) {
+			# testprog='gzip'
+		} else {
+			warning("This is not a gzip encoded nrrd")
+			return(NA)
+		}
 	}
 
 	if(UseGzip){
 		tmp=tempfile()
-		on.exit(unlink(tmp))
+		on.exit(unlink(tmp),add=TRUE)
 		system(paste("unu data ",shQuote(infile)," > ",shQuote(tmp)))
 		x=system(paste("gzip -lv",shQuote(tmp)),intern=TRUE)
 		crc=try(strsplit(x[2],"[ ]+")[[1]][[2]])
 		if(inherits(crc,'try-error')) crc=NA		
 	} else {
 		# TODO Fix handling of nhdr files
-		nf=file(infile,open='rb')
-		on.exit(close(nf))
-		seek(nf,-8,origin='end')
+		if(!is.null(h) && !is.null(h$datafile)){
+			if(length(h$datafile)>1)
+				stop("Don't know how to handle more than 1 datafile")
+			if(dirname(h$datafile)==".")
+				h$datafile=file.path(dirname(infile),h$datafile)
+			con=file(h$datafile,open='rb')
+			on.exit(close(con),add=TRUE)
+		} else if(!FastHeader){
+			con=file(infile,open='rb')
+			on.exit(close(con),add=TRUE)
+		}
+		seek(con,-8,origin='end')
 		# TODO check endian issues (what happens if CRC was from opposite endian platform?)
-		crc=readBin(nf,integer(),size=4)
+		crc=readBin(con,integer(),size=4)
 		crc=format(as.hexmode(crc),width=8)
 	}	
 	crc

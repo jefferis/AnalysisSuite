@@ -1,4 +1,4 @@
-# ReadNeuronFromAsc2.s
+# ReadNeuronFromAsc2.R
 # Functions that allow axon data in Neurolucida .asc files to be read
 # directly into an R Neuron object.  
 
@@ -69,8 +69,8 @@
 # PRESSING ISSUES : Decide on New Neuron Object format (more or less done)
 # ALTER MAIN CODE TO REFLECT NEW NEURON Object format - mostly done
 
-# source("Greg Data:AnalysingTraceFiles:R:ReadNeuronFromAsc2.s")
-# source(file.path(CodeDir,"ReadNeuronFromAsc2.s"))
+# source("Greg Data:AnalysingTraceFiles:R:ReadNeuronFromAsc2.R")
+# source(file.path(CodeDir,"ReadNeuronFromAsc2.R"))
 
 # Main function which returns a full neuron based on the supplied filename
 # which should include full path if necessary
@@ -593,7 +593,7 @@ ParseAxonData<-function(AxonData,AscFile){
     }  # End of the big old while loop
     
     # OK Figure out the branch points & End Points
-    # Copied from ParseSWCTree in NeuronFunctions4.s
+    # Copied from ParseSWCTree in NeuronFunctions4.R
     BranchPoints<-as.numeric(names(which(table(d$Parent)>1)))
     #Find out which PointNos occur in $Parent column
     NotEndPoints<-as.numeric(names(table(d$Parent)))

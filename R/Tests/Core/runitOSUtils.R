@@ -14,7 +14,7 @@ test.abs2rel<-function(x)
 	checkEquals(testans,realans)
 		
 	checkException(abs2rel("/some/other/path","/Volumes/JData/JPeople/",
-		StopIfNoCommonPath=TRUE))
+		StopIfNoCommonPath=TRUE),silent=TRUE)
 	
 	testans=abs2rel("/some/other/path","/Volumes/JData/JPeople/")
 	realans="/some/other/path"
@@ -59,6 +59,10 @@ test.RunCmdForNewerInput<-function(){
 	# single missing input file
 	checkEquals(RunCmdForNewerInput(NULL,infiles=tf[5],outfile=tf[2]),FALSE)
 
+	# empty input file vector
+	checkEquals(RunCmdForNewerInput(NULL,infiles=character(0),
+		outfile=tf[2]),FALSE)
+
 	# one input missing, another present
 	checkEquals(FALSE,
 		RunCmdForNewerInput(NULL,infiles=c(tf[1],tf[5]),outfile=tf[2]))
@@ -85,4 +89,32 @@ test.RunCmdForNewerInput<-function(){
 
 	# multiple inputs, multiple outputs, one older
 	checkTrue(RunCmdForNewerInput(NULL,infiles=c(tf[1],tf[4]),outfile=c(tf[2],tf[3]),Verbose=TRUE))
+}
+
+test.touch<-function(){
+	tf=replicate(2,tempfile())
+	on.exit(unlink(tf))
+  
+  checkException(touch(tf[1],Create=FALSE),
+      "Throws exception if Create=FALSE and file does not exist",silent = TRUE)
+	
+  checkTrue(touch(tf[1]))
+	checkTrue(file.exists(tf[1]),"touching a file without other argument creates it")
+	checkTrue(touch(tf[2]))
+  
+  t1=ISOdatetime(2001, 1, 1, 12, 12, 12)
+	t2=ISOdatetime(2011, 1, 1, 12, 12, 12)
+	checkTrue(touch(tf[1],t1))
+	checkTrue(touch(tf[2],t2,Create=FALSE),
+      "Check no error when Create=FALSE and target file exists")
+	fis=file.info(tf)
+	fis$mtime
+	checkEqualsNumeric(fis$mtime[1],t1,"Change to a specific time")
+	checkEqualsNumeric(fis$mtime[2],t2,"Change to a specific time")
+  
+  # Change modification time to that of a reference file, leaving access intact
+  checkTrue(touch(tf[2],reference = tf[1],timestoupdate = "modification"))
+  fis2=file.info(tf[2])
+	checkEqualsNumeric(fis2$mtime,fis$mtime[1],"Change mtime to that of a refernce file")
+  checkEqualsNumeric(fis2$atime,fis$atime[2],"Leave atime intact") 
 }

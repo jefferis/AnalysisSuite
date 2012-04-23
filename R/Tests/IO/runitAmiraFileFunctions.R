@@ -358,6 +358,43 @@ test.ReadAM3D<-function(){
 	checkEquals(result,result.new[fieldsToCheck],tol=1e-6)
 }
 
+test.ReadWriteNeuronFromAM<-function(){
+  # Test reading of Amira Lineset format neurons using sample data from
+  # Felix Evers' hxskeletonize plugin for Amira and
+  # flycircuit.tw data
+  fieldsToCheck=c("NumPoints", "StartPoint", "BranchPoints", "EndPoints", 
+        "NumSegs", "SegList")
+  fieldsToCheckLong=c("NeuronName", "NumPoints", "StartPoint", "BranchPoints", "EndPoints", 
+    "NumSegs", "SegList", "d")
+      
+	tmpfile=tempfile()
+	on.exit(unlink(tmpfile))
+	am3d=ReadNeuronFromAM3D(file.path(TestDir,"IO","testneuron_am3d.am"))
+	# converted to lineset in amira by hxskeletonize
+	lineset=ReadNeuronFromAM(file.path(TestDir,"IO","testneuron_lineset.am"))
+  # check seglist describes equivalent graph - they end up in different order
+  g1=Neuron2Graph(lineset)
+  g2=Neuron2Graph(am3d)
+  checkEquals(g1,g2,msg='seglist graphs do not match')
+#  checkEquals(lineset[fieldsToCheck],am3d[fieldsToCheck],tol=1e-6,
+#    msg="Same tracing saved as AM3D and AM by Amira produces different results")
+  
+  WriteNeuronToAM(am3d,tmpfile)
+  amfromam3d=ReadNeuronFromAM(tmpfile)
+  checkEquals(amfromam3d[fieldsToCheck],am3d[fieldsToCheck],tol=1e-6,checkNames = FALSE,
+    msg="AM3D and AM file saved by R produce different results")
+  checkEquals(amfromam3d$d[,1:6],am3d$d[,1:6],tol=1e-3)
+      
+  fcam=ReadNeuronFromAM(file.path(TestDir,"IO","testneuron_fclineset.am"))
+  WriteNeuronToAM(fcam,tmpfile,Force=TRUE)
+  fcamresaved=ReadNeuronFromAM(tmpfile)
+  checkEquals(fcamresaved[fieldsToCheck],fcam[fieldsToCheck],tol=1e-6,
+    msg="AM file from flycircuit and AM file resaved by R produce different results")
+  checkEquals(fcamresaved$d[,1:5],fcam$d[,1:5],tol=1e-6)
+    
+}
+
+
 test.ReadWrite3DDensityAmiraBinary<-function(){
 	testData=array(rnorm(10^3),dim=rep(10,3))
 	tmpfile=tempfile()
@@ -488,3 +525,22 @@ test.ReadAmiraTutorialSurfaceData<-function(){
 		"Failed to read lobus.surf")
 }
 }
+
+test.readGzipAmirameshNeuron<-function(){
+  closeAllConnections()
+  nopencons.start=length(showConnections())
+  am3d=read.neuron(file.path(TestDir,"IO","testneuron_am3d.am"))
+  checkException(read.neuron(file.path(TestDir,"IO","testneuron_am3d.am.gz")),
+      silent=TRUE)
+  am3da=read.neuron(file.path(TestDir,"IO","testneuron_am3d_ascii.am"))
+  checkEquals(am3d,am3da)
+  am3daz=read.neuron(file.path(TestDir,"IO","testneuron_am3d_ascii.am.gz"))
+  checkEquals(am3d,am3daz)
+  
+  fcl=read.neuron(file.path(TestDir,"IO","testneuron_fclineset.am"))
+  fclz=read.neuron(file.path(TestDir,"IO","testneuron_fclineset.am.gz"))
+  checkEquals(fcl,fclz)
+  nopencons.end=length(showConnections())
+  checkEquals(nopencons.end,nopencons.start,"Managed to leave a connection open")
+}
+
