@@ -544,3 +544,49 @@ test.readGzipAmirameshNeuron<-function(){
   checkEquals(nopencons.end,nopencons.start,"Managed to leave a connection open")
 }
 
+test.ParseMaterials<-function(){
+	amfile=file.path(TestDir,"IO","ComplexLabelFieldHeader.am")
+	h=ReadAmiramesh.Header(amfile,Verbose = FALSE,)
+	materials_baseline=structure(list(id = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
+							13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 
+							29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 
+							45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 60, 
+							61, 62, 63, 64, 65, 66, 67, 68, 69), col = structure(c("#B3CCCC", 
+									"#1CFF0A", "#E10000", "#2929CC", "#13A8BF", "#87CC29", "#005F00", 
+									"#4AC403", "#32EDFF", "#BD0000", "#A36500", "#48CC28", "#2B7BB0", 
+									"#197E20", "#29CC67", "#87CC29", "#2974CC", "#CC4D29", "#FF0000", 
+									"#FFCB00", "#FF8D00", "#661900", "#246614", "#3227CC", "#CC276B", 
+									"#FFCB30", "#4300B2", "#47B279", "#0066FF", "#CD2895", "#E57B1A", 
+									"#A425C3", "#CC8616", "#FFE102", "#5E28CC", "#28CC84", "#3B28CC", 
+									"#CB1264", "#4AC403", "#31ECFF", "#BD0000", "#A36400", "#47CC27", 
+									"#2A83B0", "#187D20", "#28CC66", "#87CC28", "#CC4C28", "#FF0000", 
+									"#FFCB00", "#FF8D00", "#661900", "#236613", "#3226CC", "#CC266B", 
+									"#FFCB2E", "#4200B1", "#47B178", "#0066FF", "#CD2793", "#E47B1A", 
+									"#A425C3", "#CC8616", "#FFE102", "#5E27CC", "#3B27CC", "#CB1263", 
+									"#28CC66", "#28CC66"), .Names = c("Exterior", "FB", "EB", "SAD", 
+									"NO", "SOG", "PB", "CRE_R", "EPA_R", "VES_R", "ATL_R", "PLP_R", 
+									"AVLP_R", "AL_R", "GOR_R", "SCL_R", "FLA", "ICL_R", "ME_R", "LOP_R", 
+									"LO_R", "MB_R", "PVLP_R", "OTU_R", "WED_R", "SMP_R", "LH_R", 
+									"SLP_R", "LB_R", "SIP_R", "IB_R", "IVLP_R", "IPS_R", "SPS_R", 
+									"LAL_R", "PRW", "AME_R", "GA_R", "CRE_L", "EPA_L", "VES_L", "ATL_L", 
+									"PLP_L", "AVLP_L", "AL_L", "GOR_L", "SCL_L", "ICL_L", "ME_L", 
+									"LOP_L", "LO_L", "MB_L", "PVLP_L", "OTU_L", "WED_L", "SMP_L", 
+									"LH_L", "SLP_L", "LB_L", "SIP_L", "IB_L", "IVLP_L", "IPS_L", 
+									"SPS_L", "LAL_L", "AME_L", "GA_L", "PAN_L", "PAN_R"), class = "AsIs"), 
+					level = c(0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 
+							15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 
+							30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 
+							45, 46, 47, 48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58, 59, 
+							60, 61, 62, 63, 64, 65, 66, 67, 68)), .Names = c("id", "col", 
+					"level"), row.names = c("Exterior", "FB", "EB", "SAD", "NO", 
+					"SOG", "PB", "CRE_R", "EPA_R", "VES_R", "ATL_R", "PLP_R", "AVLP_R", 
+					"AL_R", "GOR_R", "SCL_R", "FLA", "ICL_R", "ME_R", "LOP_R", "LO_R", 
+					"MB_R", "PVLP_R", "OTU_R", "WED_R", "SMP_R", "LH_R", "SLP_R", 
+					"LB_R", "SIP_R", "IB_R", "IVLP_R", "IPS_R", "SPS_R", "LAL_R", 
+					"PRW", "AME_R", "GA_R", "CRE_L", "EPA_L", "VES_L", "ATL_L", "PLP_L", 
+					"AVLP_L", "AL_L", "GOR_L", "SCL_L", "ICL_L", "ME_L", "LOP_L", 
+					"LO_L", "MB_L", "PVLP_L", "OTU_L", "WED_L", "SMP_L", "LH_L", 
+					"SLP_L", "LB_L", "SIP_L", "IB_L", "IVLP_L", "IPS_L", "SPS_L", 
+					"LAL_L", "AME_L", "GA_L", "PAN_L", "PAN_R"), class = "data.frame")
+	checkEquals(h$Materials,materials_baseline)
+}

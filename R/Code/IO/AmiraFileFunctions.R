@@ -296,21 +296,18 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,
 }
 
 .ParseAmirameshParameters<-function(textArray, CheckLabel=TRUE,ParametersOnly=FALSE){
-#  Reads Torsten's IGS TypedStream format which is what he uses for:
-#  registration
-#  studylist
-#  images
-#  Note that there are special methods to handle the 
-#  coefficients and active members of a spline warp 
-	
+
+	# First check what kind of input we have
 	closeConnectionWhenDone=TRUE
 	if(is.character(textArray)) con=textConnection(textArray,open='r')
 	else {
 		con=textArray
 		closeConnectionWhenDone=FALSE
 	}
+	# empty list to store results
 	l=list()
 	
+	# utility function to check that the label for a given item is unique
 	checkLabel=function(label) 	{
 		if( any(names(l)==label)  ){
 			newlabel=make.unique(c(names(l),label))[length(l)+1]
@@ -319,6 +316,7 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,
 		}
 		label
 	}
+	
 	# Should this check to see if the connection still exists?
 	# in case we want to bail out sooner
 	while ( {t<-try(isOpen(con),silent=TRUE);isTRUE(t) || !inherits(t,"try-error")} ){
@@ -338,6 +336,7 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,
 		items=strsplit(thisLine," ",fixed=TRUE)[[1]]
 		
 		if(length(items)==0) next
+
 		# get the label and items
 		label=items[1]; items=items[-1]
 		#cat("\nlabel=",label)
@@ -347,8 +346,9 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,
 		if(label=="}") {
 			#cat("end of section - leaving this recursion\n")
 			return (l)
-		}		
-		if(items[1]=="{"){
+		}
+		
+		if(isTRUE(items[1]=="{")){
 			# parse new subsection
 			#cat("new subsection -> recursion\n")
 			# set the list element!
@@ -360,31 +360,33 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,
 				break # we're done
 			else next
 		}
-		if(items[length(items)]=="}") {
+		if(isTRUE(items[length(items)]=="}")) {
 			returnAfterParsing=TRUE
 			items=items[-length(items)]
 		}
 		else returnAfterParsing=FALSE
 		# ordinary item
-		# Check first item
-		firstItemFirstChar=substr(items[1],1,1)		
-		if(any(firstItemFirstChar==c("-",as.character(0:9)) )){
-			# Get rid of any commas
-			items=chartr(","," ",items)
-			# convert to numeric if not a string
-			items=as.numeric(items)
-		} else if (firstItemFirstChar=="\""){
-
-			if(returnAfterParsing) thisLine=sub("\\}","",thisLine,fixed=TRUE)
-			
-			# dequote quoted string
-			# can do this by using a textConnection
-			tc=textConnection(thisLine)
-			
-			items=scan(tc,what="",quiet=TRUE)[-1]
-			close(tc)
-			attr(items,"quoted")=TRUE
-		}		
+		# Check first item (if there are any items)
+		if(length(items)>0){
+			firstItemFirstChar=substr(items[1],1,1)
+			if(any(firstItemFirstChar==c("-",as.character(0:9)) )){
+				# Get rid of any commas
+				items=chartr(","," ",items)
+				# convert to numeric if not a string
+				items=as.numeric(items)
+			} else if (firstItemFirstChar=="\""){
+				
+				if(returnAfterParsing) thisLine=sub("\\}","",thisLine,fixed=TRUE)
+				
+				# dequote quoted string
+				# can do this by using a textConnection
+				tc=textConnection(thisLine)
+				
+				items=scan(tc,what="",quiet=TRUE)[-1]
+				close(tc)
+				attr(items,"quoted")=TRUE
+			}
+		}
 		# set the list element!
 		if(CheckLabel)
 			label=checkLabel(label)
