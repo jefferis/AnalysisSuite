@@ -44,6 +44,28 @@ xyzmatrix<-function(x,y=NULL,z=NULL,Transpose=FALSE) {
 	if(Transpose) t(mx) else mx
 }
 
+#' Assign xyz elements of neuron or dotprops object
+#'
+#' Can also handle matrix like objects with cols called X,Y,Z
+#' @param n dotprops/neuron/data.frame/named matrix
+#' @param value Nx3 matrix specifying xyz coords
+#' @return Original object with modified coords
+#' @export
+#' @seealso \code{\link{xyzmatrix}}
+#' @examples
+#' n=MyNeurons[[1]]
+#' xyzmatrix(n)<-xyzmatrix(n)
+#' stopifnot(isTRUE(
+#'   all.equal(xyzmatrix(n),xyzmatrix(MyNeurons[[1]]))
+#' ))
+`xyzmatrix<-`<-function(n,value){
+  if(is.neuron(n)) n$d[,c("X","Y","Z")]=value
+  else if(is.dotprops(n)) n$points[,c("X","Y","Z")]=value
+  else if(c("X","Y","Z") %in% colnames(n)) n[,c("X","Y","Z")]=value
+  else stop("Not a neuron or dotprops object or a matrix-like object with XYZ volnames")
+  n
+}
+
 #' Find the nearest point(s) in a neuron/dotprops to a 3d point
 #'
 #' For example see how far a marked cell body location is from a cell
