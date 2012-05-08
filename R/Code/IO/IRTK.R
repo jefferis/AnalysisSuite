@@ -259,7 +259,7 @@ irtk.transformedPoints<-function(xyzs=NULL,dofins,direction=c("inverse","forward
 irtk.TransformNeuron<-function(neuron,dofin=NULL,transform=c("warp","affine"),...){
 	# FIXME - transform specifiers (warp, affine etc) are irrelevant for IRTK 
 	transform=match.arg(transform,several.ok=FALSE)
-	neuron$d[,c("X","Y","Z")]=irtk.transformedPoints(neuron$d[,c("X","Y","Z")],
+	xyzmatrix(neuron)<-irtk.transformedPoints(xyzmatrix(neuron),
 		dofins=dofin,transforms=transform,...)[[transform]]
 	neuron
 }
