@@ -125,7 +125,8 @@ transformedPoints=function(Brain=NULL,xyzs=NULL,warpfile=NULL,AllRegDir=AllRegDi
 
 TransformNeuron<-function(neuron,warpfile=NULL,transform=c("warp","affine"),...){
 	transform=match.arg(transform,several.ok=FALSE)
-	neuron$d[,c("X","Y","Z")]=transformedPoints(neuron$NeuronName,neuron$d[,c("X","Y","Z")],warpfile=warpfile,transforms=transform,...)[[transform]]
+	xyzmatrix(neuron)<-transformedPoints(neuron$NeuronName,xyzmatrix(neuron),
+	  warpfile=warpfile,transforms=transform,...)[[transform]]
 	return(neuron)
 }
 
