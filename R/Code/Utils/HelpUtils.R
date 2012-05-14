@@ -11,9 +11,9 @@
 #' @return return value of help() or invisible helptext 
 #' @author jefferis
 #' @export
-hlp<-function(...,PRINT.ARGS=FALSE){
+help<-function(...,PRINT.ARGS=FALSE){
 	# try built in help first
-	x=help(...)
+	x=utils::help(...)
 	if(length(x)>0) return(eval(x))
 	# if not, see if we can get somewhere with roxygen comment
 
