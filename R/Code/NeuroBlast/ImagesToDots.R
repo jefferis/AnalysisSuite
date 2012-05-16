@@ -350,17 +350,24 @@ DotPropertiesFromFile<-function(f, xformfun=NULL, ...){
 #' Transform dot property object using specified registration
 #'
 #' @param dp dotprops object to transform
-#' @param reg affine/warping registration file/folder
+#' @param reg Path to CMTK registration file OR function to transform points
 #' @param k Number of neighbour points to use when recalculating dot properties
 #' @param RecalculateDotProps Whether to recalculate tangent vector etc after 
 #'   applying transformation
-#' @param ... additional arguments passed to transformedPoints
+#' @param ... additional arguments passed to transformedPoints or reg function
 #' @return return points
 #' @export
 #' @seealso \code{\link{transformedPoints}}
 transform.dotprops<-function(dp,reg,k, RecalculateDotProps=T,na.action=c('warn','drop','error'),...) {
 	na.action=match.arg(na.action)
-	pointst=transformedPoints(xyzs=dp$points,warpfile=reg,transforms='warp',...)[['warp']]
+	if(is.function(reg)){
+	  # we've been given a function - apply this to points
+	  pointst=reg(dp$points,...)
+	} else {
+	  # we've been given a CMTK registration file
+	  pointst=transformedPoints(xyzs=dp$points,warpfile=reg,transforms='warp',...)[['warp']]
+	}
+	
 	naPoints=is.na(pointst[,1])
 	if(any(naPoints)){
 		if(na.action=='warn')
