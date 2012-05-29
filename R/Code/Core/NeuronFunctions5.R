@@ -183,10 +183,19 @@ as.neuron<-function(n){
 # plot(ANeuron)
 plot.neuron<-function(...) plotneuron2d(...)
 
+#' Make a list of neurons that can be used for coordinate plotting/analysis
+#'
+#' Note that it can cope with both neurons and dotprops but AddClassToNeurons
+#' parameter will only apply to things that look like neurons but don't have
+#' a class of neuron.
+#' @param l An existing list or a single neuron to start a list
+#' @param df A dataframe with one row of information per neuron
+#' @param AddClassToNeurons make sure that list elements have class neuron.
+#' @return neuronlist with attr('df')
+#' @export
+#' @seealso \code{\link{is.neuronlist}},\code{\link{is.neuron}},\code{\link{is.dotprops}}
+#' @examples
 as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
-	# makes a list of neurons that can be used for 
-	# coordinated plots / analysis
-	# allow one neuron to be passed
 	if(is.neuron(l)) {
 		n<-l
 		l<-list(n)
@@ -204,7 +213,7 @@ as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
 	if(!inherits(l,"neuronlist")) class(l)<-c(class(l),"neuronlist")
 	if(!AddClassToNeurons) return(l)
 	for(i in seq(l)){
-		if(!is.neuron(l[[i]],Strict=TRUE))
+		if(!is.neuron(l[[i]],Strict=TRUE) && is.neuron(l[[i]]))
 			l[[i]]=as.neuron(l[[i]])
 	}
 	l
