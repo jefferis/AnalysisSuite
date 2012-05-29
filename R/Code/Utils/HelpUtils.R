@@ -78,7 +78,7 @@ help<-function(...,PRINT.ARGS=FALSE,TRY.BUILTIN.HELP=TRUE){
 
 #' Extend built-in help by parsing in-source roxygen comments 
 #'
-#' See help for details
+#' See help for details. First tries utils::?.
 #' @param ... args passed to base ? or modified help functions
 #' @export
 #' @seealso \code{\link{help}}
