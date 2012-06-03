@@ -161,8 +161,8 @@ WeightedNNBasedLinesetDistFun.separate<-function(nndists,dotproducts,sd=3){
 	c(summaryfun(dnorm(nndists,sd=sd)/dnorm(0,sd=sd)),summaryfun(dotproducts))
 }
 
-WeightedNNBasedLinesetMatching<-function(n1,n2,dvs1=NULL,dvs2=NULL,
-	NNDistFun=WeightedNNBasedLinesetDistFun,Verbose=FALSE,
+WeightedNNBasedLinesetMatching<-function(n1,n2,dvs1=NULL,dvs2=NULL,alphas1=NULL,
+	alphas2=NULL,NNDistFun=WeightedNNBasedLinesetDistFun,Verbose=FALSE,
 	BothDirections=FALSE,BothDirectionsFun=list,OnlyClosestPoints=FALSE,...){
 	# my hybrid version
 	# returns a score based on the similarity of nearest neighbour location
@@ -177,8 +177,10 @@ WeightedNNBasedLinesetMatching<-function(n1,n2,dvs1=NULL,dvs2=NULL,
 	NNDistFun=match.fun(NNDistFun)
 	BothDirectionsFun=match.fun(BothDirectionsFun)
 	if(BothDirections){
-		f=WeightedNNBasedLinesetMatching(n1,n2,dvs1,dvs2,NNDistFun=NNDistFun,Verbose=Verbose,BothDirections=FALSE,...)
-		b=WeightedNNBasedLinesetMatching(n2,n1,dvs1,dvs2,NNDistFun=NNDistFun,Verbose=Verbose,BothDirections=FALSE,...)
+		f=WeightedNNBasedLinesetMatching(n1,n2,dvs1,dvs2,alphas1,alphas2,
+			NNDistFun=NNDistFun,Verbose=Verbose,BothDirections=FALSE,...)
+		b=WeightedNNBasedLinesetMatching(n2,n1,dvs1,dvs2,alphas1,alphas2,
+			NNDistFun=NNDistFun,Verbose=Verbose,BothDirections=FALSE,...)
 		if(length(f)==1 && length(b)==1) return (BothDirectionsFun(f,b))
 		if(length(dim(f))==1 && length(f)==length(b)) return (cbind(f,b))
 		return(BothDirectionsFun(f,b))
@@ -222,6 +224,14 @@ WeightedNNBasedLinesetMatching<-function(n1,n2,dvs1=NULL,dvs2=NULL,
 			nnn1$nn.dists=nnn1$nn.dists[!targetdupes]
 		}
 		dps=abs(dotprod(dvs1[idxArray[,1],],dvs2[idxArray[,2],]))
+		if(!is.null(alphas1) && !is.null(alphas2)){
+			# for perfectly aligned points, alpha = 1, at worst alpha = 0
+			# sqrt seems reasonable since if alpha1=alpha2=0.5 then 
+			# the scalefac will be 0.5
+			# zapsmall to make sure there are no tiny negative numbers etc
+			scalefac=sqrt(zapsmall(alphas1[idxArray[,1]]*alphas2[idxArray[,2]]))
+			dps=dps*scalefac
+		}
 	}
 
 	NNDistFun(nnn1$nn.dists,dps,...)

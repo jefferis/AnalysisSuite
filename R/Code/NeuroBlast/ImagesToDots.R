@@ -380,8 +380,23 @@ transform.dotprops<-function(dp,reg,k, RecalculateDotProps=T,na.action=c('warn',
 	dpn=DotProperties(pointst,k)
 }
 
-WeightedNNBasedLinesetMatching.dotprops<-function(dp1,dp2,...){
-	WeightedNNBasedLinesetMatching(dp1$points,dp2$points,dvs1=dp1$vect,dvs2=dp2$vect,...)
+#' Compute point & tangent vector similarity score between two dotprops objects
+#'
+#' UseAlpha determines whether the alpha values (eig1-eig2)/sum(eig1:3)
+#' are passed on to WeightedNNBasedLinesetMatching. These will be used to scale
+#' the dot products of the direction vectors for nearest neighbour pairs.
+#' @param dp1,dp2 dotprops objects
+#' @param UseAlpha Whether to scale dot product of tangent vectors (default=F)
+#' @return Return value of NNDistFun passd to WeightedNNBasedLinesetMatching
+#' @export
+#' @seealso \code{\link{DotProperties}},\code{\link{WeightedNNBasedLinesetMatching}}
+#' @examples
+WeightedNNBasedLinesetMatching.dotprops<-function(dp1,dp2,UseAlpha=FALSE,...){
+	if(UseAlpha)
+		WeightedNNBasedLinesetMatching(dp1$points,dp2$points,dvs1=dp1$vect,dvs2=dp2$vect,
+			alphas1=dp1$alpha,alphas2=dp2$alpha,...)
+	else 
+		WeightedNNBasedLinesetMatching(dp1$points,dp2$points,dvs1=dp1$vect,dvs2=dp2$vect,...)
 }
 
 
