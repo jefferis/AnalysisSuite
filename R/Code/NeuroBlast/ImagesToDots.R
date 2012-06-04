@@ -117,6 +117,24 @@ length.dotprops<-function(dp) nrow(dp$points)
 # redefining length upsets str
 str.dotprops<-function(dp,...) {class(dp)<-"list";str(dp,...)}
 
+#' Carry out in memory digest of a dotprops object
+#'
+#' This takes care to remove non-essential attributes
+#' @param dp Dotprops object
+#' @param ... additional parameters passed to digest function
+#' @return character vector of digest value
+#' @export
+#' @import digest
+#' @seealso \code{\link{digest}}
+#' @examples
+#' digest(dps[[1]])
+digest.dotprops<-function(dp,...){
+  # remove mtime and file attributes
+  atts=attributes(dp)
+  mostattributes(dp)<-atts[setdiff(names(atts),c("mtime",'file'))]
+  digest(dp,...)
+}
+
 DotProperties<-function(points,k=20){
 	points=xyzmatrix(points)
 	npoints=nrow(points)
