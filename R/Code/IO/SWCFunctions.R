@@ -86,7 +86,6 @@ WriteSWCFile<-function(ANeuron,
 # in Neuron$d.  The most important new component of Neuron is
 # a segment array, Neuron$SegList with one row for each segment
 # whose elements are the PointNo of the points in a segment
-
 ParseSWCTree<-function(MySWCTree,FileName){
     NumPoints<-length(MySWCTree[,1])
     #Find out which PointNos occur > 1 in $Parent column
@@ -155,23 +154,22 @@ ParseSWCTree<-function(MySWCTree,FileName){
 
     # Check if we ended up with something sensible
     if(length(SegmentList)>0){
-	#OK There's at least one segment
-	ParsedNeuron<-list(NeuronName=NeuronNameFromFileName(FileName),
-	    InputFileName=FileName,
-	    CreatedAt=Sys.time(),
-	    NodeName=Sys.info()["nodename"],
-	    InputFileStat=file.info(FileName)[1,],
-	    NumPoints=NumPoints,
-	    StartPoint=1,
-	    BranchPoints=BranchPoints,
-	    EndPoints=EndPoints,
-	    NumSegs=length(SegmentList),
-	    SegList=SegmentList,
-	    d=MySWCTree	)
-	return(ParsedNeuron)
+		#OK There's at least one segment
+		ParsedNeuron<-list(NeuronName=NeuronNameFromFileName(FileName),
+		    InputFileName=FileName,
+		    CreatedAt=Sys.time(),
+		    NodeName=Sys.info()["nodename"],
+		    InputFileStat=file.info(FileName)[1,],
+		    NumPoints=NumPoints,
+		    StartPoint=1,
+		    BranchPoints=BranchPoints,
+		    EndPoints=EndPoints,
+		    NumSegs=length(SegmentList),
+		    SegList=SegmentList,
+		    d=MySWCTree)
+		return(as.neuron(ParsedNeuron))
     }
-    else return(-1)
-	
+    else return(NULL)
 }
 
 
