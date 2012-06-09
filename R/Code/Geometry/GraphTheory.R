@@ -47,6 +47,9 @@
 # the igraph package looks like it may be a more general purpose graph
 # package
 
+require(igraph)
+require(RBGL)
+
 # Adjacency matrix
 AdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
 	#ps=sort(unique(unlist(SegList)))
@@ -89,6 +92,29 @@ ReducedAdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
 	colnames(A)=1:nrow(A)
 	toKeep=which(rowSums(A)!=0 | colSums(A)!=0)
 	A[toKeep,toKeep]
+}
+
+RerootNeuron<-function(ANeuron,root=1){
+  am=AdjacencyMatrixFromSegList(ANeuron$SegList)
+  gam=graph.adjacency(am,'undirected')
+  dgam=dfs(igraph.to.graphNEL(gam),as.character(root))
+  canon_nodeorder=as.integer(dgam$discovered)
+  d=ANeuron$d
+  d$Parent=-1
+  for(i in seq(nrow(d))){
+    if(i==root) next
+    # nb graph vertices are 0 indexed
+    nbs=neighbors(gam,i-1)
+    # find neighbor that comes earliest in canon_nodeorder
+    nbcanonpos=sapply(nbs,function(x) which(canon_nodeorder==x))
+    # nb convert back to 1-indexed
+    d$Parent[i]=nbs[which.min(nbcanonpos)]+1
+  }
+  
+  # sl=CanonicalSegList(ANeuron$SegList,root=root)
+  # ANeuron$SegList=sl
+  ANeuron$d=d
+  ANeuron
 }
 
 
