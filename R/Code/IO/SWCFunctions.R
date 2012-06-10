@@ -109,12 +109,12 @@ SWC2Neuron<-function(swc,filename){
 #'
 #' NB read.neuron or ReadNeuronFromSWC are more appropriate for general use.
 #' 
-#' @param MySWCTree Dataframe containing PointNo, Label, X,Y,Z,W, Parent
+#' @param swc Dataframe containing PointNo, Label, X,Y,Z,W, Parent
 #' @return List containing core components of neuron
 #' @export
 #' @seealso \code{\link{read.neuron}}, \code{\link{ReadNeuronFromSWC}}, \code{\link{SWC2Neuron}}
 #' @examples
-ParseSWC<-function(MySWCTree,FileName){
+ParseSWC<-function(swc){
     NumPoints<-length(MySWCTree[,1])
     #Find out which PointNos occur > 1 in $Parent column
     BranchPoints<-as.numeric(names(which(table(MySWCTree$Parent)>1)))
@@ -193,8 +193,6 @@ ParseSWC<-function(MySWCTree,FileName){
     else return(NULL)
 }
 
-
-
 # ParseSWCTree 
 # This function takes an SWC format array (e.g. from ReadSWCFile)
 # and returns a Neuron list - it retains the input data
@@ -202,93 +200,9 @@ ParseSWC<-function(MySWCTree,FileName){
 # a segment array, Neuron$SegList with one row for each segment
 # whose elements are the PointNo of the points in a segment
 ParseSWCTree<-function(MySWCTree,FileName){
-    NumPoints<-length(MySWCTree[,1])
-    #Find out which PointNos occur > 1 in $Parent column
-    BranchPoints<-as.numeric(names(which(table(MySWCTree$Parent)>1)))
-    NumBranches<-table(MySWCTree$Parent)[ table(MySWCTree$Parent)>1]
-    #Find out which PointNos occur in $Parent column
-    NotEndPoints<-as.numeric(names(table(MySWCTree$Parent)))
-    #Get rid of any -1s
-    NotEndPoints<-NotEndPoints[NotEndPoints>0]
-    EndPoints<-MySWCTree$PointNo[-NotEndPoints]
-    
-    PointType<-rep(0,NumPoints)
-    PointType[BranchPoints]<-1
-    PointType[EndPoints]<-2
-    PointType[1]<- (-1)
-    
-    #I'm interested in the Nodes
-    Nodes<-c(EndPoints,BranchPoints)
-    #OK this is going to be the list of segments
-    SegmentList<-list()
-
-    # Counter for Current Segment
-    CurrSeg<-0
-    for(ThisNode in Nodes){
-	#Set the next point to the parent of this one
-	Parent<-MySWCTree$Parent[ThisNode]
-	# Is this a valid parent?
-	# if not, terminate the node immediately
-	if(Parent>0){
-	    # OK there is a a parent so start setting up this segment
-	    # as it will have more than one point in it
-	    CurrSeg<-CurrSeg+1
-	    SegmentList[[CurrSeg]]<-ThisNode
-	    PointofSeg<-1
-
-	    #Keep looping through points so long as they have valid parents
-	    while(Parent>0) {
-		# OK It's valid so increment point index
-		PointofSeg<-PointofSeg+1
-		CurrentPoint<-Parent
-		# Add the point to the big list
-		SegmentList[[CurrSeg]][PointofSeg]<-CurrentPoint
-		# Check if we've got to a node
-		if(PointType[CurrentPoint]>0){
-		    # we have so lets start a new segment
-		    break
-		} else {
-		    # we haven't so lets keep going with this segment
-		    Parent<-MySWCTree$Parent[CurrentPoint]
-		}
-	    } # end of while(Parent>0) loop
-	} # end of if(Parent>0)
-    } # end of for(ThisNode in Nodes) loop
-    
-    # The root point type does need special handling.
-    StartType<-PointType[1]
-    #If it's not a branch point, then it must be an end point
-    # I'm changing it only now because otherwise there would be an
-    # extra endpoint to visit.
-    # that will keep the Ant from stalling
-    # (it checks to see if the current point is an EndPoint so it would 
-    # never get past the first point!)
-    if(StartType!=1){
-	EndPoints<-sort(c(EndPoints,1))
-    }
-
-    # Check if we ended up with something sensible
-    if(length(SegmentList)>0){
-		#OK There's at least one segment
-		ParsedNeuron<-list(NeuronName=NeuronNameFromFileName(FileName),
-		    InputFileName=FileName,
-		    CreatedAt=Sys.time(),
-		    NodeName=Sys.info()["nodename"],
-		    InputFileStat=file.info(FileName)[1,],
-		    NumPoints=NumPoints,
-		    StartPoint=1,
-		    BranchPoints=BranchPoints,
-		    EndPoints=EndPoints,
-		    NumSegs=length(SegmentList),
-		    SegList=SegmentList,
-		    d=MySWCTree)
-		return(as.neuron(ParsedNeuron))
-    }
-    else return(NULL)
+	warning("This function is deprecated, please use SWC2Neuron")
+	SWC2Neuron(MySWCTree,FileName)
 }
-
-
-
 
 # this is a utility function to find all the points neighbouring
 # a given point.  Bi and Trifurcations are permitted, but no more.
