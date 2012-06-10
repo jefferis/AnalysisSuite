@@ -115,15 +115,15 @@ SWC2Neuron<-function(swc,filename){
 #' @seealso \code{\link{read.neuron}}, \code{\link{ReadNeuronFromSWC}}, \code{\link{SWC2Neuron}}
 #' @examples
 ParseSWC<-function(swc){
-    NumPoints<-length(MySWCTree[,1])
+    NumPoints<-length(swc[,1])
     #Find out which PointNos occur > 1 in $Parent column
-    BranchPoints<-as.numeric(names(which(table(MySWCTree$Parent)>1)))
-    NumBranches<-table(MySWCTree$Parent)[ table(MySWCTree$Parent)>1]
+    BranchPoints<-as.numeric(names(which(table(swc$Parent)>1)))
+    NumBranches<-table(swc$Parent)[ table(swc$Parent)>1]
     #Find out which PointNos occur in $Parent column
-    NotEndPoints<-as.numeric(names(table(MySWCTree$Parent)))
+    NotEndPoints<-as.numeric(names(table(swc$Parent)))
     #Get rid of any -1s
     NotEndPoints<-NotEndPoints[NotEndPoints>0]
-    EndPoints<-MySWCTree$PointNo[-NotEndPoints]
+    EndPoints<-swc$PointNo[-NotEndPoints]
     
     PointType<-rep(0,NumPoints)
     PointType[BranchPoints]<-1
@@ -139,7 +139,7 @@ ParseSWC<-function(swc){
     CurrSeg<-0
     for(ThisNode in Nodes){
 	#Set the next point to the parent of this one
-	Parent<-MySWCTree$Parent[ThisNode]
+	Parent<-swc$Parent[ThisNode]
 	# Is this a valid parent?
 	# if not, terminate the node immediately
 	if(Parent>0){
@@ -162,7 +162,7 @@ ParseSWC<-function(swc){
 		    break
 		} else {
 		    # we haven't so lets keep going with this segment
-		    Parent<-MySWCTree$Parent[CurrentPoint]
+		    Parent<-swc$Parent[CurrentPoint]
 		}
 	    } # end of while(Parent>0) loop
 	} # end of if(Parent>0)
