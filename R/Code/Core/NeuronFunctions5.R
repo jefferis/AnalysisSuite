@@ -1399,8 +1399,6 @@ GetNeuron<-function(NeuronRef,mask=1:length(MyNeurons)){
     return(MyNeurons[[mask[Nnum]]])
 }
 
-#Copied directly from the match help file
-intersect <- function(x, y) y[match(x, y, nomatch = 0)]
 # Find all the elements of x which have a match in y
 matchingyinx <- function(x, y) which(match(x,y,nomatch=0)!=0)
 
