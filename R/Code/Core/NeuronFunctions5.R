@@ -399,6 +399,44 @@ seglength=function(ThisSeg){
     sum(sqrt(rowSums(Squared.ds)))	
 }
 
+#' Recalculate Neurons's SWCData using SegList and point information
+#'
+#' Uses the SegList field (indices into point array) to recalculate 
+#' point numbers and parent points for SWC data field (d).
+#' If Label column is missing (or ReplaceLabel=TRUE) then it is set to the
+#' value of DefaultLabel (2=Axon by default).
+#' Note that the order of point indices in SegList must match those in SWC.
+#' @param Neuron Must contain both the SegList and d fields
+#' @param RecalculateParents Whether to recalculate parent points (default T)
+#' @param DefaultLabel Integer label to use for SWC data chunk
+#' @param ReplaceLabel Whether to replace Label column if it already exists
+#' @return return value
+#' @export
+#' @seealso \code{\link{ParseSWC}}
+#' @examples
+RecalculateSWCData<-function(Neuron,RecalculateParents=TRUE,DefaultLabel=2L,ReplaceLabel=FALSE){
+  sl=Neuron$SegList
+  d=Neuron$d
+  if(is.null(d$PointNo))
+    d$PointNo=seq(nrow(d))
+  else {
+    # check that points are consecutive
+    if(any(d$PointNo!=seq(nrow(d))))
+      stop("Points must be numbered consecutively from 1:npoints")
+  }
+  # NB this assumes that points are in order
+  if(is.null(d$Parent) || RecalculateParents){
+    d$Parent=-1L
+    for(s in sl){
+      d$Parent[s[-1]]=s[-length(s)]
+    }
+  }
+  if(is.null(d$Label) || ReplaceLabel)
+    d$Label=DefaultLabel
+  Neuron$d=d
+  Neuron
+}
+
 MergeUnconnectedPathsToSingleNeuron<-function(NeuronList){
 	# expects a list of neurons which will be joined together
 	# these are expected to be unconnected paths
