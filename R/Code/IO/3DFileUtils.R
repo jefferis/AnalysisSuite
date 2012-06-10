@@ -812,7 +812,7 @@ SWCToPov<-function(FileName,...){
     # Read in the Data
     swcarray<-ReadSWCFile(FileName)
     # Parse the data and make a neuronobject out of it
-    TmpNeuron<-TmpNeuron<-ParseSWCTree(swcarray,ShortName)
+    TmpNeuron<-TmpNeuron<-SWC2Neuron(swcarray,ShortName)
     
     WritePOVFile(TmpNeuron,...)
 }

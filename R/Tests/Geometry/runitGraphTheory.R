@@ -16,7 +16,7 @@ testn=SWC2Neuron(testd,'test')
 # isomorphic
 # 1 2 3b 5 6
 #     4
-testn2=ParseSWCTree(data.frame(
+testn2=SWC2Neuron(data.frame(
   PointNo=1:6,Label=2,
   X=c(1:3,3,4,5),Y=c(rep(1,3),2,1,1),Z=0,W=NA,
   Parent=c(-1,1:3,3,5))
@@ -26,7 +26,7 @@ testn2=ParseSWCTree(data.frame(
 # 1 2 3b 4
 #     5
 #     6
-testn3=ParseSWCTree(data.frame(
+testn3=SWC2Neuron(data.frame(
   PointNo=1:6,Label=2,
   X=c(1:4,3,3),Y=c(rep(1,4),2,3),Z=0,W=NA,
   Parent=c(-1,1:3,3,5))

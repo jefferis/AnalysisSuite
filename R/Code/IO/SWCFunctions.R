@@ -44,7 +44,7 @@
 # source(file.path(CodeDir,"SWCFunctions.R"))
 
 # A typical use would be:
-# MyNeuron<-ParseSWCTree(ReadSWCFile("A:File:Path:JL2R.swc"),"JL2R")
+# MyNeuron<-SWC2Neuron(ReadSWCFile("A:File:Path:JL2R.swc"),"JL2R")
 # plotneuron2d(MyNeuron,ToFile=T) # produce a rotater file
 
 # ReadSWCFile reads in an SWC format file

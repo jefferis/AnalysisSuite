@@ -1499,7 +1499,7 @@ getBrain=function(fileNames){
 
 ReadNeuronFromSWC<-function(f){
 	d=ReadSWCFile(f)
-	ParseSWCTree(d,f)
+	SWC2Neuron(d,f)
 }
 
 read.neuron<-function(f, ...){
