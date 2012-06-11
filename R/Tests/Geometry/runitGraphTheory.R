@@ -53,7 +53,7 @@ testRerootNeuron<-function(){
   checkTrue(is.neuron(rn))
   checkEquals(rn[identicalFields],testn[identicalFields])
   checkEquals(testn$StartPoint,1)
-  
+  checkEquals(testn$d$Parent,c(-1, 1, 2, 3, 4, 3))
   rn=RerootNeuron(testn,2)
-  checkEquals(testn$StartPoint,2)
+  checkEquals(rn$StartPoint,2)
 }

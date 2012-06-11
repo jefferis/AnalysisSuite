@@ -97,10 +97,10 @@ ReducedAdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
 RerootNeuron<-function(ANeuron,root=1){
   am=AdjacencyMatrixFromSegList(ANeuron$SegList)
   gam=graph.adjacency(am,'undirected')
-  dgam=dfs(igraph.to.graphNEL(gam),as.character(root))
+  dgam=dfs(igraph.to.graphNEL(gam),as.character(root-1))
   canon_nodeorder=as.integer(dgam$discovered)
   d=ANeuron$d
-  d$Parent=-1
+  d$Parent=-1L
   for(i in seq(nrow(d))){
     if(i==root) next
     # nb graph vertices are 0 indexed
@@ -114,6 +114,10 @@ RerootNeuron<-function(ANeuron,root=1){
   # sl=CanonicalSegList(ANeuron$SegList,root=root)
   # ANeuron$SegList=sl
   ANeuron$d=d
+  # Now that we have recalculated SWC data we should 
+  # use that to recalculate core neuron fields including seglist 
+  coreneuron=ParseSWC(ANeuron$d)
+  ANeuron[names(coreneuron)]<-coreneuron
   ANeuron
 }
 
