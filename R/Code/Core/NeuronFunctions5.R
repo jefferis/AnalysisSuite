@@ -1548,6 +1548,8 @@ read.neuron<-function(f, ...){
 		n=ReadNeuronFromAsc(f, ...)
 	else if(ext=="swc")
 		n=ReadNeuronFromSWC(f, ...)
+	else if(ext=="rds")
+		n=readRDS(file)
 	else {
     h=readLines(f,1) # nb readLines can cope with gzipped data
     
@@ -1566,8 +1568,8 @@ read.neuron<-function(f, ...){
 			n=ReadNeuronFromAsc(f, ...)
 		else stop("Unable to identify file format of file: ",f)
 	}
-	
-	if(is.neuron(n,Strict=FALSE)) as.neuron(n)
+	# we can normally rely on dotprops objects to have the correct class
+	if(is.neuron(n,Strict=FALSE) && !is.dotprops(n)) as.neuron(n)
 	else n
 }
 
@@ -1595,6 +1597,19 @@ read.neurons<-function(paths, patt, OmitFailures=TRUE,
 	if(OmitFailures) nl=nl[!is.na(nl)]
 	nl
 }
+
+#' Write neurons from a neuronlist object to individual files
+#' 
+#' NB using INDICES to subset a large neuron list can be much faster
+#' @param nl neuronlist object
+#' @param dir directory to write neurons
+#' @param propForSubDir field within each neuron that specifies a subdirectory
+#' @param INDICES names of neurons in neuronlist to write
+#' @param ... Additional arguments passed to write.neuron
+#' @return 
+#' @author jefferis
+#' @export
+#' @seealso \code{\link{write.neuron}}
 write.neuronlist<-function(nl,dir,propForSubDir=NULL,INDICES=names(nl),...){
   if(!file.exists(dir)) dir.create(dir)
   for(nn in INDICES){
@@ -1622,10 +1637,14 @@ write.neuronlist<-function(nl,dir,propForSubDir=NULL,INDICES=names(nl),...){
 #' @param ftype File type (a unique abbreviation of 
 #'   'swc','lineset.am','skeletonize.am','neurolucida.asc','borst','rds')
 #' @param suffix Will replace the default suffix for the filetype
+#' @param ... Additional arguments passed to selected  WriteNeuron function
 #' @return return value
 #' @export
-#' @seealso \code{\link{somefun}}
+#' @seealso \code{\link{WriteSWCFile, WriteNeuronToAM, WriteNeuronToAM3D, 
+#'   WriteAscFromNeuron, WriteBorstFile,saveRDS}}
 #' @examples
+#' \dontrun{
+#' 
 write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am','skeletonize.am','neurolucida.asc','borst','rds'),
   suffix=NULL,...){
   if(is.dotprops(n)){
