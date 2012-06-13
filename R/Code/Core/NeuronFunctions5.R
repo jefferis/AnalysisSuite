@@ -296,14 +296,11 @@ subset.neuronlist<-function(nl, ..., INDICES=NULL, ReturnList=is.null(INDICES)){
 	else return(rownames(sdf))
 }
 
-"[.neuronlist" <- function(nl,inds,...) {
-	attribs=attributes(nl)
-	class(nl)='list'
-	nl2=nl[inds,...]
-	class(nl2)=attribs$class
-	df=attr(nl,'df')
+"[.neuronlist" <- function(x,i,...) {
+	nl2=structure(NextMethod("["), class = class(x))
+	df=attr(x,'df')
 	if(!is.null(df)){
-		attr(nl2,'df')=df[inds,,...]
+		attr(nl2,'df')=df[i,,...]
 	}
 	nl2
 }
