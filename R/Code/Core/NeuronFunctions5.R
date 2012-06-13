@@ -323,17 +323,21 @@ nlapply<-function (X, FUN, ...){
 #'
 #' @param nl a neuron list (where omitted will use MyNeurons as default)
 #' @param subset - an expression passed to subset.neuronlist
+#' @param col Optional colours passed to plot3d with mapply
 #' @param ... options passed on to plot3d (such as colours, line width etc)
 #' @return value of plot3d 
 #' @export
-plot3d.neuronlist<-function(nl,subset,...){
+plot3d.neuronlist<-function(nl,subset,col,...){
 	if(!is.neuronlist(nl)){
 		subset=nl
 		nl=MyNeurons
 	}
 	if(!missing(subset)) nl=subset(nl,subset)
-	invisible(mapply(plot3d,nl,...))
-}
+	if(missing(col) && length(nl)>1){
+		col=rainbow(length(nl))
+	}
+	invisible(mapply(plot3d,nl,col=col,...))
+}}
 
 #------------------------------------------------------------------------#
 # Returns a neuron containing the segment orders for the ordered collection
