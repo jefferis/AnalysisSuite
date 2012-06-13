@@ -304,6 +304,24 @@ subset.neuronlist<-function(nl, ..., INDICES=NULL, ReturnList=is.null(INDICES)){
 	}
 	nl2
 }
+
+#' lapply for neuronlists
+#'
+#' Looks after class and any attached dataframe
+#' @param X A neuronlist
+#' @param FUN Function to be applied to each element of X
+#' @param ... Additional arguments for FUN
+#' @return A neuronlist
+#' @export
+#' @seealso \code{\link{lapply,neuronlist}}
+nlapply<-function (X, FUN, ...){
+	structure(lapply(X,FUN,...),class=class(X),df=attr(X,'df'))
+	# nl=
+	# class(nl)<-class(X)
+	# attr(nl,'df')<-attr(X,'df')
+	# nl
+}
+
 #' 3D plots of the elements in a neuronlist, optionally using a subset expression
 #'
 #' @param nl a neuron list (where omitted will use MyNeurons as default)
