@@ -210,7 +210,7 @@ as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
 		else if(any(names(l)!=rownames(df)))
 			stop("mismatch between neuronlist names and dataframe rownames")
 	}
-	if(!inherits(l,"neuronlist")) class(l)<-c(class(l),"neuronlist")
+	if(!inherits(l,"neuronlist")) class(l)<-c("neuronlist",class(l))
 	if(!AddClassToNeurons) return(l)
 	for(i in seq(l)){
 		if(!is.neuron(l[[i]],Strict=TRUE) && is.neuron(l[[i]]))
