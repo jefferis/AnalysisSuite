@@ -337,7 +337,7 @@ plot3d.neuronlist<-function(nl,subset,col,...){
 		col=rainbow(length(nl))
 	}
 	invisible(mapply(plot3d,nl,col=col,...))
-}}
+}
 
 #------------------------------------------------------------------------#
 # Returns a neuron containing the segment orders for the ordered collection
@@ -1601,16 +1601,19 @@ read.neurons<-function(paths, patt, OmitFailures=TRUE,
 	}
 	
 	nl=neuronlist()
-	for(f in paths){
-		n=try(read.neuron(f))
-		if(inherits(n,'try-error')) n=NA
-		nl[[length(nl)+1]]=n
-	}
 	if(is.function(neuronnames))
-		names(nl)=neuronnames(paths)
+		nn=neuronnames(paths)
 	else
-		names(nl)=neuronnames
-	if(OmitFailures) nl=nl[!is.na(nl)]
+		nn=neuronnames
+	for(i in seq_along(paths)){
+		f=paths[i]
+		x=try(read.neuron(f))
+		if(inherits(x,'try-error')){
+			if(OmitFailures) x=NULL
+			else x=NA
+		}
+		nl[[nn[i]]]=x
+	}
 	nl
 }
 
