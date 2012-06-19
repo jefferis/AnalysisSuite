@@ -96,7 +96,7 @@ FlipAndORMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),gz
 ReformatImage<-function(floating,target,registrations,output, 
 	dryrun=FALSE, Verbose=TRUE, MakeLock=TRUE, OverWrite=c("no","update","yes"),
 	filesToIgnoreModTimes=NULL,
-	reformatxPath="/usr/local/bin/reformatx",reformatoptions="-v --pad-out 0",
+	reformatxPath="reformatx",reformatoptions="-v --pad-out 0",
 	Push=FALSE,...){
 		# TODO improve default ouput file name
 	if(missing(output)){
