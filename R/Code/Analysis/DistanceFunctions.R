@@ -110,3 +110,34 @@ RandomiseDistanceMatrix<-function(m,RandomiseNames=TRUE){
 	}
 	rval
 }
+
+#' Convert square distance matrix by applying function to reciprocal distances
+#'
+#' Expects an NxN distance matrix and converts to N^2-N over 2 distances
+#' by applying a function to each pair of values from the upper and lower
+#' triangle
+#' @param dm the (asymmetric) distance matrix
+#' @param fun A function to apply to pairs of distances
+#' @return a \code{\link{dist}} object
+#' @export
+#' @seealso \code{\link{somefun}}
+#' @examples
+#' dm=matrix(1:16,nrow=4)
+#' dmr=as.dist.asym_matrix(dm,"min")
+#' stopifnot(isTRUE(all.equal(dmr,as.dist(dm))))
+#' dmr2=as.dist.asym_matrix(dm,"max")
+#' stopifnot(isTRUE(all.equal(dmr2,as.dist(t(dm)))))
+as.dist.asym_matrix<-function(dm,fun=c('mean','min','max')){
+	fun=match.arg(fun)
+	dm1=as.dist(dm)
+	dm2=as.dist(t(dm))
+	if(fun=='mean')
+		ans=(dm1+dm2)/2
+	else if(fun=='max')
+		ans=pmax(dm1,dm2)
+	else if(fun=='min')
+		ans=pmin(dm1,dm2)
+	attr(ans,'recipfun')=as.character(substitute(fun))
+	ans
+}
+

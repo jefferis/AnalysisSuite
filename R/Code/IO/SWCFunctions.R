@@ -44,7 +44,7 @@
 # source(file.path(CodeDir,"SWCFunctions.R"))
 
 # A typical use would be:
-# MyNeuron<-ParseSWCTree(ReadSWCFile("A:File:Path:JL2R.swc"),"JL2R")
+# MyNeuron<-SWC2Neuron(ReadSWCFile("A:File:Path:JL2R.swc"),"JL2R")
 # plotneuron2d(MyNeuron,ToFile=T) # produce a rotater file
 
 # ReadSWCFile reads in an SWC format file
@@ -79,24 +79,51 @@ WriteSWCFile<-function(ANeuron,
     write.table(df,FileName,col.names=F,row.names=F,append=TRUE,...)
 }
 
+#' Convert SWC style definition of a neuron into complete neuron object
+#'
+#' Details
+#' @param swc Matrix or data.frame with swc style definition of neuron
+#' @return List with class neuron
+#' @export
+#' @seealso \code{\link{is.neuron}},\code{\link{read.neuron}}, \code{\link{ReadNeuronFromSWC}}, \code{\link{ParseSWC}}
+#' @examples
+SWC2Neuron<-function(swc,filename){
+	neuron_core=ParseSWC(data.frame(swc))
+	neuron_extra=list(NeuronName=NeuronNameFromFileName(filename),
+		InputFileName=filename,
+		CreatedAt=Sys.time(),
+		NodeName=Sys.info()["nodename"],
+		InputFileStat=file.info(filename)[1,])
+	as.neuron(c(neuron_extra,neuron_core,list(d=swc)))
+}
 
-# ParseSWCTree 
-# This function takes an SWC format array (e.g. from ReadSWCFile)
-# and returns a Neuron list - it retains the input data
-# in Neuron$d.  The most important new component of Neuron is
-# a segment array, Neuron$SegList with one row for each segment
-# whose elements are the PointNo of the points in a segment
-
-ParseSWCTree<-function(MySWCTree,FileName){
-    NumPoints<-length(MySWCTree[,1])
+#' Low level function to convert SWC data into core components of neuron object
+#' 
+#' In particular this will generate a SegList describing branch structure:
+#' NumPoints
+#' StartPoint
+#' BranchPoints
+#' EndPoints
+#' NumSegs
+#' SegList
+#'
+#' NB read.neuron or ReadNeuronFromSWC are more appropriate for general use.
+#' 
+#' @param swc Dataframe containing PointNo, Label, X,Y,Z,W, Parent
+#' @return List containing core components of neuron
+#' @export
+#' @seealso \code{\link{read.neuron}}, \code{\link{ReadNeuronFromSWC}}, \code{\link{SWC2Neuron}}
+#' @examples
+ParseSWC<-function(swc){
+    NumPoints<-length(swc[,1])
     #Find out which PointNos occur > 1 in $Parent column
-    BranchPoints<-as.numeric(names(which(table(MySWCTree$Parent)>1)))
-    NumBranches<-table(MySWCTree$Parent)[ table(MySWCTree$Parent)>1]
+    BranchPoints<-as.numeric(names(which(table(swc$Parent)>1)))
+    NumBranches<-table(swc$Parent)[ table(swc$Parent)>1]
     #Find out which PointNos occur in $Parent column
-    NotEndPoints<-as.numeric(names(table(MySWCTree$Parent)))
+    NotEndPoints<-as.numeric(names(table(swc$Parent)))
     #Get rid of any -1s
     NotEndPoints<-NotEndPoints[NotEndPoints>0]
-    EndPoints<-MySWCTree$PointNo[-NotEndPoints]
+    EndPoints<-swc$PointNo[-NotEndPoints]
     
     PointType<-rep(0,NumPoints)
     PointType[BranchPoints]<-1
@@ -112,7 +139,7 @@ ParseSWCTree<-function(MySWCTree,FileName){
     CurrSeg<-0
     for(ThisNode in Nodes){
 	#Set the next point to the parent of this one
-	Parent<-MySWCTree$Parent[ThisNode]
+	Parent<-swc$Parent[ThisNode]
 	# Is this a valid parent?
 	# if not, terminate the node immediately
 	if(Parent>0){
@@ -135,7 +162,7 @@ ParseSWCTree<-function(MySWCTree,FileName){
 		    break
 		} else {
 		    # we haven't so lets keep going with this segment
-		    Parent<-MySWCTree$Parent[CurrentPoint]
+		    Parent<-swc$Parent[CurrentPoint]
 		}
 	    } # end of while(Parent>0) loop
 	} # end of if(Parent>0)
@@ -155,27 +182,27 @@ ParseSWCTree<-function(MySWCTree,FileName){
 
     # Check if we ended up with something sensible
     if(length(SegmentList)>0){
-	#OK There's at least one segment
-	ParsedNeuron<-list(NeuronName=NeuronNameFromFileName(FileName),
-	    InputFileName=FileName,
-	    CreatedAt=Sys.time(),
-	    NodeName=Sys.info()["nodename"],
-	    InputFileStat=file.info(FileName)[1,],
-	    NumPoints=NumPoints,
-	    StartPoint=1,
-	    BranchPoints=BranchPoints,
-	    EndPoints=EndPoints,
-	    NumSegs=length(SegmentList),
-	    SegList=SegmentList,
-	    d=MySWCTree	)
-	return(ParsedNeuron)
+		#OK There's at least one segment
+		list(NumPoints=NumPoints,
+			StartPoint=1,
+			BranchPoints=BranchPoints,
+			EndPoints=EndPoints,
+			NumSegs=length(SegmentList),
+			SegList=SegmentList)
     }
-    else return(-1)
-	
+    else return(NULL)
 }
 
-
-
+# ParseSWCTree 
+# This function takes an SWC format array (e.g. from ReadSWCFile)
+# and returns a Neuron list - it retains the input data
+# in Neuron$d.  The most important new component of Neuron is
+# a segment array, Neuron$SegList with one row for each segment
+# whose elements are the PointNo of the points in a segment
+ParseSWCTree<-function(MySWCTree,FileName){
+	warning("This function is deprecated, please use SWC2Neuron")
+	SWC2Neuron(MySWCTree,FileName)
+}
 
 # this is a utility function to find all the points neighbouring
 # a given point.  Bi and Trifurcations are permitted, but no more.

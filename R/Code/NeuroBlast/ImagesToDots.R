@@ -44,6 +44,28 @@ xyzmatrix<-function(x,y=NULL,z=NULL,Transpose=FALSE) {
 	if(Transpose) t(mx) else mx
 }
 
+#' Assign xyz elements of neuron or dotprops object
+#'
+#' Can also handle matrix like objects with cols called X,Y,Z
+#' @param n dotprops/neuron/data.frame/named matrix
+#' @param value Nx3 matrix specifying xyz coords
+#' @return Original object with modified coords
+#' @export
+#' @seealso \code{\link{xyzmatrix}}
+#' @examples
+#' n=MyNeurons[[1]]
+#' xyzmatrix(n)<-xyzmatrix(n)
+#' stopifnot(isTRUE(
+#'   all.equal(xyzmatrix(n),xyzmatrix(MyNeurons[[1]]))
+#' ))
+`xyzmatrix<-`<-function(n,value){
+  if(is.neuron(n)) n$d[,c("X","Y","Z")]=value
+  else if(is.dotprops(n)) n$points[,c("X","Y","Z")]=value
+  else if(c("X","Y","Z") %in% colnames(n)) n[,c("X","Y","Z")]=value
+  else stop("Not a neuron or dotprops object or a matrix-like object with XYZ volnames")
+  n
+}
+
 #' Find the nearest point(s) in a neuron/dotprops to a 3d point
 #'
 #' For example see how far a marked cell body location is from a cell
@@ -94,6 +116,24 @@ length.dotprops<-function(dp) nrow(dp$points)
 
 # redefining length upsets str
 str.dotprops<-function(dp,...) {class(dp)<-"list";str(dp,...)}
+
+#' Carry out in memory digest of a dotprops object
+#'
+#' This takes care to remove non-essential attributes
+#' @param dp Dotprops object
+#' @param ... additional parameters passed to digest function
+#' @return character vector of digest value
+#' @export
+#' @import digest
+#' @seealso \code{\link{digest}}
+#' @examples
+#' digest(dps[[1]])
+digest.dotprops<-function(dp,...){
+  # remove mtime and file attributes
+  atts=attributes(dp)
+  mostattributes(dp)<-atts[setdiff(names(atts),c("mtime",'file'))]
+  digest(dp,...)
+}
 
 DotProperties<-function(points,k=20){
 	points=xyzmatrix(points)
@@ -328,17 +368,24 @@ DotPropertiesFromFile<-function(f, xformfun=NULL, ...){
 #' Transform dot property object using specified registration
 #'
 #' @param dp dotprops object to transform
-#' @param reg affine/warping registration file/folder
+#' @param reg Path to CMTK registration file OR function to transform points
 #' @param k Number of neighbour points to use when recalculating dot properties
 #' @param RecalculateDotProps Whether to recalculate tangent vector etc after 
 #'   applying transformation
-#' @param ... additional arguments passed to transformedPoints
+#' @param ... additional arguments passed to transformedPoints or reg function
 #' @return return points
 #' @export
 #' @seealso \code{\link{transformedPoints}}
 transform.dotprops<-function(dp,reg,k, RecalculateDotProps=T,na.action=c('warn','drop','error'),...) {
 	na.action=match.arg(na.action)
-	pointst=transformedPoints(xyzs=dp$points,warpfile=reg,transforms='warp',...)[['warp']]
+	if(is.function(reg)){
+	  # we've been given a function - apply this to points
+	  pointst=reg(dp$points,...)
+	} else {
+	  # we've been given a CMTK registration file
+	  pointst=transformedPoints(xyzs=dp$points,warpfile=reg,transforms='warp',...)[['warp']]
+	}
+	
 	naPoints=is.na(pointst[,1])
 	if(any(naPoints)){
 		if(na.action=='warn')
@@ -351,8 +398,23 @@ transform.dotprops<-function(dp,reg,k, RecalculateDotProps=T,na.action=c('warn',
 	dpn=DotProperties(pointst,k)
 }
 
-WeightedNNBasedLinesetMatching.dotprops<-function(dp1,dp2,...){
-	WeightedNNBasedLinesetMatching(dp1$points,dp2$points,dvs1=dp1$vect,dvs2=dp2$vect,...)
+#' Compute point & tangent vector similarity score between two dotprops objects
+#'
+#' UseAlpha determines whether the alpha values (eig1-eig2)/sum(eig1:3)
+#' are passed on to WeightedNNBasedLinesetMatching. These will be used to scale
+#' the dot products of the direction vectors for nearest neighbour pairs.
+#' @param dp1,dp2 dotprops objects
+#' @param UseAlpha Whether to scale dot product of tangent vectors (default=F)
+#' @return Return value of NNDistFun passd to WeightedNNBasedLinesetMatching
+#' @export
+#' @seealso \code{\link{DotProperties}},\code{\link{WeightedNNBasedLinesetMatching}}
+#' @examples
+WeightedNNBasedLinesetMatching.dotprops<-function(dp1,dp2,UseAlpha=FALSE,...){
+	if(UseAlpha)
+		WeightedNNBasedLinesetMatching(dp1$points,dp2$points,dvs1=dp1$vect,dvs2=dp2$vect,
+			alphas1=dp1$alpha,alphas2=dp2$alpha,...)
+	else 
+		WeightedNNBasedLinesetMatching(dp1$points,dp2$points,dvs1=dp1$vect,dvs2=dp2$vect,...)
 }
 
 

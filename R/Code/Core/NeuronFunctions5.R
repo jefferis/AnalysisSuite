@@ -183,10 +183,19 @@ as.neuron<-function(n){
 # plot(ANeuron)
 plot.neuron<-function(...) plotneuron2d(...)
 
+#' Make a list of neurons that can be used for coordinate plotting/analysis
+#'
+#' Note that it can cope with both neurons and dotprops but AddClassToNeurons
+#' parameter will only apply to things that look like neurons but don't have
+#' a class of neuron.
+#' @param l An existing list or a single neuron to start a list
+#' @param df A dataframe with one row of information per neuron
+#' @param AddClassToNeurons make sure that list elements have class neuron.
+#' @return neuronlist with attr('df')
+#' @export
+#' @seealso \code{\link{is.neuronlist}},\code{\link{is.neuron}},\code{\link{is.dotprops}}
+#' @examples
 as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
-	# makes a list of neurons that can be used for 
-	# coordinated plots / analysis
-	# allow one neuron to be passed
 	if(is.neuron(l)) {
 		n<-l
 		l<-list(n)
@@ -201,10 +210,10 @@ as.neuronlist<-function(l,df,AddClassToNeurons=TRUE){
 		else if(any(names(l)!=rownames(df)))
 			stop("mismatch between neuronlist names and dataframe rownames")
 	}
-	if(!inherits(l,"neuronlist")) class(l)<-c(class(l),"neuronlist")
+	if(!inherits(l,"neuronlist")) class(l)<-c("neuronlist",class(l))
 	if(!AddClassToNeurons) return(l)
 	for(i in seq(l)){
-		if(!is.neuron(l[[i]],Strict=TRUE))
+		if(!is.neuron(l[[i]],Strict=TRUE) && is.neuron(l[[i]]))
 			l[[i]]=as.neuron(l[[i]])
 	}
 	l
@@ -287,31 +296,47 @@ subset.neuronlist<-function(nl, ..., INDICES=NULL, ReturnList=is.null(INDICES)){
 	else return(rownames(sdf))
 }
 
-"[.neuronlist" <- function(nl,inds,...) {
-	attribs=attributes(nl)
-	class(nl)='list'
-	nl2=nl[inds,...]
-	class(nl2)=attribs$class
-	df=attr(nl,'df')
+"[.neuronlist" <- function(x,i,...) {
+	nl2=structure(NextMethod("["), class = class(x))
+	df=attr(x,'df')
 	if(!is.null(df)){
-		attr(nl2,'df')=df[inds,,...]
+		attr(nl2,'df')=df[i,,...]
 	}
 	nl2
 }
+
+#' lapply for neuronlists
+#'
+#' Looks after class and any attached dataframe.
+#' @param X A neuronlist
+#' @param FUN Function to be applied to each element of X
+#' @param ... Additional arguments for FUN
+#' @return A neuronlist
+#' @export
+#' @seealso \code{\link{lapply,neuronlist}}
+nlapply<-function (X, FUN, ...){
+	cl=if(is.neuronlist(X)) class(X) else c("neuronlist",'list')
+	structure(lapply(X,FUN,...),class=cl,df=attr(X,'df'))
+}
+
 #' 3D plots of the elements in a neuronlist, optionally using a subset expression
 #'
 #' @param nl a neuron list (where omitted will use MyNeurons as default)
 #' @param subset - an expression passed to subset.neuronlist
+#' @param col Optional colours passed to plot3d with mapply
 #' @param ... options passed on to plot3d (such as colours, line width etc)
 #' @return value of plot3d 
 #' @export
-plot3d.neuronlist<-function(nl,subset,...){
+plot3d.neuronlist<-function(nl,subset,col,...){
 	if(!is.neuronlist(nl)){
 		subset=nl
 		nl=MyNeurons
 	}
 	if(!missing(subset)) nl=subset(nl,subset)
-	invisible(mapply(plot3d,nl,...))
+	if(missing(col) && length(nl)>1){
+		col=rainbow(length(nl))
+	}
+	invisible(mapply(plot3d,nl,col=col,...))
 }
 
 #------------------------------------------------------------------------#
@@ -388,6 +413,44 @@ seglength=function(ThisSeg){
 	ds=diff(ThisSeg)
     Squared.ds<-ds*ds
     sum(sqrt(rowSums(Squared.ds)))	
+}
+
+#' Recalculate Neurons's SWCData using SegList and point information
+#'
+#' Uses the SegList field (indices into point array) to recalculate 
+#' point numbers and parent points for SWC data field (d).
+#' If Label column is missing (or ReplaceLabel=TRUE) then it is set to the
+#' value of DefaultLabel (2=Axon by default).
+#' Note that the order of point indices in SegList must match those in SWC.
+#' @param Neuron Must contain both the SegList and d fields
+#' @param RecalculateParents Whether to recalculate parent points (default T)
+#' @param DefaultLabel Integer label to use for SWC data chunk
+#' @param ReplaceLabel Whether to replace Label column if it already exists
+#' @return return value
+#' @export
+#' @seealso \code{\link{ParseSWC}}
+#' @examples
+RecalculateSWCData<-function(Neuron,RecalculateParents=TRUE,DefaultLabel=2L,ReplaceLabel=FALSE){
+  sl=Neuron$SegList
+  d=Neuron$d
+  if(is.null(d$PointNo))
+    d$PointNo=seq(nrow(d))
+  else {
+    # check that points are consecutive
+    if(any(d$PointNo!=seq(nrow(d))))
+      stop("Points must be numbered consecutively from 1:npoints")
+  }
+  # NB this assumes that points are in order
+  if(is.null(d$Parent) || RecalculateParents){
+    d$Parent=-1L
+    for(s in sl){
+      d$Parent[s[-1]]=s[-length(s)]
+    }
+  }
+  if(is.null(d$Label) || ReplaceLabel)
+    d$Label=DefaultLabel
+  Neuron$d=d
+  Neuron
 }
 
 MergeUnconnectedPathsToSingleNeuron<-function(NeuronList){
@@ -1352,8 +1415,6 @@ GetNeuron<-function(NeuronRef,mask=1:length(MyNeurons)){
     return(MyNeurons[[mask[Nnum]]])
 }
 
-#Copied directly from the match help file
-intersect <- function(x, y) y[match(x, y, nomatch = 0)]
 # Find all the elements of x which have a match in y
 matchingyinx <- function(x, y) which(match(x,y,nomatch=0)!=0)
 
@@ -1490,7 +1551,7 @@ getBrain=function(fileNames){
 
 ReadNeuronFromSWC<-function(f){
 	d=ReadSWCFile(f)
-	ParseSWCTree(d,f)
+	SWC2Neuron(d,f)
 }
 
 read.neuron<-function(f, ...){
@@ -1503,6 +1564,8 @@ read.neuron<-function(f, ...){
 		n=ReadNeuronFromAsc(f, ...)
 	else if(ext=="swc")
 		n=ReadNeuronFromSWC(f, ...)
+	else if(ext=="rds")
+		n=readRDS(file)
 	else {
     h=readLines(f,1) # nb readLines can cope with gzipped data
     
@@ -1521,8 +1584,8 @@ read.neuron<-function(f, ...){
 			n=ReadNeuronFromAsc(f, ...)
 		else stop("Unable to identify file format of file: ",f)
 	}
-	
-	if(is.neuron(n,Strict=FALSE)) as.neuron(n)
+	# we can normally rely on dotprops objects to have the correct class
+	if(is.neuron(n,Strict=FALSE) && !is.dotprops(n)) as.neuron(n)
 	else n
 }
 
@@ -1538,15 +1601,105 @@ read.neurons<-function(paths, patt, OmitFailures=TRUE,
 	}
 	
 	nl=neuronlist()
-	for(f in paths){
-		n=try(read.neuron(f))
-		if(inherits(n,'try-error')) n=NA
-		nl[[length(nl)+1]]=n
-	}
 	if(is.function(neuronnames))
-		names(nl)=neuronnames(paths)
+		nn=neuronnames(paths)
 	else
-		names(nl)=neuronnames
-	if(OmitFailures) nl=nl[!is.na(nl)]
+		nn=neuronnames
+	for(i in seq_along(paths)){
+		f=paths[i]
+		x=try(read.neuron(f))
+		if(inherits(x,'try-error')){
+			if(OmitFailures) x=NULL
+			else x=NA
+		}
+		nl[[nn[i]]]=x
+	}
 	nl
+}
+
+#' Write neurons from a neuronlist object to individual files
+#' 
+#' NB using INDICES to subset a large neuron list can be much faster
+#' @param nl neuronlist object
+#' @param dir directory to write neurons
+#' @param propForSubDir field within each neuron that specifies a subdirectory
+#' @param INDICES names of neurons in neuronlist to write
+#' @param ... Additional arguments passed to write.neuron
+#' @return 
+#' @author jefferis
+#' @export
+#' @seealso \code{\link{write.neuron}}
+write.neuronlist<-function(nl,dir,propForSubDir=NULL,INDICES=names(nl),...){
+  if(!file.exists(dir)) dir.create(dir)
+  for(nn in INDICES){
+    n=nl[[nn]]
+    thisdir=dir
+    if(!is.null(propForSubDir)){
+      propval=n[[propForSubDir]]
+      if(!is.null(propval)) thisdir=file.path(dir,propval)
+    }
+    if(!file.exists(thisdir)) dir.create(thisdir)
+    write.neuron(n,dir=thisdir,...)
+  }
+}
+
+#' Write out a neuron in any of the file formats we know about
+#'
+#' If filename is not specified the neuron's InputFileName field will be checked.
+#' If this is missing there will be an error.
+#' If dir is specified it will be combined with basename(filename).
+#' If filename is specified but ftype is not, it will be inferred from filename's
+#'   extension.
+#' @param n A neuron
+#' @param filename Path to output file
+#' @param dir Path to directory (this will replace dirname(filename) if specified)
+#' @param ftype File type (a unique abbreviation of 
+#'   'swc','lineset.am','skeletonize.am','neurolucida.asc','borst','rds')
+#' @param suffix Will replace the default suffix for the filetype
+#' @param ... Additional arguments passed to selected  WriteNeuron function
+#' @return return value
+#' @export
+#' @seealso \code{\link{WriteSWCFile, WriteNeuronToAM, WriteNeuronToAM3D, 
+#'   WriteAscFromNeuron, WriteBorstFile,saveRDS}}
+#' @examples
+#' \dontrun{
+#' 
+write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am','skeletonize.am','neurolucida.asc','borst','rds'),
+  suffix=NULL,...){
+  if(is.dotprops(n)){
+    # we only know how to save dotprops objects in R's internal format
+    ftype='rds'
+  }
+  if(is.null(filename)){
+    filename=n$InputFileName
+    if(is.null(filename)) stop("No filename specified and neuron does not have an InputFileName")
+    ftype=match.arg(ftype)
+    if(!is.null(suffix)) suffix=sub(".*\\.([^.]+)$","\\1",ftype)
+  } else {
+    ext=sub(".*(\\.[^.]+)$","\\1",filename)
+    ftype_from_ext=switch(tolower(ext),.swc='swc',.asc='neurolucida.asc',.am='lineset.am',.amiramesh='lineset.am',.borst='borst',NA)
+    if(!is.na(ftype_from_ext) && length(ftype!=1))
+      ftype=ftype_from_ext
+    else ftype=match.arg(ftype)
+  }
+  # replace with an explicit suffix if desired
+  if(!is.null(suffix)) filename=sub("\\.([^.]+)$",paste(".",sep="",suffix),filename)
+  if(!is.null(dir)){
+    filename=file.path(dir,basename(filename))
+  }
+  if(ftype=='rds'){
+    saveRDS(n,filename,...)
+  } else if(ftype=='lineset.am'){
+    WriteNeuronToAM(n,filename,...)
+  } else if(ftype=='skeletonize.am'){
+    WriteNeuronToAM3D(n,filename,...)
+  } else if(ftype=='neurolucida.asc'){
+    WriteAscFromNeuron(n,filename,...)
+  } else if(ftype=='swc'){
+    WriteSWCFile(n,filename,...)
+  } else if(ftype=='borst'){
+    WriteBorstFile(n,filename,...)
+  } else {
+    stop("Unimplemented file type ",ftype)
+  }
 }

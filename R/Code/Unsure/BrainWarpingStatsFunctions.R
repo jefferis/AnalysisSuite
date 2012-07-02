@@ -41,7 +41,8 @@
 
 # source(file.path(CodeDir,"BrainWarpingStatsFunctions.R"))
 
-transformedPoints=function(Brain=NULL,xyzs=NULL,warpfile=NULL,AllRegDir=AllRegDir,
+transformedPoints=function(Brain=NULL,xyzs=NULL,
+	warpfile=NULL,AllRegDir=get('AllRegDir',envir=.GlobalEnv),
 	gregxform=file.path(IGSRegToolsDir,"gregxform"),direction=c("inverse","forward"),
 	transforms=c("warp","affine"),gregxoptions="-b"){
 	if(file.access(gregxform,mode=1)<0 || file.info(gregxform)$isdir)
@@ -75,7 +76,7 @@ transformedPoints=function(Brain=NULL,xyzs=NULL,warpfile=NULL,AllRegDir=AllRegDi
 			# if not use traceinfo
 			if(!exists("TraceInfo")) {
 				warning("You must supply a warpfile, or make sure that there is an entry in the MNInfo$WarpFile column")
-				return(null)
+				return(NULL)
 			}			
 			warpfile=file.path(RootDir,"allreg",TraceInfo$StudyList[TraceInfo$Brain==Brain])
 		}
@@ -125,7 +126,13 @@ transformedPoints=function(Brain=NULL,xyzs=NULL,warpfile=NULL,AllRegDir=AllRegDi
 
 TransformNeuron<-function(neuron,warpfile=NULL,transform=c("warp","affine"),...){
 	transform=match.arg(transform,several.ok=FALSE)
-	neuron$d[,c("X","Y","Z")]=transformedPoints(neuron$NeuronName,neuron$d[,c("X","Y","Z")],warpfile=warpfile,transforms=transform,...)[[transform]]
+	tps=transformedPoints(neuron$NeuronName,xyzmatrix(neuron),
+	  warpfile=warpfile,transforms=transform,...)[[transform]]
+	if(!is.null(tps)) xyzmatrix(neuron)<-tps
+	else {
+		warning("Failed to transform neuron")
+		return(NULL)
+	}
 	return(neuron)
 }
 

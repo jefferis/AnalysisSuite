@@ -118,3 +118,13 @@ test.touch<-function(){
 	checkEqualsNumeric(fis2$mtime,fis$mtime[1],"Change mtime to that of a refernce file")
   checkEqualsNumeric(fis2$atime,fis$atime[2],"Leave atime intact") 
 }
+
+test.gzip.crc<-function(){
+	rdsfile=system.file('help/aliases.rds')
+	crc1=gzip.crc(rdsfile)
+	tf=tempfile()
+	on.exit(unlink(tf))
+	saveRDS(readRDS(rdsfile),file=tf,compress=F)
+	crc2=digest(file=tf,algo='crc32')
+	checkEquals(crc1,crc2,'digest(,algo="crc32") and gzip.crc agree')
+}
