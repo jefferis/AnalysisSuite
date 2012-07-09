@@ -1664,8 +1664,8 @@ write.neuronlist<-function(nl,dir,propForSubDir=NULL,INDICES=names(nl),...){
 #' @examples
 #' \dontrun{
 #' 
-write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am','skeletonize.am','neurolucida.asc','borst','rds'),
-  suffix=NULL,...){
+write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am',
+    'skeletonize.am','neurolucida.asc','borst','rds'),suffix=NULL,...){
   if(is.dotprops(n)){
     # we only know how to save dotprops objects in R's internal format
     ftype='rds'
@@ -1674,7 +1674,7 @@ write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am','skel
     filename=n$InputFileName
     if(is.null(filename)) stop("No filename specified and neuron does not have an InputFileName")
     ftype=match.arg(ftype)
-    if(!is.null(suffix)) suffix=sub(".*\\.([^.]+)$","\\1",ftype)
+    if(is.null(suffix)) suffix=sub(".*\\.([^.]+)$","\\1",ftype)
   } else {
     ext=sub(".*(\\.[^.]+)$","\\1",filename)
     ftype_from_ext=switch(tolower(ext),.swc='swc',.asc='neurolucida.asc',.am='lineset.am',.amiramesh='lineset.am',.borst='borst',NA)
