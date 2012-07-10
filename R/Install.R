@@ -5,6 +5,15 @@ local({
     source("http://bioconductor.org/biocLite.R")
     for (pkg in x) biocLite(pkg)
   }
+  
+  install_or_update_cran_package<-function(x){
+    allpackages=.packages(all = TRUE)
+    new=setdiff(x,allpackages)
+    existing=intersect(x,allpackages)
+    update.packages(existing)
+    install.packages(new)
+  }
+  
   gjanalysis_suite_install<-function(local_file=FALSE){
     message("Please choose a location in which to INSTALL AnalysisSuite")
     message("You will need to type a fake filename in the dialog box you are presented")
@@ -27,6 +36,7 @@ local({
       dirname(zf[1])
     }
   }
+  
   set_option<-function(p){
     options(gjanalysissuite.startup=p)
   }
@@ -38,10 +48,6 @@ local({
   }
 
   if(!require(httr)){
-    message("Installing httr package to permit https downloads (from github)")
-    install.packages("httr")
-  }
-  if(!require(httr)){
     message("Please manually download the zip file at https://github.com/jefferis/AnalysisSuite/zipball/master")
     readline("Press return when download has finished")
     installpath=gjanalysis_suite_install(local_file=TRUE)
@@ -49,7 +55,7 @@ local({
     installpath=gjanalysis_suite_install()
   }
   message("Installing required packages")
-  install.packages(c("rgl",'RANN','igraph'))
+  install_or_update_cran_package(c("rgl",'RANN','igraph'))
   install_bioc('RBGL')
   startup=file.path(installpath,'R','Code','Startup.R')
   set_option(startup)
