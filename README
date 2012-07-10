@@ -18,7 +18,9 @@ http://dx.doi.org/10.1016/j.cell.2007.01.040
 INSTALLATION
 ------------
 
-  * Copy the source code to a suitable location on your hard drive
+  * Download the source code to a suitable location on your hard drive
+    * you can either get a zip snapshot of the code by following this link https://github.com/jefferis/AnalysisSuite/zipball/master
+    * or git clone the repository (strongly recommended if you plan to use this code regularly)
   * Start R
   * source ''/path/to/AnalysisSuite/R/Code/Startup.R''
   * See http://flybrain.mrc-lmb.cam.ac.uk/dokuwiki/doku.php?id=warping_manual:start for further details
