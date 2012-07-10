@@ -10,8 +10,10 @@ local({
     allpackages=.packages(all = TRUE)
     new=setdiff(x,allpackages)
     existing=intersect(x,allpackages)
-    update.packages(existing)
-    install.packages(new)
+    if(length(existing))
+      update.packages(existing)
+    if(length(new))
+      install.packages(new)
   }
   
   gjanalysis_suite_install<-function(local_file=FALSE){
