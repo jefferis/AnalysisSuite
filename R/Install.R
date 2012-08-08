@@ -48,13 +48,14 @@ local({
     optionline=paste("options(gjanalysissuite.startup='",p,"')",sep='')
     cat(file=rp,append=TRUE,optionline,sep="",'\n')
   }
-
-  if(!require(httr)){
-    message("Please manually download the zip file at https://github.com/jefferis/AnalysisSuite/zipball/master")
-    readline("Press return when download has finished")
-    installpath=gjanalysis_suite_install(local_file=TRUE)
-  } else {
+  RDir<-dirname(attr(body(function() {}),'srcfile')$filename)
+  if(RDir=='.')){
+    # we are sourcing this from a connection (which happens during web install)
     installpath=gjanalysis_suite_install()
+  } else {
+    # file has already been unzipped (hopefully in the right place)
+    # 
+    installpath=dirname(RDir)
   }
   message("Installing required packages")
   install_or_update_cran_package(c("rgl",'RANN','igraph'))
@@ -62,6 +63,8 @@ local({
   startup=file.path(installpath,'R','Code','Startup.R')
   set_option(startup)
   add_path_to_rprofile(startup)
-  message("In future you can start AnalysisSuite by doing")
+  message("********************* Install completed ********************")
+  message("You can start AnalysisSuite (now and in the future) by doing")
   message("source(options()$gjanalysissuite.startup)")
+  message("************************************************************")
 })
