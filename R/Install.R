@@ -49,7 +49,7 @@ local({
     cat(file=rp,append=TRUE,optionline,sep="",'\n')
   }
   RDir<-dirname(attr(body(function() {}),'srcfile')$filename)
-  if(RDir=='.')){
+  if(RDir=='.'){
     # we are sourcing this from a connection (which happens during web install)
     installpath=gjanalysis_suite_install()
   } else {
