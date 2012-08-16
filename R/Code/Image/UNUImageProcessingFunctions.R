@@ -320,6 +320,8 @@ NrrdCrc<-function(infile,UseGzip=FALSE,FastHeader=TRUE){
 	crc
 }
 
+# gamma: Just as in xv, the gamma value here is actually the reciprocal
+# of the exponent actually used to transform the values.
 NrrdProject<-function(infile,outfile,axis,
 	measure=c("max", "min", "mean", "median", "mode", "variance", "skew",
 	"intc", "slope", "error", "sd", "product", "sum", "L1", "L2", "Linf"),
