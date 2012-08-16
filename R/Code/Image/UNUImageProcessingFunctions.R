@@ -342,7 +342,7 @@ NrrdProject<-function(infile,outfile,axis,
 	cmd=paste("unu resample -s",scale," = -k ",kernel," -i",shQuote(infile),
 		"| unu project -a",axis,"-m ",measure," | unu quantize -b 8 ")
 	if(!is.na(gamma)){
-		cmd=paste(cmd,"| unu gamma -blind8 --gamma",gamma)
+		cmd=paste(cmd,"| unu gamma --gamma",gamma)
 	}
 	cmd=paste(cmd,"| unu save -f png -o",shQuote(outfile))
 	rval = system(cmd)
