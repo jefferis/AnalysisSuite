@@ -323,7 +323,7 @@ NrrdCrc<-function(infile,UseGzip=FALSE,FastHeader=TRUE){
 NrrdProject<-function(infile,outfile,axis,
 	measure=c("max", "min", "mean", "median", "mode", "variance", "skew",
 	"intc", "slope", "error", "sd", "product", "sum", "L1", "L2", "Linf"),
-	scale="x0.3333 x0.333",
+	scale="x0.3333 x0.333",kernel='cheap',
 	suffix=NULL,
 	CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE){
 	measure=match.arg(measure)
@@ -339,7 +339,7 @@ NrrdProject<-function(infile,outfile,axis,
 	# return FALSE to signal output doens't exist
 	if(UseLock && !makelock(lockfile)) return (FALSE)
 	if(is.numeric(scale)) scale=paste(scale,collapse=" ")
-	cmd=paste("unu resample -s",scale," = -k cheap -i",shQuote(infile),
+	cmd=paste("unu resample -s",scale," = -k ",kernel," -i",shQuote(infile),
 		"| unu project -a",axis,"-m ",measure," | unu quantize -b 8 | unu save -f png",
 		"-o",shQuote(outfile))
 	rval = system(cmd)
