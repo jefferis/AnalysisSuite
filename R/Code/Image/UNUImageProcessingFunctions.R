@@ -323,7 +323,7 @@ NrrdCrc<-function(infile,UseGzip=FALSE,FastHeader=TRUE){
 NrrdProject<-function(infile,outfile,axis,
 	measure=c("max", "min", "mean", "median", "mode", "variance", "skew",
 	"intc", "slope", "error", "sd", "product", "sum", "L1", "L2", "Linf"),
-	scale="x0.3333 x0.333",kernel='cheap',
+	scale="x0.3333 x0.333",kernel='cheap',gamma=NA,
 	suffix=NULL,
 	CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE){
 	measure=match.arg(measure)
@@ -340,8 +340,11 @@ NrrdProject<-function(infile,outfile,axis,
 	if(UseLock && !makelock(lockfile)) return (FALSE)
 	if(is.numeric(scale)) scale=paste(scale,collapse=" ")
 	cmd=paste("unu resample -s",scale," = -k ",kernel," -i",shQuote(infile),
-		"| unu project -a",axis,"-m ",measure," | unu quantize -b 8 | unu save -f png",
-		"-o",shQuote(outfile))
+		"| unu project -a",axis,"-m ",measure," | unu quantize -b 8 ")
+	if(!is.na(gamma)){
+		cmd=paste(cmd,"| unu gamma -blind8 --gamma",gamma)
+	}
+	cmd=paste(cmd,"| unu save -f png -o",shQuote(outfile))
 	rval = system(cmd)
 	if(Verbose) cat(".")
 	if(UseLock) unlink(lockfile)
