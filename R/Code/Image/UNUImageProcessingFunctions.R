@@ -354,6 +354,35 @@ NrrdProject<-function(infile,outfile,axis,
 	return(TRUE)
 }
 
+NrrdMerge<-function(infiles,outdir=NULL,outfile=NULL,axis=0,
+	CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE,...){
+	if(is.null(outfile) && is.null(outdir)) {
+		outfile=sub("\\.[^.]+$","-merge.png",infiles[1])
+	} else if (is.null(outfile)){
+		outfile=file.path(outdir,basename(infiles[1]))
+		outfile=sub("\\.[^.]+$",".png",outfile)
+	} else {
+		# make sure this is a png
+		outfile=sub("\\.[^.]+$",".png",outfile)
+	}
+
+	if(!all(file.exists(infiles))) stop("one or more infiles: ",infiles," do not exist")
+	# return TRUE to signal output exists (we just didn't make it now)
+	if(!Force && !RunCmdForNewerInput(NULL,infiles,outfile)) return (TRUE)
+	if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile),recursive = TRUE)
+	lockfile=paste(outfile,sep=".","lock")
+	# return FALSE to signal output doens't exist
+	if(UseLock && !makelock(lockfile)) return (FALSE)
+
+	cmd=paste("unu join -a",axis,"-incr -i",paste(shQuote(infiles),collapse=" "),"-o",shQuote(outfile))
+	cat(cmd,"\n")
+	rval = system(cmd)
+	if(Verbose) cat(".")
+	if(UseLock) unlink(lockfile)
+	if(rval!=0) stop("unu error ",rval," in NrrdProject")
+	return(TRUE)
+}
+
 NrrdFlip<-function(infile,outfile,axes,suffix=NULL,endian=c("big","little"),
 	CreateDirs=TRUE,Verbose=TRUE,UseLock=FALSE, OverWrite=c("no","update","yes")){
 	# TODO would be nice if we could 
