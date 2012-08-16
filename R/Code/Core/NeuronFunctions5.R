@@ -1622,23 +1622,40 @@ read.neurons<-function(paths, patt, OmitFailures=TRUE,
 #' NB using INDICES to subset a large neuron list can be much faster
 #' @param nl neuronlist object
 #' @param dir directory to write neurons
-#' @param propForSubDir field within each neuron that specifies a subdirectory
+#' @param subdir String naming field in neuron that specifies a subdirectory
+#'   OR expression to evaluate in the context of neuronlist's df attribute
 #' @param INDICES names of neurons in neuronlist to write
 #' @param ... Additional arguments passed to write.neuron
 #' @return 
 #' @author jefferis
 #' @export
 #' @seealso \code{\link{write.neuron}}
-write.neuronlist<-function(nl,dir,propForSubDir=NULL,INDICES=names(nl),...){
+#' @examples
+#' \dontrun{
+#' write.neurons(MyNeurons,'/path/to/some/dir',subdir='CellType')
+#' write.neurons(MyNeurons,'/path/to/some/dir',subdir=file.path(PNType,Glomerulus,Sex))
+#' }
+write.neuronlist<-function(nl,dir,subdir=NULL,INDICES=names(nl),...){
   if(!file.exists(dir)) dir.create(dir)
+  # Construct subdirectory structure based on 
+  df=attr(nl,'df')
+  ee=substitute(subdir)
+  subdirs=NULL
+  if(is.call(ee) && !is.null(df)){
+    df=df[INDICES,]
+    subdirs=file.path(dir,eval(ee,df,parent.frame()))
+    names(subdirs)=INDICES
+  }
   for(nn in INDICES){
     n=nl[[nn]]
     thisdir=dir
-    if(!is.null(propForSubDir)){
-      propval=n[[propForSubDir]]
+    if(is.null(subdirs)){
+      propval=n[[subdir]]
       if(!is.null(propval)) thisdir=file.path(dir,propval)
+    } else {
+      thisdir=subdirs[nn]
     }
-    if(!file.exists(thisdir)) dir.create(thisdir)
+    if(!file.exists(thisdir)) dir.create(thisdir,recursive=TRUE)
     write.neuron(n,dir=thisdir,...)
   }
 }
@@ -1655,40 +1672,54 @@ write.neuronlist<-function(nl,dir,propForSubDir=NULL,INDICES=names(nl),...){
 #' @param dir Path to directory (this will replace dirname(filename) if specified)
 #' @param ftype File type (a unique abbreviation of 
 #'   'swc','lineset.am','skeletonize.am','neurolucida.asc','borst','rds')
-#' @param suffix Will replace the default suffix for the filetype
+#' @param suffix Will replace the default suffix for the filetype and should
+#'   include the period eg suffix='.amiramesh' or suffix='_reg.swc'
 #' @param ... Additional arguments passed to selected  WriteNeuron function
 #' @return return value
 #' @export
 #' @seealso \code{\link{WriteSWCFile, WriteNeuronToAM, WriteNeuronToAM3D, 
 #'   WriteAscFromNeuron, WriteBorstFile,saveRDS}}
-#' @examples
-#' \dontrun{
-#' 
-write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am','skeletonize.am','neurolucida.asc','borst','rds'),
-  suffix=NULL,...){
+write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am',
+    'skeletonize.am','neurolucida.asc','borst','rds'),suffix=NULL,...){
   if(is.dotprops(n)){
     # we only know how to save dotprops objects in R's internal format
     ftype='rds'
   }
   if(is.null(filename)){
+    # no filename was specified - use the one embedded in neuron
     filename=n$InputFileName
     if(is.null(filename)) stop("No filename specified and neuron does not have an InputFileName")
-    ftype=match.arg(ftype)
-    if(!is.null(suffix)) suffix=sub(".*\\.([^.]+)$","\\1",ftype)
+    if(!is.null(suffix)){
+      # we specified an explicit suffix - use this to identify file type
+      ftype_from_ext=switch(tolower(suffix),.swc='swc',.asc='neurolucida.asc',
+        .am='lineset.am',.amiramesh='lineset.am',.borst='borst',.rds='rds',NA)
+      if(is.na(ftype_from_ext) && length(ftype!=1)){
+        stop("file suffix: ",suffix,
+          " does not uniquely identify filetype nor has this been specified directly")
+      } else if(length(ftype_from_ext)>1)
+        ftype=ftype_from_ext
+      else
+        ftype=match.arg(ftype)
+    } else {
+      # use the file type to specify the suffix
+      ftype=match.arg(ftype)
+      suffix=sub(".*(\\.[^.]+)$","\\1",ftype)      
+    }
   } else {
     ext=sub(".*(\\.[^.]+)$","\\1",filename)
-    ftype_from_ext=switch(tolower(ext),.swc='swc',.asc='neurolucida.asc',.am='lineset.am',.amiramesh='lineset.am',.borst='borst',NA)
+    ftype_from_ext=switch(tolower(ext),.swc='swc',.asc='neurolucida.asc',
+      .am='lineset.am',.amiramesh='lineset.am',.borst='borst',.rds='rds',NA)
     if(!is.na(ftype_from_ext) && length(ftype!=1))
       ftype=ftype_from_ext
     else ftype=match.arg(ftype)
   }
   # replace with an explicit suffix if desired
-  if(!is.null(suffix)) filename=sub("\\.([^.]+)$",paste(".",sep="",suffix),filename)
+  if(!is.null(suffix)) filename=sub("(\\.[^.]+)$",suffix,filename)
   if(!is.null(dir)){
     filename=file.path(dir,basename(filename))
   }
   if(ftype=='rds'){
-    saveRDS(n,filename,...)
+    saveRDS(n,file=filename,...)
   } else if(ftype=='lineset.am'){
     WriteNeuronToAM(n,filename,...)
   } else if(ftype=='skeletonize.am'){
