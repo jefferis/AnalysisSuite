@@ -645,7 +645,7 @@ NrrdMakeDetachedHeaderForNrrd<-function(nrrd,nhdr=paste(nrrd,sep='.','nhdr')){
 #' @author jefferis
 #' @seealso \link{\code{ReadNrrdHeader}}
 #' @export
-NrrdVoxDims<-function(f,ReturnAbsoluteDims=TRUE){
+NrrdVoxDims<-function(f,ReturnAbsoluteDims=TRUE,Verbose=FALSE){
 	if(is.character(f))
 		h=ReadNrrdHeader(f)
 	else
@@ -655,8 +655,8 @@ NrrdVoxDims<-function(f,ReturnAbsoluteDims=TRUE){
 	} else if ('spacings'%in%names(h)){
 		voxdims=h[["spacings"]]
 	} else {
-		warning("Unable to find voxel dimensions in nrrd: ",f)
-		vd=rep(NA,h$dimension)
+		if(Verbose) warning("Unable to find voxel dimensions in nrrd: ",f)
+		voxdims=rep(NA,h$dimension)
 	}
 	
 	# Sometimes get -ve space dirs, take abs if requested
