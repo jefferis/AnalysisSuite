@@ -1589,16 +1589,31 @@ read.neuron<-function(f, ...){
 	else n
 }
 
-read.neurons<-function(paths, patt, OmitFailures=TRUE,
-	neuronnames=basename, ...){
+#' Read one or more neurons from file to a neuronlist in memory
+#'
+#' This function will cope with the same set of file formats offered by
+#' read.neuron.
+#' If the paths argument specifies a (single) directory then all files in that 
+#' directory will be read unless an optional regex pattern is also specified.
+#' neuronnames must specify a unique set of names that will be used as the 
+#' names of the neurons in the resultant neuronlist. If neuronnames is a
+#' a function then this will be applied to the path to each neuron. The default
+#' value is the function basename which results in each neuron being named for 
+#' the input file from which it was read.
+#' @param paths Paths to neuron input files (or directory containing neurons)
+#' @param pattern If paths is a directory, regex that file names must match.
+#' @param neuronnames Character vector or function that specified neuron names
+#' @param OmitFailures Omit failures (when TRUE) or leave an NA value in the list
+#' @return neuronlist object containing the neurons
+#' @export
+#' @seealso \code{\link{read.neuron}}
+#' @examples
+read.neurons<-function(paths, pattern=NULL, neuronnames=basename,
+  OmitFailures=TRUE, ...){
 	if(!is.character(paths)) stop("Expects a character vector of filenames")
 	
-	if(length(paths)==1 && file.info(paths)$isdir){
-		paths=if(missing(patt))
-			dir(paths,full=TRUE)
-		else
-			dir(paths,patt=patt,full=TRUE)
-	}
+	if(length(paths)==1 && file.info(paths)$isdir)
+		paths=dir(paths,pattern=pattern,full=TRUE)
 	
 	nl=neuronlist()
 	if(is.function(neuronnames))
