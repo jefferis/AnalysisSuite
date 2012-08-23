@@ -327,12 +327,30 @@ nlapply<-function (X, FUN, ...){
 #' @param ... options passed on to plot3d (such as colours, line width etc)
 #' @return value of plot3d 
 #' @export
+#' plot3d(MyNeurons,glomerulus=="DA1",col='red')
+#' plot3d(MyNeurons,glomerulus=="VA1lm",col='green')
 plot3d.neuronlist<-function(nl,subset,col,...){
 	if(!is.neuronlist(nl)){
 		subset=nl
 		nl=MyNeurons
 	}
-	if(!missing(subset)) nl=subset(nl,subset)
+	if(!missing(subset)){
+		df=attr(nl,'df')
+		if(is.null(df)) stop("Can't use a subset unless neuronlist has an attached dataframe")
+		# convert subset (which may a language expression) into an expression that won't get
+		# evaluated until we say so
+		e <- substitute(subset)
+		# now evaluate it looking for variables first in the attached data frame and then 
+		# in the environment of the function
+		r <- eval(e, df, parent.frame())
+		# check we got something back
+		if((is.logical(r) && sum(r)==0) || length(r)==0){
+			# no neurons left, so just return
+			return()
+		}
+		# now just select the neurons we want
+		nl=nl[r]
+	} 
 	if(missing(col) && length(nl)>1){
 		col=rainbow(length(nl))
 	}
