@@ -1,6 +1,8 @@
 # Functions to assist in coordinating parallel processing of data
 # eg across many cpus/machines or other OS interactions
 
+library(digest)
+
 # inspired by makelock = munger.pl, which is supposed to be
 # nfs safe (although I have my doubts)
 makelock<-function(lockfile,lockmsg,CreateDirectories=TRUE){
