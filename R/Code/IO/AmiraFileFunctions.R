@@ -789,6 +789,10 @@ ParseEdgeListForAllSubTrees<-function(Nb,Origin=NULL,Silent=T){
 	SegLists
 }
 
+read.neuron.amiraskel<-function(AM3DFile){
+	datalist=ReadAM3DData(AM3DFile)
+	MyNeuron<-ParseAM3DToNeuron(datalist,AM3DFile,...)
+}
 
 ReadNeuronFromAM3D<-function(AM3DFile,Components="Axon",OldNeuron=NULL,ReOrient=F,WithConvexHull=T,...){
 	# Function to read in a neuron from an AmiraMesh 3D ascii file
@@ -801,6 +805,7 @@ ReadNeuronFromAM3D<-function(AM3DFile,Components="Axon",OldNeuron=NULL,ReOrient=
 	# nb if WithConvHull ==T then use convex hull to reduce number of data 
 	# points in LH and MB contours 
 
+	# .Deprecated(read.neuron.amiraskel)
 	
 	if(any(Components=="Axon")){	
 		# WE'RE GOING TO BUILD A NEW NEURON FROM SCRATCH

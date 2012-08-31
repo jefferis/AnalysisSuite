@@ -272,61 +272,55 @@ GetMarkerPoints<-function(ANeuron,AscData,AscFile){
 # so that the axes can be swapped/inverted in due course
 # AT THE MOMENT CONTAINS RE-ORIENTING CODE FOR AXON DATA!!
 OrientNeuron<-function(ANeuron,AscData,AscFile,ReOrient=T){
-
-   
-    if(ReOrient){
-	#OK Now get the Orientation Markers and the LHEntryPoint
 	
-	AVMLine<-na.omit(c(grep("AVM",AscData)+1,grep("Marker 1",AscData)+1))[1]
-	AVMPoint<-as.numeric(unlist(strsplit(AscData[AVMLine],split="[ (]+"))[2:4])
-	if ( any(is.na(AVMPoint)) ){
-	    warning(
-	    paste("Cant find AVM (AnteroVentroMedial) Corner in",AscFile))
-	    return(ANeuron)
+	
+	if(ReOrient){
+		#OK Now get the Orientation Markers and the LHEntryPoint
+		
+		AVMLine<-na.omit(c(grep("AVM",AscData)+1,grep("Marker 1",AscData)+1))[1]
+		AVMPoint<-as.numeric(unlist(strsplit(AscData[AVMLine],split="[ (]+"))[2:4])
+		if ( any(is.na(AVMPoint)) ){
+			warning(
+					paste("Cant find AVM (AnteroVentroMedial) Corner in",AscFile))
+			return(ANeuron)
+		}
+		
+		
+		AVLLine<-na.omit(c(grep("AVL",AscData)+1,grep("Marker 2",AscData)+1))[1]
+		AVLPoint<-as.numeric(unlist(strsplit(AscData[AVLLine],split="[ (]+"))[2:4])
+		if ( any(is.na(AVLPoint)) ){
+			warning(
+					paste("Cant find AVL (AnteroVentroLateral) Corner",AscFile))
+			return(ANeuron)
+		}
+		# OK Now get the new axes nb the largest and smallest values on each 
+		# the axes of ANeuron$d (the array describing the points in the axon tree)
+		# are also passed to GetRealAxes
+		MyPointList<-c(list(AVMPoint=AVMPoint,AVLPoint=AVLPoint),
+				lapply(ANeuron$d[c("X","Y","Z")],range))
+		
+		NewAxisInfo<-GetRealAxes(MyPointList)
+		# OK Now that we've figured out how to treat the axes, rescale/order axon data axes
+		# and the AVM/L Marker Points
+		ANeuron$d[,c("X","Y","Z")]<-InvertAndReorderData(ANeuron$d[,c("X","Y","Z")],NewAxisInfo)
+		AVMPoint<-InvertAndReorderData(AVMPoint,NewAxisInfo)
+		AVLPoint<-InvertAndReorderData(AVLPoint,NewAxisInfo)
+		# NB AxonOriented is a flag to indicate that we have rotated the axon data
+		# NB making AVMPoint and AVLPoint into their own list is so that these 2 arrays 
+		# don't get unlisted into AVMPoint1,AVMPoint2 etc.
+		OrientInfo<-c(AxonOriented=T,list(AVMPoint=AVMPoint,AVLPoint=AVLPoint),NewAxisInfo)
+	} else {
+		# GJ: 28 March 2004
+		# I don't want to rescale the new trace files since they should
+		# all be in the correct orientation
+		# This is a hack to prevent re-orientation of trace files
+		NewAxisInfo=list(Scl=c(1,1,1),NewAxes=c(1,2,3))
+		OrientInfo<-c(AxonOriented=T,list(AVMPoint=NA,AVLPoint=NA),NewAxisInfo)
 	}
 	
-
-	AVLLine<-na.omit(c(grep("AVL",AscData)+1,grep("Marker 2",AscData)+1))[1]
-	AVLPoint<-as.numeric(unlist(strsplit(AscData[AVLLine],split="[ (]+"))[2:4])
-	if ( any(is.na(AVLPoint)) ){
-	    warning(
-	    paste("Cant find AVL (AnteroVentroLateral) Corner",AscFile))
-	    return(ANeuron)
-	}
-	# OK Now get the new axes nb the largest and smallest values on each 
-	# the axes of ANeuron$d (the array describing the points in the axon tree)
-	# are also passed to GetRealAxes
-	MyPointList<-c(list(AVMPoint=AVMPoint,AVLPoint=AVLPoint),
-	    lapply(ANeuron$d[c("X","Y","Z")],range))
-     
-	NewAxisInfo<-GetRealAxes(MyPointList)
-	# OK Now that we've figured out how to treat the axes, rescale/order axon data axes
-	# and the AVM/L Marker Points
-	ANeuron$d[,c("X","Y","Z")]<-InvertAndReorderData(ANeuron$d[,c("X","Y","Z")],NewAxisInfo)
-	AVMPoint<-InvertAndReorderData(AVMPoint,NewAxisInfo)
-	AVLPoint<-InvertAndReorderData(AVLPoint,NewAxisInfo)
-    # NB AxonOriented is a flag to indicate that we have rotated the axon data
-    # NB making AVMPoint and AVLPoint into their own list is so that these 2 arrays 
-    # don't get unlisted into AVMPoint1,AVMPoint2 etc.
-	OrientInfo<-c(AxonOriented=T,list(AVMPoint=AVMPoint,AVLPoint=AVLPoint),NewAxisInfo)
-    } else {
-	# GJ: 28 March 2004
-	# I don't want to rescale the new trace files since they should
-	# all be in the correct orientation
-	# This is a hack to prevent re-orientation of trace files
-        NewAxisInfo=list(Scl=c(1,1,1),NewAxes=c(1,2,3))
-	OrientInfo<-c(AxonOriented=T,list(AVMPoint=NA,AVLPoint=NA),NewAxisInfo)
-    }
-    
-    if( is.null(ANeuron$OrientInfo) ){
-	### Need to create a new object for orientation info since this Neuron
-	  # doesn't yet have any orientation info
-	ANeuron<-c(ANeuron,list(OrientInfo=OrientInfo))
-    } else {
-        ANeuron$OrientInfo<-OrientInfo
-    }
-
-    return(ANeuron)
+	ANeuron$OrientInfo<-OrientInfo
+	
+	return(ANeuron)
 }
 
 # Expects a point or a matrix of X,Y and Z values
