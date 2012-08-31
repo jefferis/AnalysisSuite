@@ -685,7 +685,7 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 			ParsedNeuron$SubTrees=SubTrees
 		}
 		
-		return(ParsedNeuron)
+		return(as.neuron(ParsedNeuron))
 	} else {
 		cat("0 length Seglist for",filename,"\n")
 		return(NULL)
@@ -849,12 +849,8 @@ ReadNeuronFromAM3D<-function(AM3DFile,Components="Axon",OldNeuron=NULL,ReOrient=
 		warning(paste("Don't know how to add LH data to AmiraMesh 3D file",AM3DFile))
 	}
 	
-	class(MyNeuron)=c("neuron",class(MyNeuron))
 	return(MyNeuron)
-
 }
-
-
 
 WriteNeuronToAM<-function(ANeuron,AMFile=NULL,
 	suffix="am",Force=F,MakeDir=T,WriteAllSubTrees=TRUE,ScaleSubTreeNumsTo1=TRUE,
