@@ -29,7 +29,7 @@ TidyDBResult<-function(df,maxFactorLength=60,minUniqueFracToKeepChar=1.0,convNAC
 		# FACTORS AND T/F
 		# iconv to latin1 suppresses locale errors (though may well screw up non-ascii chars)
 		# not really sure what the correct locale for stuff coming out of FileMaker 
-		# via ODBC actually is – neither Latin1 or macroman seemed to do the trick
+		# via ODBC actually is - neither Latin1 or macroman seemed to do the trick
 		df[[c]]=sub("\\N","",iconv(df[[c]],"",to="latin1"),fixed=TRUE)
 		maxstrlen=max(nchar(df[[c]]))
 		if(maxstrlen==1){

@@ -328,7 +328,7 @@ voxdim.gjdens<-function(d){
 
 getBounds<-function(b){
 	# nb Bounds = outer edges of outer voxels 
-	# (ie probably what most people expect & more like ImageJ than Amira)
+	# (ie probably what most people expect & more like ImageJ than Amira)
 	if(is.character(b)) {
 		if(toupper(b)=='LH') return(c(95,165,60,130,0,70))
 		if(toupper(b)=='MB') return(c(45,115,60,130,60,95))

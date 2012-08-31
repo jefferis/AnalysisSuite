@@ -49,7 +49,7 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 				# TODO fix handling of complex datafile specifications
 				# See http://teem.sourceforge.net/nrrd/format.html#detached
 				if(substring(fieldval,1,4)=="LIST"){
-					# we need to keep reading in lines until we hit EOF
+					# we need to keep reading in lines until we hit EOF
 					fieldval=c(fieldval,readLines(con))
 				}
 				# otherwise no special action required
@@ -97,7 +97,7 @@ NrrdDataFiles<-function(nhdr,ReturnAbsPath=TRUE){
 	} else dfs=h$datafile
 	
 	if(ReturnAbsPath){
-		# check if paths begin with /
+		# check if paths begin with /
 		relpaths=substring(dfs,1,1)!="/"
 		if(any(relpaths)){
 			nhdrpath=attr(h,"path")
