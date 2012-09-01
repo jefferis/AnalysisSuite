@@ -168,12 +168,12 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
   }
   readLines(con, df$LineOffsets[1]-1)
   for(i in seq(len=nrow(df))){
+    if(df$DataLength[i]>0){
     # read some lines until we get to a data section
     nskip=0
     while( substring(t<-readLines(con,1),1,1)!="@"){nskip=nskip+1}
     if(Verbose) cat("Skipped",nskip,"lines to reach next data section")
-    if(df$DataLength[i]>0){
-      if(Verbose) cat("Reading ",df$DataLength[i],"lines in file",filename,"\n")
+    if(Verbose) cat("Reading ",df$DataLength[i],"lines in file",filename,"\n")
       
       if(df$RType[i]=="integer") whatval=integer(0) else whatval=numeric(0)
       datachunk=scan(con,what=whatval,n=df$SimpleDataLength[i],quiet=!Verbose)
