@@ -289,7 +289,10 @@ ReadAmiramesh.Header<-function(con,Verbose=TRUE,
 	# FIXME Note that this assumes exactly one blank line in between each data section
 	# I'm not sure if this is a required property of the amira file format
 	# Fixing this would of course require reading/skipping each data section
-	DataDefDF$LineOffsets=nHeaderLines+c(0,cumsum(DataDefDF$DataLength+2)[-nrow(DataDefDF)])+1
+	nDataSections=nrow(DataDefDF)
+	# NB 0 length data sections are not written
+	DataSectionsLineLengths=ifelse(DataDefDF$DataLength==0,0,2+DataDefDF$DataLength)
+	DataDefDF$LineOffsets=nHeaderLines+1+c(0,cumsum(DataSectionsLineLengths[-nDataSections]))
 	
 	returnList[["dataDef"]]=DataDefDF
 	return(returnList)
