@@ -439,8 +439,8 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 		# we can only add one numeric label to the SWC format version of the neuron
 		FirstSegmentProps=subset(SegmentProps,!duplicated(PointNo))
 		# 0 = undefined
-		d$Label=0L
-		d[FirstSegmentProps$PointNo,"Label"]=FirstSegmentProps$Id
+		NeuronData$PointList$Label=0L
+		NeuronData$PointList[FirstSegmentProps$PointNo,"Label"]=FirstSegmentProps$Id
 		NeuronData=c(NeuronData,list(SegmentProps=SegmentProps))
 	}
 	
@@ -589,7 +589,11 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 			SWCData$Parent[s[-1]]=s[-length(s)]
 		}		
 	}
-	SWCData$Label=2
+	
+	if(is.null(SWCData$Label)){
+		# set up a default label if there was not label information
+		SWCData$Label=2
+	}
 	firstFields=c("PointNo","Label","X","Y","Z","W","Parent")
 	remainingFields=setdiff(names(SWCData),firstFields)
 	SWCData=SWCData[,c(firstFields,remainingFields)]
@@ -619,6 +623,10 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 			# If there are multiple subtrees then make that data available 
 			# as well.
 			ParsedNeuron$SubTrees=SubTrees
+		}
+		if(!is.null(datalist$SegmentProps)){
+			# If we have materials information for the segments, keep that
+			ParsedNeuron$SegmentProps=datalist$SegmentProps
 		}
 		return(as.neuron(ParsedNeuron))
 	} else {
