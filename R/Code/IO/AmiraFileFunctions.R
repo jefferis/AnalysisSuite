@@ -1709,7 +1709,15 @@ WriteGenericAmiramesh<-function(filename,d,ContentType){
 	}		
 }
 
-ReadNeuronFromAM<-function(amfile){
+
+#' Read neuron in Amira's native lineset format
+#' @param amfile Path to the amiramesh file
+#' @param defaultDiameter If diameter information, missing use this default
+#' @return A neuron object
+#' @author jefferis
+#' @export
+#' @seealso \code{\link{read.neuron},\link{ReadNeuronFromAM3D}
+ReadNeuronFromAM<-function(amfile,defaultDiameter=NA){
   amdata=ReadAmiramesh(amfile)
   if(!all(c("Coordinates","LineIdx")%in%names(amdata)))
     stop("Cannot find required data sections")
@@ -1722,7 +1730,7 @@ ReadNeuronFromAM<-function(amfile){
   lad=length(radiusData)
   if(lad==0){
     warning("No width data for neuron:",amfile)
-    coords[,"W"]=NA
+    coords[,"W"]=defaultDiameter
   } else if (lad==1) {
     # assume Amira provides radius
     coords[,"W"]=radiusData[[1]]*2
