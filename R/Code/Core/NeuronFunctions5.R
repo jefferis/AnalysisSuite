@@ -1632,18 +1632,42 @@ read.neuron<-function(f, ...){
 #' @export
 #' @seealso \code{\link{read.neuron}}
 #' @examples
-read.neurons<-function(paths, pattern=NULL, neuronnames=basename, df=NULL,
-	OmitFailures=TRUE, ...){
+read.neurons<-function(paths, pattern=NULL, neuronnames=basename, nl=NULL,
+	df=NULL, OmitFailures=TRUE, ...){
 	if(!is.character(paths)) stop("Expects a character vector of filenames")
 	
 	if(length(paths)==1 && file.info(paths)$isdir)
 		paths=dir(paths,pattern=pattern,full=TRUE)
 	
-	nl=neuronlist()
 	if(is.function(neuronnames))
 		nn=neuronnames(paths)
 	else
 		nn=neuronnames
+	duplicateNames=nn[duplicated(nn)]
+	if(length(duplicateNames)) {
+		stop("Neurons cannot have duplicate names: ",
+				paste(duplicateNames,collapse=" "))
+	}
+	names(paths)=nn
+	
+	if(!is.null(nl)) {
+		# we are going to try and update a list of neurons
+		if(!is.neuronlist(nl)) stop("nl must be a neuronlist")
+		new_neurons=setdiff(nn,names(nl))
+		old_neurons_we_can_see=intersect(names(nl),nn)
+		old_paths=paths[old_neurons_we_can_see]
+		
+		new_md5s=md5sum(old_paths)
+		old_md5s=sapply(nl,"[[","InputFileMD5")
+		names(old_md5s)=names(nl)
+		old_md5s=old_md5s[old_neurons_we_can_see]
+		stopifnot(length(old_md5s)==length(new_md5s))
+		modified_neurons=old_neurons_we_can_see[new_md5s!=old_md5s]
+		# now just select the oart
+		nn=c(modified_neurons,new_neurons)
+		paths=paths[nn]
+	} else nl=neuronlist()
+	
 	if(!is.null(df)){
 		matching_rows=intersect(nn,rownames(df))
 		if(length(matching_rows)){
@@ -1659,14 +1683,14 @@ read.neurons<-function(paths, pattern=NULL, neuronnames=basename, df=NULL,
 			stop("Dataframe rownames do not match neuron names.")
 		}
 	}
-	for(i in seq_along(paths)){
-		f=paths[i]
+	for(n in names(paths)){
+		f=paths[n]
 		x=try(read.neuron(f))
 		if(inherits(x,'try-error')){
 			if(OmitFailures) x=NULL
 			else x=NA
 		}
-		nl[[nn[i]]]=x
+		nl[[n]]=x
 	}
 	# nb only keep dataframe rows for neurons that were successfully read in
 	attr(nl,'df')=df[names(nl),]
