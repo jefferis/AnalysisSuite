@@ -504,52 +504,59 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 		if(length(OriginStart)>0) Origin=1+scan(filename,what=integer(1),skip=OriginStart-1,nlines=1,quiet=TRUE)
 	}
 	
+	NeuronData=list(PointList=d,EdgeList=Neighbours,Origin=Origin)
 	
+	if(OmitNAs) return(RemoveInvalidPointsFromNeighbourList(NeuronData))
+	else NeuronData
+}
+
+#' Remove invalid points from data block read from Amira skeletonize neuron
+#' @param x List containing PointList, EdgeList and Origin
+#' @return List with same components as input
+#' @author jefferis
+#' @seealso \link{\code{ReadAM3DData}}
+#' @examples
+RemoveInvalidPointsFromNeighbourList<-function(x){
 	# check if there are actually any NAs - these should only be in XYZ
-	InvalidPoints=which(apply(d[,c("X","Y","Z")],1,function(x) any(is.na(x))))
+	InvalidPoints=which(apply(x$PointList[,c("X","Y","Z")],1,function(p) any(is.na(p))))
 	
-	if(OmitNAs && length(InvalidPoints)>0){
+	if(length(x$InvalidPoints)>0){
 		# Remove all edges that reference an invalid point
-		Neighbours=subset(Neighbours,
+		x$EdgeList=subset(x$EdgeList,
 				!(CurPoint%in%InvalidPoints | Neighbour%in%InvalidPoints) )
 		# find the remaining valid points NB valid points is not necessarily
 		# the exact complement of invalid points - consider an end point which 
 		# remains defined just distal to a point that doesn't transform.
-		ValidPoints=sort(unique(Neighbours$CurPoint))
+		ValidPoints=sort(unique(x$EdgeList$CurPoint))
 		
 		# Restrict d to the valid points
-		d=d[ValidPoints,]
-		d$OldPointNo=d$PointNo # keep track of the old point numbers
-		d$PointNo=seq(len=nrow(d)) # make the new ones	
+		x$PointList=x$PointList[ValidPoints,]
+		x$PointList$OldPointNo=x$PointList$PointNo # keep track of the old point numbers
+		x$PointList$PointNo=seq(len=nrow(x$PointList)) # make the new ones
 		
-		# need to figure out how to find the closest end point
+		# TODO figure out how to find the closest end point
 		# to the original origin - hmm I think a better idea
 		# would be to reroot the tree on the origin
-# 		if(!is.null(Origin)){
-# 			if(Origin
-# 			Origin=d$OldP
 		# For the moment, just assume that the origin is not deleted
 		# or make it null if it is
-		dO=subset(d,Origin==OldPointNo)
-		if(nrow(dO)==1) Origin=dO$PointNo else Origin=NULL
+		dO=subset(x$PointList,x$Origin==OldPointNo)
+		if(nrow(dO)==1) x$Origin=dO$PointNo else x$Origin=NULL
 		
 		# figure out the new number of neighbours for remaining points
-		d$NeighbourCount=table(Neighbours$CurPoint)
+		x$PointList$NeighbourCount=table(x$EdgeList$CurPoint)
 		
 		# Renumber Neighbours data frame
-		Neighbours$CurPoint=rep(d$PointNo,d$NeighbourCount)
+		x$EdgeList$CurPoint=rep(x$PointList$PointNo,x$PointList$NeighbourCount)
 		# Get the new neighbours by looking up against the old points
 		# NB could have been written d$PointNo[match(...)]
 		# but unnecessary since d$PointNo=seq(nrow(d))
-		NewNeighbours=match(Neighbours$Neighbour,d$OldPointNo)
+		NewNeighbours=match(x$EdgeList$Neighbour,x$PointList$OldPointNo)
 		# Verify that we have non-zero (or NA) entries
 		stopifnot(all(NewNeighbours))
-		Neighbours$Neighbour=NewNeighbours
+		x$EdgeList$Neighbour=NewNeighbours
 	}
-	
-	return(list(PointList=d,EdgeList=Neighbours,Origin=Origin))
+	return(x)
 }
-
 
 ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Verbose=FALSE){
 	# function to parse a an amira mesh 3D
