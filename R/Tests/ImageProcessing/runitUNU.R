@@ -44,3 +44,13 @@ test.NrrdFlip<-function(){
 		"Check content field is as expected after two flips")
 }
 #debug(test.NrrdFlip)
+
+test.NrrdVoxDims<-function(){
+  histogram_file=file.path(TestDir,"Data",'FCWB-32xd.histo.nrrd')
+  nvd=NrrdVoxDims(histogram_file)
+  checkTrue(is.na(nvd),msg="Check vox dims for 1d histogram nrrd")
+  checkTrue(length(nvd)==1)
+  mask_file=file.path(TestDir,"Data",'LHMask.nrrd')
+  nvd=NrrdVoxDims(mask_file)
+  checkEqualsNumeric(rep(1.4,3),nvd,tol=1e-6,msg="Check vox dims for 3d mask nrrd")
+}
