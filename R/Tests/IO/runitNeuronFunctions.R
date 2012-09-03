@@ -4,34 +4,34 @@
 # AmiraFileFunctions rountines
 # now going to use the RUnit package (see pdf in doc dir)
 
-# runTestFile(file.path(TestDir,"IO","runitNeuronFunctions.R"))
+# runTestFile(file.path(TestDir,"Data","neurons","runitNeuronFunctions.R"))
 require(RUnit)
 test.read.neuron<-function(){
-	result.new=read.neuron(file.path(TestDir,"IO","Neurites.am"))
-	result=ReadNeuronFromAM3D(file.path(TestDir,"IO","Neurites.am"))
+	result.new=read.neuron(file.path(TestDir,"Data","neurons","Neurites.am"))
+	result=ReadNeuronFromAM3D(file.path(TestDir,"Data","neurons","Neurites.am"))
 	checkTrue(is.neuron(result.new))
 	checkEquals(result,result.new)
 	
-	result.new=read.neuron(file.path(TestDir,"IO","SequentiallyBranchingTrace.traces"))
+	result.new=read.neuron(file.path(TestDir,"Data","neurons","SequentiallyBranchingTrace.traces"))
 	result=ReadNeuronsFromLongairTraces(
-		file.path(TestDir,"IO","SequentiallyBranchingTrace.traces"),Merge=TRUE)
+		file.path(TestDir,"Data","neurons","SequentiallyBranchingTrace.traces"),Merge=TRUE)
 	checkTrue(is.neuron(result.new))
 	checkEquals(result.new,result)
 	
-	result.new=read.neuron(file.path(TestDir,"IO","LF28R.tasc"))
-	result=ReadNeuronFromAsc(file.path(TestDir,"IO","LF28R.tasc"))
+	result.new=read.neuron(file.path(TestDir,"Data","neurons","LF28R.tasc"))
+	result=ReadNeuronFromAsc(file.path(TestDir,"Data","neurons","LF28R.tasc"))
 	checkTrue(is.neuron(result.new))
 	checkEquals(result,result.new)
 	
-	checkException(read.neuron(file.path(TestDir,"IO","runitNeuronFunctions.R")),
+	checkException(read.neuron(file.path(TestDir,"Data","neurons","runitNeuronFunctions.R")),
 		silent=TRUE)
 }
 # debug(test.read.neuron)
 
 test.all.equal.neuron<-function(){
-	a=ReadNeuronFromAM3D(file.path(TestDir,"IO","Neurites.am"))
+	a=ReadNeuronFromAM3D(file.path(TestDir,"Data","neurons","Neurites.am"))
 	b=ReadNeuronsFromLongairTraces(
-		file.path(TestDir,"IO","SequentiallyBranchingTrace.traces"))
+		file.path(TestDir,"Data","neurons","SequentiallyBranchingTrace.traces"))
 	checkTrue(all.equal(a, a))
 	checkTrue(!isTRUE(all.equal(a, b)))
 	checkTrue(!isTRUE(all.equal(a, NULL)))
