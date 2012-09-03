@@ -354,7 +354,7 @@ test.ReadAM3D<-function(){
 	"StartPoint", "BranchPoints", "EndPoints", "NumSegs", "SegList", 
 	"nTrees", "d", "OrientInfo"))
 	
-	result.new=ReadNeuronFromAM3D(file.path(TestDir,"IO","Neurites.am"))
+	result.new=ReadNeuronFromAM3D(file.path(TestDir,"Data","neurons","Neurites.am"))
 	checkEquals(result,result.new[fieldsToCheck],tol=1e-6)
 }
 
@@ -369,9 +369,9 @@ test.ReadWriteNeuronFromAM<-function(){
       
 	tmpfile=tempfile()
 	on.exit(unlink(tmpfile))
-	am3d=ReadNeuronFromAM3D(file.path(TestDir,"IO","testneuron_am3d.am"))
+	am3d=ReadNeuronFromAM3D(file.path(TestDir,"Data","neurons","testneuron_am3d.am"))
 	# converted to lineset in amira by hxskeletonize
-	lineset=ReadNeuronFromAM(file.path(TestDir,"IO","testneuron_lineset.am"))
+	lineset=ReadNeuronFromAM(file.path(TestDir,"Data","neurons","testneuron_lineset.am"))
   # check seglist describes equivalent graph - they end up in different order
   g1=Neuron2Graph(lineset)
   g2=Neuron2Graph(am3d)
@@ -385,7 +385,7 @@ test.ReadWriteNeuronFromAM<-function(){
     msg="AM3D and AM file saved by R produce different results")
   checkEquals(amfromam3d$d[,1:6],am3d$d[,1:6],tol=1e-3)
       
-  fcam=ReadNeuronFromAM(file.path(TestDir,"IO","testneuron_fclineset.am"))
+  fcam=ReadNeuronFromAM(file.path(TestDir,"Data","neurons","testneuron_fclineset.am"))
   WriteNeuronToAM(fcam,tmpfile,Force=TRUE)
   fcamresaved=ReadNeuronFromAM(tmpfile)
   checkEquals(fcamresaved[fieldsToCheck],fcam[fieldsToCheck],tol=1e-6,
@@ -529,23 +529,23 @@ test.ReadAmiraTutorialSurfaceData<-function(){
 test.readGzipAmirameshNeuron<-function(){
   closeAllConnections()
   nopencons.start=length(showConnections())
-  am3d=read.neuron(file.path(TestDir,"IO","testneuron_am3d.am"))
+  am3d=read.neuron(file.path(TestDir,"Data","neurons","testneuron_am3d.am"))
   checkException(read.neuron(file.path(TestDir,"IO","testneuron_am3d.am.gz")),
       silent=TRUE)
-  am3da=read.neuron(file.path(TestDir,"IO","testneuron_am3d_ascii.am"))
+  am3da=read.neuron(file.path(TestDir,"Data","neurons","testneuron_am3d_ascii.am"))
   checkEquals(am3d,am3da)
-  am3daz=read.neuron(file.path(TestDir,"IO","testneuron_am3d_ascii.am.gz"))
+  am3daz=read.neuron(file.path(TestDir,"Data","neurons","testneuron_am3d_ascii.am.gz"))
   checkEquals(am3d,am3daz)
   
-  fcl=read.neuron(file.path(TestDir,"IO","testneuron_fclineset.am"))
-  fclz=read.neuron(file.path(TestDir,"IO","testneuron_fclineset.am.gz"))
+  fcl=read.neuron(file.path(TestDir,"Data","neurons","testneuron_fclineset.am"))
+  fclz=read.neuron(file.path(TestDir,"Data","neurons","testneuron_fclineset.am.gz"))
   checkEquals(fcl,fclz)
   nopencons.end=length(showConnections())
   checkEquals(nopencons.end,nopencons.start,"Managed to leave a connection open")
 }
 
 test.ParseMaterials<-function(){
-	amfile=file.path(TestDir,"IO","ComplexLabelFieldHeader.am")
+	amfile=file.path(TestDir,"Data","labels","ComplexLabelFieldHeader.am")
 	h=ReadAmiramesh.Header(amfile,Verbose = FALSE,)
 	materials_baseline=structure(list(id = c(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 
 							13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 
