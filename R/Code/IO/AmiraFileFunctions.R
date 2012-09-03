@@ -529,18 +529,18 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 	
 	PredictedEndPoints=sum(BranchPoints$NeighbourCount-2)+2
 	if(!Force && nrow(EndPoints)!=PredictedEndPoints){
-		cat(paste("Mismatch between number of end points (",nrow(EndPoints),") and number predicted from branch statistics (",PredictedEndPoints,")\n"))
-		#return (NULL)
+		cat(paste("Mismatch between number of end points (",nrow(EndPoints),
+						") and number predicted from branch statistics (",PredictedEndPoints,")\n"))
 	}
-
+	
 	# Start off with the start point as the first endpoint
 	# we may change our mind if we try to parse multiple trees
 	if(!is.null(datalist$Origin) && datalist$Origin%in%EndPoints$PointNo){
-			StartPoint=datalist$Origin 
+		StartPoint=datalist$Origin 
 	} else {
-			StartPoint=min(EndPoints$PointNo)
+		StartPoint=min(EndPoints$PointNo)
 	}
-
+	
 	if(ProcessAllTrees){
 		SubTrees=ParseEdgeListForAllSubTrees(Neighbours,Origin=datalist$Origin,Silent=!Verbose)
 		nTrees=length(SubTrees)
@@ -572,20 +572,9 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 			for (tree in SubTrees){
 				for(s in tree){
 					SWCData$Parent[s[-1]]=s[-length(s)]
-				}				
-			}				
+				}
+			}
 		}
-# 		# Trim down to the chosen Tree
-# 		# nb sort is important, because subtrees returns vertices
-# 		# in the order that they are found ie not sorted
-# 		SWCData=datalist$PointList[sort(SubTrees[[which.max(lengths)]]),]
-# 		Neighbours=subset(datalist$EdgeList,CurPoint%in%SWCData$PointNo)
-# 		nVertices=nrow(SWCData)
-# 		# Replace the old point numbers with new ones which are contiguous
-# 		OldNums=SWCData$PointNo
-# 		SWCData$PointNo=seq(nVertices)
-# 		Neighbours$CurPoint=rep(SWCData$PointNo,SWCData$NeighbourCount)
-# 		Neighbours$Neighbour=SWCData$PointNo[match(Neighbours$Neighbour,OldNums)]
 	} else {
 		# I believe that my new ParseEdgeLists is robust to this now
 		#if(StartPoint!=1) warning(paste(filename,": StartPoint is",StartPoint,"not 1 - this may break parsing routine"))
@@ -604,7 +593,7 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 	firstFields=c("PointNo","Label","X","Y","Z","W","Parent")
 	remainingFields=setdiff(names(SWCData),firstFields)
 	SWCData=SWCData[,c(firstFields,remainingFields)]
-
+	
 	# Remove any Branch or End points that didn't make it into SegList
 	PointsInSubTree=unique(unlist(SegList))
 	EndPoints=subset(EndPoints,PointNo%in%PointsInSubTree)
@@ -613,32 +602,30 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 	if(length(SegList)>0){
 		#OK There's at least one segment
 		ParsedNeuron<-list(NeuronName=NeuronNameFromFileName(filename),
-			InputFileName=filename,
-			CreatedAt=Sys.time(),
-			NodeName=Sys.info()["nodename"],
-			InputFileStat=file.info(filename)[1,],
-			InputFileMD5=md5sum(path.expand(filename)),
-			NumPoints=nrow(SWCData),
-			StartPoint=StartPoint, # NB I am assuming that this is always 1
-			BranchPoints=BranchPoints$PointNo,
-			EndPoints=EndPoints$PointNo,
-			NumSegs=length(SegList),
-			SegList=SegList,
-			nTrees=nTrees,
-			d=SWCData	)
+				InputFileName=filename,
+				CreatedAt=Sys.time(),
+				NodeName=Sys.info()["nodename"],
+				InputFileStat=file.info(filename)[1,],
+				InputFileMD5=md5sum(path.expand(filename)),
+				NumPoints=nrow(SWCData),
+				StartPoint=StartPoint, # NB I am assuming that this is always 1
+				BranchPoints=BranchPoints$PointNo,
+				EndPoints=EndPoints$PointNo,
+				NumSegs=length(SegList),
+				SegList=SegList,
+				nTrees=nTrees,
+				d=SWCData	)
 		if(nTrees>1){
 			# If there are multiple subtrees then make that data available 
 			# as well.
 			ParsedNeuron$SubTrees=SubTrees
 		}
-		
 		return(as.neuron(ParsedNeuron))
 	} else {
 		cat("0 length Seglist for",filename,"\n")
 		return(NULL)
 	}
 }
-
 
 ParseEdgeList<-function(Nb,Silent=TRUE,Verbose=!Silent,RootPoint=1){
 	# Takes an edge list from a Skeletonize file
