@@ -427,6 +427,23 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 	
 	NeuronData=list(PointList=d,EdgeList=Neighbours,Origin=Origin)
 	
+	# Handle materials
+	if(length(ndata$vertexTypeList)){
+		SegmentProps=data.frame(
+				PointNo=rep(seq(nVertices),ndata$vertexTypeCounter),
+				Id=ndata$vertexTypeList)
+		if(length(attr(ndata,'Materials'))){
+			# we have named materials, so let's add them as an attribute
+			attr(SegmentProps,'Materials')=attr(ndata,'Materials')
+		}
+		# we can only add one numeric label to the SWC format version of the neuron
+		FirstSegmentProps=subset(SegmentProps,!duplicated(PointNo))
+		# 0 = undefined
+		d$Label=0L
+		d[FirstSegmentProps$PointNo,"Label"]=FirstSegmentProps$Id
+		NeuronData=c(NeuronData,list(SegmentProps=SegmentProps))
+	}
+	
 	if(OmitNAs) return(RemoveInvalidPointsFromNeighbourList(NeuronData))
 	else NeuronData
 }
@@ -719,7 +736,7 @@ ParseEdgeListForAllSubTrees<-function(Nb,Origin=NULL,Silent=T){
 	SegLists
 }
 
-read.neuron.amiraskel<-function(AM3DFile){
+read.neuron.amiraskel<-function(AM3DFile,...){
 	datalist=ReadAM3DData(AM3DFile)
 	MyNeuron<-ParseAM3DToNeuron(datalist,AM3DFile,...)
 }
