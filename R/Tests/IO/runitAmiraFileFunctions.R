@@ -702,6 +702,9 @@ test.ReadAM3D<-function(){
 	3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 
 	3L, 3L, 3L, 3L)
 	checkEquals(nwm$d$Label,labels)
+	
+	nwip = ReadNeuronFromAM3D(file.path(TestDir, "Data", "neurons", 
+		"NeuritesWithIsolatedPoints_veryshort.am"))
 }
 
 test.ReadWriteNeuronFromAM<-function(){
