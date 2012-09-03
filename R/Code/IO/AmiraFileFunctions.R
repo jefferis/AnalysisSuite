@@ -535,7 +535,7 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 	
 	# Start off with the start point as the first endpoint
 	# we may change our mind if we try to parse multiple trees
-	if(!is.null(datalist$Origin) && datalist$Origin%in%EndPoints$PointNo){
+	if(length(datalist$Origin) && datalist$Origin%in%EndPoints$PointNo){
 		StartPoint=datalist$Origin 
 	} else {
 		StartPoint=min(EndPoints$PointNo)
