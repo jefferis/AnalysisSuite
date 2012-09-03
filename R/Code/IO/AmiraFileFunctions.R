@@ -407,100 +407,23 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 	# function to read in the basic data from the 
 	# files produced by the Amira Skeletonize plugin
 	
-	# Check for header confirming file type
-	con=file(filename,open='rt')
-	firstLine=readLines(con,n=1)
-	conclass=summary(con)$class
+	ndata=ReadAmiramesh(filename)
+	required_fields=c("Coordinates", "NeighbourCount", "Radii", "NeighbourList")
+	missing_fields=setdiff(required_fields,names(ndata))
+	if(length(missing_fields))
+		stop("Neuron: ",filename," is missing fields: ",paste(missing_fields,collapse=" "))
 	
-	if(!any(grep("#\\s+amiramesh",firstLine,ignore.case=T))){
-		warning(paste(filename,"does not appear to be an AmiraMesh 3D file"))
-		return(NULL)
-	}
-	filetype=ifelse(any(grep("binary",firstLine,ignore.case=T)),"binary","ascii")
-	if(length(grep("LITTLE.ENDIAN",firstLine,ignore.case=TRUE))>0) endian="little"
-	else endian='big'
-	
-	if(filetype=='binary'){
-		if(conclass == 'gzfile')
-			stop("Cannot read gzipped binary amiramesh format files")
-		# else need to reopen connection to regular binary file
-		close(con)
-		con=file(filename,open='rb')
-	}
-	
-	# Read Header
-	# nb have to start from scratch if binary, or save first line if text
-	headerLines <- if(filetype=="ascii") firstLine else NULL
-	#	while( (thisLine<-readLines(con,1))!="@1"){
-	while( !isTRUE(charmatch("@1",thisLine<-readLines(con,1))==1) ){
-		headerLines=c(headerLines,thisLine)
-	}
-	
-	getfield=function(fName,pos=2) unlist(strsplit(headerLines[grep(fName,headerLines)],"\\s+",perl=TRUE))[pos]
-	
-	nVertices=as.numeric(getfield("nVertices",2))
-	nEdges=as.numeric(getfield("nEdges",2))
-	
-	CoordinatesDefLine=grep("Coordinates",headerLines)
-	NeighbourCountDefLine=grep("NeighbourCount",headerLines)
-	NeighbourListDefLine=grep("NeighbourList",headerLines)
-	RadiiDefLine=grep("Radii",headerLines)
-	OriginDefLine=grep("int Origins",headerLines)
-	
-	coordAt=sub("^.*@([0-9]+$)","\\1",headerLines[CoordinatesDefLine])
-	NCAt=sub("^.*@([0-9]+$)","\\1",headerLines[NeighbourCountDefLine])
-	NLAt=sub("^.*@([0-9]+$)","\\1",headerLines[NeighbourListDefLine])
-	RadAt=sub("^.*@([0-9]+$)","\\1",headerLines[RadiiDefLine])
-	OriginAt=sub("^.*@([0-9]+$)","\\1",headerLines[OriginDefLine])
-	
-	if(	filetype=="binary"){
-		d=matrix(readBin(con,what='numeric',n=nVertices*3,size=4,endian=endian),ncol=3,byrow=T)
-		d=data.frame(d)
-		colnames(d)=c("X","Y","Z")
-		# next read the Neighbour Count
-		cat(readLines(con,2)[2],"\n")
-		NeighbourCount=readBin(con,what="integer",size=4,n=nVertices,endian=endian)
-		cat(readLines(con,2)[2],"\n")
-		d$W=readBin(con,what='numeric',n=nVertices,size=4,endian=endian)*2
-		cat(readLines(con,2)[2],"\n")
-		# Note these numbers come in zero indexed, but I will want them 1-indexed
-		# so add 1
-		Neighbours=data.frame(Neighbour=readBin(con,what="integer",size=4,n=nEdges,endian=endian)+1)
-		cat(readLines(con,2)[2],"\n")
-		
-		Origin=NULL
-		close(con)
-		d[,1:4]=round(d[,1:4],digits=3)
-	} else {
-		close(con)
-		t=readLines(filename)
-		dataStart=length(headerLines)+1
-		coordStart=grep(paste("^\\s*@",sep="",coordAt,"\\s*"),t)+1
-		NCStart=grep(paste("^\\s*@",sep="",NCAt,"\\s*"),t)+1
-		NLStart=grep(paste("^\\s*@",sep="",NLAt,"\\s*"),t)+1
-		RadiusStart=grep(paste("^\\s*@",sep="",RadAt,"\\s*"),t)+1
-		OriginStart=grep(paste("^\\s*@",sep="",OriginAt,"\\s*"),t)+1
-		
-		d=read.table(filename,skip=coordStart-1,nrows=nVertices,col.names=c("X","Y","Z"),
-				colClasses="numeric",na.strings=c("NA","ERR"))
-		# SWC expects width rather than radius
-		d$W=read.table(filename,skip=RadiusStart-1,nrows=nVertices)$V1*2
-		# round to 3dp to avoid any surprises (like v small -ve numbers)
-		d[,1:4]=round(d[,1:4],digits=3)
-		NeighbourCount=read.table(filename,skip=NCStart-1,nrows=nVertices,colClasses="integer")$V1
-		
-		
-		# Note these numbers come in zero indexed, but I will want them 1-indexed
-		# so add 1
-		Neighbours=read.table(filename,skip=NLStart-1,nrows=nEdges,col.names="Neighbour")+1
-		# Figure out the current point for each of these neighbours
-		
-		Origin=NULL
-		if(length(OriginStart)>0) Origin=1+scan(filename,what=integer(1),skip=OriginStart-1,nlines=1,quiet=TRUE)
-	}
-	d$PointNo=seq(nrow(d))
-	d$NeighbourCount=NeighbourCount
-	Neighbours$CurPoint=rep(seq(nVertices),d$NeighbourCount)
+	d=data.frame(ndata$Coordinates)
+	colnames(d)=c("X","Y","Z")
+	d$W=ndata$Radii*2
+	d$NeighbourCount=ndata$NeighbourCount
+	nVertices=nrow(d)
+	d$PointNo=seq(nVertices)
+	d[,1:4]=round(d[,1:4],digits=3)
+	# Note these numbers come in zero indexed, but I will want them 1-indexed
+	Neighbours=data.frame(Neighbour=ndata$NeighbourList+1,CurPoint=rep(seq(nVertices),d$NeighbourCount))
+	Origin=ndata$Origins
+	if(!is.null(Origin)) Origin=Origin+1
 	
 	NeuronData=list(PointList=d,EdgeList=Neighbours,Origin=Origin)
 	
