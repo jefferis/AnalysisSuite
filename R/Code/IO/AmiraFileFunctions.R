@@ -463,8 +463,6 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 		cat(readLines(con,2)[2],"\n")
 		d$W=readBin(con,what='numeric',n=nVertices,size=4,endian=endian)*2
 		cat(readLines(con,2)[2],"\n")
-		d$PointNo=seq(nrow(d))
-		d$NeighbourCount=NeighbourCount
 		# Note these numbers come in zero indexed, but I will want them 1-indexed
 		# so add 1
 		Neighbours=data.frame(Neighbour=readBin(con,what="integer",size=4,n=nEdges,endian=endian)+1)
@@ -473,7 +471,6 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 		Origin=NULL
 		close(con)
 		d[,1:4]=round(d[,1:4],digits=3)
-		Neighbours$CurPoint=rep(seq(nVertices),d$NeighbourCount)
 	} else {
 		close(con)
 		t=readLines(filename)
@@ -490,19 +487,20 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 		d$W=read.table(filename,skip=RadiusStart-1,nrows=nVertices)$V1*2
 		# round to 3dp to avoid any surprises (like v small -ve numbers)
 		d[,1:4]=round(d[,1:4],digits=3)
-		d$PointNo=seq(nrow(d))
-		d$NeighbourCount=read.table(filename,skip=NCStart-1,nrows=nVertices,colClasses="integer")$V1
+		NeighbourCount=read.table(filename,skip=NCStart-1,nrows=nVertices,colClasses="integer")$V1
 		
 		
 		# Note these numbers come in zero indexed, but I will want them 1-indexed
 		# so add 1
 		Neighbours=read.table(filename,skip=NLStart-1,nrows=nEdges,col.names="Neighbour")+1
 		# Figure out the current point for each of these neighbours
-		Neighbours$CurPoint=rep(seq(nVertices),d$NeighbourCount)
 		
 		Origin=NULL
 		if(length(OriginStart)>0) Origin=1+scan(filename,what=integer(1),skip=OriginStart-1,nlines=1,quiet=TRUE)
 	}
+	d$PointNo=seq(nrow(d))
+	d$NeighbourCount=NeighbourCount
+	Neighbours$CurPoint=rep(seq(nVertices),d$NeighbourCount)
 	
 	NeuronData=list(PointList=d,EdgeList=Neighbours,Origin=Origin)
 	
