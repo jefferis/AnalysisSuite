@@ -409,10 +409,10 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 	# files produced by the Amira Skeletonize plugin
 	
 	# Check for header confirming file type
-  con=file(filename,open='rt')
+	con=file(filename,open='rt')
 	firstLine=readLines(con,n=1)
-  conclass=summary(con)$class
-  
+	conclass=summary(con)$class
+	
 	if(!any(grep("#\\s+amiramesh",firstLine,ignore.case=T))){
 		warning(paste(filename,"does not appear to be an AmiraMesh 3D file"))
 		return(NULL)
@@ -420,34 +420,34 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 	filetype=ifelse(any(grep("binary",firstLine,ignore.case=T)),"binary","ascii")
 	if(length(grep("LITTLE.ENDIAN",firstLine,ignore.case=TRUE))>0) endian="little"
 	else endian='big'
-  
-  if(filetype=='binary'){
-    if(conclass == 'gzfile')
-      stop("Cannot read gzipped binary amiramesh format files")
-    # else need to reopen connection to regular binary file
-    close(con)
-    con=file(filename,open='rb')
-  }
+	
+	if(filetype=='binary'){
+		if(conclass == 'gzfile')
+			stop("Cannot read gzipped binary amiramesh format files")
+		# else need to reopen connection to regular binary file
+		close(con)
+		con=file(filename,open='rb')
+	}
 	
 	# Read Header
-  # nb have to start from scratch if binary, or save first line if text
+	# nb have to start from scratch if binary, or save first line if text
 	headerLines <- if(filetype=="ascii") firstLine else NULL
 	#	while( (thisLine<-readLines(con,1))!="@1"){
 	while( !isTRUE(charmatch("@1",thisLine<-readLines(con,1))==1) ){
 		headerLines=c(headerLines,thisLine)
 	}
-
+	
 	getfield=function(fName,pos=2) unlist(strsplit(headerLines[grep(fName,headerLines)],"\\s+",perl=TRUE))[pos]
-
+	
 	nVertices=as.numeric(getfield("nVertices",2))
 	nEdges=as.numeric(getfield("nEdges",2))
-
+	
 	CoordinatesDefLine=grep("Coordinates",headerLines)
 	NeighbourCountDefLine=grep("NeighbourCount",headerLines)
 	NeighbourListDefLine=grep("NeighbourList",headerLines)
 	RadiiDefLine=grep("Radii",headerLines)
 	OriginDefLine=grep("int Origins",headerLines)
-
+	
 	coordAt=sub("^.*@([0-9]+$)","\\1",headerLines[CoordinatesDefLine])
 	NCAt=sub("^.*@([0-9]+$)","\\1",headerLines[NeighbourCountDefLine])
 	NLAt=sub("^.*@([0-9]+$)","\\1",headerLines[NeighbourListDefLine])
@@ -484,17 +484,17 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 		NLStart=grep(paste("^\\s*@",sep="",NLAt,"\\s*"),t)+1
 		RadiusStart=grep(paste("^\\s*@",sep="",RadAt,"\\s*"),t)+1
 		OriginStart=grep(paste("^\\s*@",sep="",OriginAt,"\\s*"),t)+1
-
+		
 		d=read.table(filename,skip=coordStart-1,nrows=nVertices,col.names=c("X","Y","Z"),
-			colClasses="numeric",na.strings=c("NA","ERR"))
+				colClasses="numeric",na.strings=c("NA","ERR"))
 		# SWC expects width rather than radius
 		d$W=read.table(filename,skip=RadiusStart-1,nrows=nVertices)$V1*2
 		# round to 3dp to avoid any surprises (like v small -ve numbers)
 		d[,1:4]=round(d[,1:4],digits=3)
 		d$PointNo=seq(nrow(d))
 		d$NeighbourCount=read.table(filename,skip=NCStart-1,nrows=nVertices,colClasses="integer")$V1
-
-
+		
+		
 		# Note these numbers come in zero indexed, but I will want them 1-indexed
 		# so add 1
 		Neighbours=read.table(filename,skip=NLStart-1,nrows=nEdges,col.names="Neighbour")+1
@@ -504,25 +504,25 @@ ReadAM3DData<-function(filename,OmitNAs=TRUE){
 		Origin=NULL
 		if(length(OriginStart)>0) Origin=1+scan(filename,what=integer(1),skip=OriginStart-1,nlines=1,quiet=TRUE)
 	}
-
-
+	
+	
 	# check if there are actually any NAs - these should only be in XYZ
 	InvalidPoints=which(apply(d[,c("X","Y","Z")],1,function(x) any(is.na(x))))
-		
+	
 	if(OmitNAs && length(InvalidPoints)>0){
 		# Remove all edges that reference an invalid point
 		Neighbours=subset(Neighbours,
-			!(CurPoint%in%InvalidPoints | Neighbour%in%InvalidPoints) )
+				!(CurPoint%in%InvalidPoints | Neighbour%in%InvalidPoints) )
 		# find the remaining valid points NB valid points is not necessarily
 		# the exact complement of invalid points - consider an end point which 
 		# remains defined just distal to a point that doesn't transform.
 		ValidPoints=sort(unique(Neighbours$CurPoint))
-
+		
 		# Restrict d to the valid points
 		d=d[ValidPoints,]
 		d$OldPointNo=d$PointNo # keep track of the old point numbers
 		d$PointNo=seq(len=nrow(d)) # make the new ones	
-
+		
 		# need to figure out how to find the closest end point
 		# to the original origin - hmm I think a better idea
 		# would be to reroot the tree on the origin
