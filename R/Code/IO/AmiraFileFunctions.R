@@ -520,7 +520,7 @@ RemoveInvalidPointsFromNeighbourList<-function(x){
 	# check if there are actually any NAs - these should only be in XYZ
 	InvalidPoints=which(apply(x$PointList[,c("X","Y","Z")],1,function(p) any(is.na(p))))
 	
-	if(length(x$InvalidPoints)>0){
+	if(length(InvalidPoints)>0){
 		# Remove all edges that reference an invalid point
 		x$EdgeList=subset(x$EdgeList,
 				!(CurPoint%in%InvalidPoints | Neighbour%in%InvalidPoints) )
