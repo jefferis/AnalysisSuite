@@ -651,7 +651,8 @@ ParseEdgeList<-function(Nb,Silent=TRUE,Verbose=!Silent,RootPoint=1){
 	
 	parseSegment<-function(HeadPoint){
 		# Check if the head point has any neighbours
-		if(length(lNeighboursFromPoint[[HeadPoint]])==0) {
+		cHeadPoint=as.character(HeadPoint)
+		if(length(lNeighboursFromPoint[[cHeadPoint]])==0) {
 			if(Verbose) cat("Bailing out because no neighbours for headpoint",HeadPoint,"\n")
 			return(0)
 		}
@@ -662,7 +663,8 @@ ParseEdgeList<-function(Nb,Silent=TRUE,Verbose=!Silent,RootPoint=1){
 		while(T){
 			#str(lNeighboursFromPoint); str(SegList)
 			# Find the CurPoint - by picking the prev point's 1st neighbour
-			PossCurPoints=lNeighboursFromPoint[[PrevPoint]]			
+			cPrevPoint=as.character(PrevPoint)
+			PossCurPoints=lNeighboursFromPoint[[cPrevPoint]]
 			if(Verbose) cat("Seg:",length(SegList),"PrevPoint",PrevPoint,"has",length(PossCurPoints),"Neighbours:",PossCurPoints,"\n")
 			# If no CurPoint return 0
 			if(length(PossCurPoints)<1){
@@ -674,15 +676,17 @@ ParseEdgeList<-function(Nb,Silent=TRUE,Verbose=!Silent,RootPoint=1){
 			# add the point to the current segment
 			SegList[[length(SegList)]]<<-c(	SegList[[length(SegList)]],CurPoint[1])
 			if(Verbose) cat("Seg:",length(SegList),"Added Point",CurPoint,"\n")
+			if(Verbose) print(lNeighboursFromPoint)
 			# Remove the relevant PrevPoint / CurPoint edges
-			lNeighboursFromPoint[[PrevPoint]]<<-
-				lNeighboursFromPoint[[PrevPoint]][!(lNeighboursFromPoint[[PrevPoint]]==CurPoint)]
-			lNeighboursFromPoint[[CurPoint]]<<-
-				lNeighboursFromPoint[[CurPoint]][!(lNeighboursFromPoint[[CurPoint]]==PrevPoint)]
+			lNeighboursFromPoint[[cPrevPoint]]<<-
+				lNeighboursFromPoint[[cPrevPoint]][!(lNeighboursFromPoint[[cPrevPoint]]==CurPoint)]
+			cCurPoint=as.character(CurPoint)
+			lNeighboursFromPoint[[cCurPoint]]<<-
+				lNeighboursFromPoint[[cCurPoint]][!(lNeighboursFromPoint[[cCurPoint]]==PrevPoint)]
 			# What kind of point is the CurPoint? 
 			# 1: an end point - terminate
 			if(any(EndPoints==CurPoint)) return (0)
-			Children=lNeighboursFromPoint[[CurPoint]]
+			Children=lNeighboursFromPoint[[cCurPoint]]
 			# 2: a branch - process children and terminate
 			if(any(CurPoint==BranchPoints)){
 				# if branch point (ie has multiple neighbours
