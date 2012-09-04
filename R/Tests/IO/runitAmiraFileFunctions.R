@@ -699,6 +699,36 @@ test.ReadAM3D<-function(){
 	3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 3L, 
 	3L, 3L, 3L, 3L)
 	checkEquals(nwm$d$Label,labels)
+
+	nwis = ReadNeuronFromAM3D(file.path(TestDir, "Data", "neurons", 
+		"NeuritesWithIsolatedPoints_veryshort.am"))
+		
+	nwis_base=structure(list(NeuronName = "NeuritesWithIsolatedSegment", NumPoints = 14L, 
+		    StartPoint = 1, BranchPoints = integer(0), EndPoints = c(1L, 
+		    12L), NumSegs = 1L, SegList = list(c(1, 2, 3, 4, 5, 6, 7, 
+		    8, 9, 10, 11, 12)), nTrees = 2L, d = structure(list(PointNo = 1:14, 
+		        Label = c(2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2), 
+		        X = c(374.926, 374.838, 374.779, 374.399, 373.922, 373.518, 
+		        373.138, 372.689, 372.261, 371.859, 371.634, 371.257, 
+		        373.549, 373.913), Y = c(127.815, 128.305, 128.772, 128.496, 
+		        128.564, 128.755, 129.046, 129.264, 129.485, 129.77, 
+		        130.204, 130.525, 128.38, 128.055), Z = c(62, 62.077, 
+		        62.149, 62.068, 62.139, 62.218, 62.255, 62.174, 62.073, 
+		        62.082, 62.137, 62.174, 63, 63), W = c(0.2, 0.411, 0.655, 
+		        1.247, 1.564, 1.794, 1.988, 2.211, 2.461, 2.708, 2.717, 
+		        2.678, 0.2, 0.2), Parent = c(-1, 1, 2, 3, 4, 5, 6, 7, 
+		        8, 9, 10, 11, -1, 13), NeighbourCount = c(1L, 2L, 2L, 
+		        2L, 2L, 2L, 2L, 2L, 2L, 2L, 2L, 1L, 1L, 1L), SubTree = c(1, 
+		        1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2)), .Names = c("PointNo", 
+		    "Label", "X", "Y", "Z", "W", "Parent", "NeighbourCount", 
+		    "SubTree"), class = "data.frame", row.names = c(NA, -14L)), 
+		    OrientInfo = structure(list(AxonOriented = TRUE, AVMPoint = NA, 
+		        AVLPoint = NA, Scl = c(1, 1, 1), NewAxes = c(1, 2, 3)), .Names = c("AxonOriented", 
+		    "AVMPoint", "AVLPoint", "Scl", "NewAxes"))), .Names = c("NeuronName", 
+		"NumPoints", "StartPoint", "BranchPoints", "EndPoints", "NumSegs", 
+		"SegList", "nTrees", "d", "OrientInfo"))
+	
+	checkEquals(nwis,nwis_base,"Compare parsed version of NeuritesWithIsolatedSegment")
 	
 	nwip = ReadNeuronFromAM3D(file.path(TestDir, "Data", "neurons", 
 		"NeuritesWithIsolatedPoints_veryshort.am"))
