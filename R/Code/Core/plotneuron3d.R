@@ -13,12 +13,10 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,NeuronNames=FALSE,
 	require(rgl)
 	r3dDefaults$bg<-'grey'
 	if(ClearRGL) clear3d()
-    
-	if(missing(col)) col='green'
-
+	
 	if ( is.character(ANeuron) || is.numeric(ANeuron) ){
 		if(length(ANeuron)>1){
-			
+			if(missing(col)) col=rainbow
 			if(is.function(col)) col=col(length(ANeuron))
 			if(is.factor(col)) col=rainbow(nlevels(col))[as.integer(col)]
 			if(is.logical(NeuronNames) && NeuronNames) NeuronNames=ANeuron
@@ -27,13 +25,24 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,NeuronNames=FALSE,
 			WithNodes=WithNodes,WithText=WithText,WithLine=WithLine,
 			HighlightLongestSegment=HighlightLongestSegment,PlotSubTrees=PlotSubTrees,...)))
 		} else ANeuron<-NeuronList[[ANeuron]]
-    }
-    
-    if (!is.list(ANeuron)){
+	}
+	
+	if (!is.neuron(ANeuron)){
 		warning("Cannot understand passed neuron")
 		return(F)
-    }
-	# at this point we've only got one neuron, but we could still have col as a function
+	}
+	# at this point we've only got one neuron, but col may not be properly set
+	if(missing(col)){
+		# see if we have some materials to use
+		Material=attr(ANeuron$SegmentProps,'Material')
+		if(!is.null(Material)){
+			rownames(Material)=Material$id
+			Ids<-do.call(c,sapply(ANeuron$SegList,function(s) {c(ANeuron$d[s,'Label'],NA)},simplify=FALSE))
+			col=Material[as.character(Ids),'col']
+		} 
+		else col='green'
+		# otherwise just plot in default colour
+	}
 	if(is.function(col)) col=col(1)
 	
 	rglreturnlist=list()
