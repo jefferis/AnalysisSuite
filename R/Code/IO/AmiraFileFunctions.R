@@ -545,10 +545,8 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 		SubTrees=ParseEdgeListForAllSubTrees(Neighbours,Origin=datalist$Origin,Silent=!Verbose)
 		nTrees=length(SubTrees)
 		nPointsParsed=length(unique(unlist(SubTrees)))
-		if(nPointsParsed != nrow(SWCData)){
-			cat("unable to find valid subtrees\n")
-			return(NULL)
-		}
+		if(nPointsParsed != nrow(SWCData))
+			stop("subtrees do not include all points in neuron: ",filename)
 		
 		# NB recurs = F to prevent us just ending up with a point list
 		SegList=unlist(SubTrees,recurs=FALSE)
@@ -761,8 +759,7 @@ ReadNeuronFromAM3D<-function(AM3DFile,Components="Axon",OldNeuron=NULL,ReOrient=
 		datalist=ReadAM3DData(AM3DFile)
 		MyNeuron<-ParseAM3DToNeuron(datalist,AM3DFile,...)
 		if(is.null(MyNeuron$SegList)){
-			cat("Unable to Extract neuron from",AM3DFile,"\n")
-			return(NULL)
+			stop("Unable to Extract neuron from",AM3DFile,"\n")
 		}
 		
 		
