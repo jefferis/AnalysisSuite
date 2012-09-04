@@ -1663,8 +1663,10 @@ read.neurons<-function(paths, pattern=NULL, neuronnames=basename, nl=NULL,
 		old_md5s=old_md5s[old_neurons_we_can_see]
 		stopifnot(length(old_md5s)==length(new_md5s))
 		modified_neurons=old_neurons_we_can_see[new_md5s!=old_md5s]
-		# now just select the oart
+		# now just select the paths that need to be (re)loaded
 		nn=c(modified_neurons,new_neurons)
+		# no paths to load => existing list is up to date
+		if(!length(nn)) return(nl)
 		paths=paths[nn]
 	} else nl=neuronlist()
 	
