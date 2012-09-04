@@ -71,14 +71,14 @@ test.ParseEdgeList<-function(){
 		RapidlyNestedBranchesResult,msg="One Branch Point right after another")
 
 	# a missing point number
+	# FIXME - this doesn't work yet
 	el=DoubleFromSingleEdgeList(rbind( c(1,2),c(2,3),c(2,5),c(5,6),c(5,7) ))
 	MissingPointResult=list( c(1,2),c(2,3),c(2,5),c(5,6),c(5,7) )
-	#checkException(ParseEdgeList(el), MissingPointResult)
+	checkEquals(ParseEdgeList(el), MissingPointResult)
 	#DEACTIVATED("MissingPointResult")
 
 	# unattached points
 	el=DoubleFromSingleEdgeList(rbind( c(1,2),c(2,3),c(2,4),c(4,5),c(4,6),c(7,8)))
-	
 	UnattachedPointResult=list( c(1,2),c(2,3),c(2,4),c(4,5),c(4,6) )
 	#checkException(ParseEdgeList(el), "unattached points")
 	checkEquals(ParseEdgeList(el,Silent=T),UnattachedPointResult, "unattached points with Force=T")
@@ -90,7 +90,6 @@ test.ParseEdgeList<-function(){
 
 	checkEquals(ParseEdgeList(DoubleFromSingleEdgeList(el),RootPoint=6),
 		DifferentRootResult,msg="Root other than point 1")
-
 	
 	# Nonsequential numbering
 	el=rbind( c(1,2),c(2,6),c(2,4),c(4,5),c(4,3) )
@@ -99,8 +98,6 @@ test.ParseEdgeList<-function(){
 
 	checkEquals(ParseEdgeList(DoubleFromSingleEdgeList(el)),
 		NonsequentialNumberingResult,msg="Nonsequential numbering")
-
-
 }
 
 test.ReadAM3D<-function(){
