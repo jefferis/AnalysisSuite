@@ -1623,17 +1623,20 @@ read.neuron<-function(f, ...){
 #' key was present in a column of the data frame.  If the dataframe contains
 #' more rows than neurons, the superfluous rows are dropped with a warning.
 #' If the dataframe is missing rows for some neurons an error is generated.
+#' If SortOnUpdate is TRUE then updating an existing neuronlist should result
+#' in a new neuronlist with ordering identical to reading all neurons from scratch.
 #' @param paths Paths to neuron input files (or directory containing neurons)
 #' @param pattern If paths is a directory, regex that file names must match.
 #' @param neuronnames Character vector or function that specified neuron names
 #' @param df Optional data frame containing information about each neuron
 #' @param OmitFailures Omit failures (when TRUE) or leave an NA value in the list
+#' @param SortOnUpdate Sort the neuronlist when update adds new neurons 
 #' @return neuronlist object containing the neurons
 #' @export
 #' @seealso \code{\link{read.neuron}}
 #' @examples
 read.neurons<-function(paths, pattern=NULL, neuronnames=basename, nl=NULL,
-	df=NULL, OmitFailures=TRUE, ...){
+	df=NULL, OmitFailures=TRUE, SortOnUpdate=FALSE, ...){
 	if(!is.character(paths)) stop("Expects a character vector of filenames")
 	
 	if(length(paths)==1 && file.info(paths)$isdir)
@@ -1648,10 +1651,10 @@ read.neurons<-function(paths, pattern=NULL, neuronnames=basename, nl=NULL,
 		stop("Neurons cannot have duplicate names: ",
 				paste(duplicateNames,collapse=" "))
 	}
+	all_names=nn
 	names(paths)=nn
-	
+	# Handle updates of an existing neuronlist
 	if(!is.null(nl)) {
-		# we are going to try and update a list of neurons
 		if(!is.neuronlist(nl)) stop("nl must be a neuronlist")
 		new_neurons=setdiff(nn,names(nl))
 		old_neurons_we_can_see=intersect(names(nl),nn)
@@ -1667,9 +1670,11 @@ read.neurons<-function(paths, pattern=NULL, neuronnames=basename, nl=NULL,
 		nn=c(modified_neurons,new_neurons)
 		# no paths to load => existing list is up to date
 		if(!length(nn)) return(nl)
+		message("There are ",length(modified_neurons)," modified neurons",
+				" and ",length(new_neurons),'new neurons')
 		paths=paths[nn]
 	} else nl=neuronlist()
-	
+	# Look after the attached dataframe
 	if(!is.null(df)){
 		matching_rows=intersect(nn,rownames(df))
 		if(length(matching_rows)){
@@ -1685,6 +1690,7 @@ read.neurons<-function(paths, pattern=NULL, neuronnames=basename, nl=NULL,
 			stop("Dataframe rownames do not match neuron names.")
 		}
 	}
+	# Actually read in the neurons
 	for(n in names(paths)){
 		f=paths[n]
 		x=try(read.neuron(f))
@@ -1693,6 +1699,19 @@ read.neurons<-function(paths, pattern=NULL, neuronnames=basename, nl=NULL,
 			else x=NA
 		}
 		nl[[n]]=x
+	}
+	if(SortOnUpdate) {
+		names_missing_from_all_names=setdiff(names(nl),all_names)
+		if(length(names_missing_from_all_names)){
+			warning("Cannot SortOnUpdate when supplied paths do not include all neurons: ",
+					paste(names_missing_from_all_names,collapse=' '))
+		} else {
+			# nb names_we_have will be ordered like all_names
+			names_we_have=intersect(all_names,names(nl))
+			# resort if required
+			if(!isTRUE(all.equal(names_we_have,names(nl))))
+				nl=nl[names_we_have]
+		}
 	}
 	# nb only keep dataframe rows for neurons that were successfully read in
 	attr(nl,'df')=df[names(nl),]
