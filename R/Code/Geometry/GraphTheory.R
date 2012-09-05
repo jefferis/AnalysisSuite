@@ -97,18 +97,18 @@ ReducedAdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
 RerootNeuron<-function(ANeuron,root=1){
   am=AdjacencyMatrixFromSegList(ANeuron$SegList)
   gam=graph.adjacency(am,'undirected')
-  dgam=dfs(igraph.to.graphNEL(gam),as.character(root-1))
+  dgam=dfs(igraph.to.graphNEL(gam),as.character(root))
   canon_nodeorder=as.integer(dgam$discovered)
   d=ANeuron$d
   d$Parent=-1L
   for(i in seq(nrow(d))){
     if(i==root) next
     # nb graph vertices are 0 indexed
-    nbs=neighbors(gam,i-1)
+    nbs=neighbors(gam,i)
     # find neighbor that comes earliest in canon_nodeorder
     nbcanonpos=sapply(nbs,function(x) which(canon_nodeorder==x))
     # nb convert back to 1-indexed
-    d$Parent[i]=nbs[which.min(nbcanonpos)]+1
+    d$Parent[i]=nbs[which.min(nbcanonpos)]
   }
   
   # sl=CanonicalSegList(ANeuron$SegList,root=root)
