@@ -496,8 +496,122 @@ RemoveInvalidPointsFromNeighbourList<-function(x){
 	return(x)
 }
 
+#' Convert data Point and Edge data to the core components of a neuron
+#' 
+#' The Point and Edge data is essentially what is saved by the Amira 
+#' skeletonize format, but the same data can also easily be generated
+#' for SWC data and is also pretty much identical to what is
+#' required for graph.data.frame from the igraph package.
+#' @param PointData Coordinates and another information relating to Points
+#' @param Neighbours Reciprocal edges for all connected points (2 col matrix)
+#' @param Origin Optional root for tree
+#' @param ProcessAllTrees Process all trees if graph is not connected (def T)
+#' @param Verbose Whether to show detailed information about progress
+#' @return a neuron including both SegList and SWC format data
+#' @author jefferis
+#' @export
+#' @seealso \code{\link{ParseAM3DToNeuron},\link{ParseEdgeListForAllSubTrees}}
+CoreNeuronFromPointAndEdgeData<-function(PointData,Neighbours,Origin=NULL,ProcessAllTrees=TRUE,Verbose=FALSE){
+	nVertices=nrow(PointData)
+	EndPoints=subset(PointData,NeighbourCount==1)
+	BranchPoints=subset(PointData,NeighbourCount>2)
+	
+	# a single unbranched segment will have 2 end points
+	# if a branch point has 3 neighbours then it should increase
+	# the number of free ends by one.
+	# if 4 neighbours then free ends += 2 etc
+	
+	PredictedEndPoints=sum(BranchPoints$NeighbourCount-2)+2
+	if(nrow(EndPoints)!=PredictedEndPoints)
+		warning("Mismatch between number of end points (",nrow(EndPoints),
+				") and number predicted from branch statistics (",PredictedEndPoints,")")
+	
+	# Start off with the start point as the first endpoint
+	# we may change our mind if we try to parse multiple trees
+	if(length(Origin) && Origin%in%EndPoints$PointNo){
+		StartPoint=Origin 
+	} else {
+		StartPoint=min(EndPoints$PointNo)
+		warning("No Origin specified. Using: ",StartPoint)
+	}
+	
+	if(ProcessAllTrees){
+		SubTrees=ParseEdgeListForAllSubTrees(Neighbours,Origin=Origin,Silent=!Verbose)
+		nTrees=length(SubTrees)
+		nPointsParsed=length(unique(unlist(SubTrees)))
+		if(nPointsParsed != nrow(PointData))
+			stop("subtrees do not include all points in neuron!")
+		
+		# NB recurs = F to prevent us just ending up with a point list
+		SegList=unlist(SubTrees,recurs=FALSE)
+		if (nTrees>1) {
+			SegSubTrees=rep(1:nTrees,sapply(SubTrees,length))
+			# I suppose at this juncture I should choose the StartPoint with
+			# the largest associated subtree - I will use complexity as the
+			# measure
+			SubTreeLengths=sapply(SubTrees,length)
+			# Pick the first point of the first segment of the largest subtree
+			LargestSubTree=order(SubTreeLengths,decreasing=TRUE)[1]
+			StartPoint=SubTrees[[LargestSubTree]][[1]][1]		
+			SegList=SubTrees[[LargestSubTree]]
+			
+			PointData$SubTree=rep(-1,nrow(PointData))
+			for(i in 1:length(SubTrees)){
+				PointData$SubTree[PointData$PointNo%in%unique(unlist(SubTrees[[i]]))]=i
+			}
+			# New (and more correct method for assigning parents)
+			PointData$Parent=-1
+			for (tree in SubTrees){
+				for(s in tree){
+					PointData$Parent[s[-1]]=s[-length(s)]
+				}
+			}
+		}
+	} else {
+		# Just look for one tree starting from root
+		SegList=ParseEdgeList(Neighbours,RootPoint=StartPoint)
+	}
+	
+	# New (and more correct method for assigning parents)
+	# Check, since we may already have done this for multi subtree neurons
+	if(is.null(PointData$Parent)){
+		PointData$Parent=-1
+		for(s in SegList){
+			PointData$Parent[s[-1]]=s[-length(s)]
+		}		
+	}
+	
+	if(is.null(PointData$Label)){
+		# set up a default label if there was not label information
+		PointData$Label=2
+	}
+	firstFields=c("PointNo","Label","X","Y","Z","W","Parent")
+	remainingFields=setdiff(names(PointData),firstFields)
+	PointData=PointData[,c(firstFields,remainingFields)]
+	
+	# Remove any Branch or End points that didn't make it into SegList
+	PointsInSubTree=unique(unlist(SegList))
+	EndPoints=subset(EndPoints,PointNo%in%PointsInSubTree)
+	BranchPoints=subset(BranchPoints,PointNo%in%PointsInSubTree)
+	
+	CoreNeuron<-list(
+			NumPoints=nrow(PointData),
+			StartPoint=StartPoint, # NB I am assuming that this is always 1
+			BranchPoints=BranchPoints$PointNo,
+			EndPoints=EndPoints$PointNo,
+			NumSegs=length(SegList),
+			SegList=SegList,
+			nTrees=nTrees,
+			d=PointData)
+	# If there are multiple subtrees then make that data available as well
+	if(nTrees>1)
+		CoreNeuron$SubTrees=SubTrees
+
+	as.neuron(CoreNeuron)
+}
+
 ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Verbose=FALSE){
-	# function to parse a an amira mesh 3D
+	# function to parse an amira mesh 3D
 	# format skeleton tree produced by the Amira Skeletonize plugin
 	# 050505 - This function has been rewritten extensively over the
 	# previous week - and now works! 
@@ -517,120 +631,23 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 	# Bail out if we couldn't read any data
 	if(is.null(datalist)) return(NULL)
 	Neighbours=datalist$EdgeList
-	SWCData=datalist$PointList
-	nVertices=nrow(SWCData)
-	EndPoints=subset(SWCData,NeighbourCount==1)
-	BranchPoints=subset(SWCData,NeighbourCount>2)
+	PointData=datalist$PointList
+	CoreNeuron=CoreNeuronFromPointAndEdgeData(
+			datalist$PointList,datalist$EdgeList,datalist$Origin,
+			ProcessAllTrees = ProcessAllTrees,Verbose = Verbose)
 	
-	# a single unbranched segment will have 2 end points
-	# if a branch point has 3 neighbours then it should increase
-	# the number of free ends by one.
-	# if 4 neighbours then free ends += 2 etc
-	
-	PredictedEndPoints=sum(BranchPoints$NeighbourCount-2)+2
-	if(!Force && nrow(EndPoints)!=PredictedEndPoints){
-		cat(paste("Mismatch between number of end points (",nrow(EndPoints),
-						") and number predicted from branch statistics (",PredictedEndPoints,")\n"))
+	ParsedNeuron<-c(list(NeuronName=NeuronNameFromFileName(filename),
+			InputFileName=filename,
+			CreatedAt=Sys.time(),
+			NodeName=Sys.info()["nodename"],
+			InputFileStat=file.info(filename)[1,],
+			InputFileMD5=md5sum(path.expand(filename))),
+			CoreNeuron)
+	if(!is.null(datalist$SegmentProps)){
+		# If we have materials information for the segments, keep that
+		ParsedNeuron$SegmentProps=datalist$SegmentProps
 	}
-	
-	# Start off with the start point as the first endpoint
-	# we may change our mind if we try to parse multiple trees
-	if(length(datalist$Origin) && datalist$Origin%in%EndPoints$PointNo){
-		StartPoint=datalist$Origin 
-	} else {
-		StartPoint=min(EndPoints$PointNo)
-	}
-	
-	if(ProcessAllTrees){
-		SubTrees=ParseEdgeListForAllSubTrees(Neighbours,Origin=datalist$Origin,Silent=!Verbose)
-		nTrees=length(SubTrees)
-		nPointsParsed=length(unique(unlist(SubTrees)))
-		if(nPointsParsed != nrow(SWCData))
-			stop("subtrees do not include all points in neuron: ",filename)
-		
-		# NB recurs = F to prevent us just ending up with a point list
-		SegList=unlist(SubTrees,recurs=FALSE)
-		if (nTrees>1) {
-			SegSubTrees=rep(1:nTrees,sapply(SubTrees,length))
-			# I suppose at this juncture I should choose the StartPoint with
-			# the largest associated subtree - I will use complexity as the
-			# measure
-			SubTreeLengths=sapply(SubTrees,length)
-			# Pick the first point of the first segment of the largest subtree
-			LargestSubTree=order(SubTreeLengths,decreasing=TRUE)[1]
-			StartPoint=SubTrees[[LargestSubTree]][[1]][1]		
-			SegList=SubTrees[[LargestSubTree]]
-			
-			SWCData$SubTree=rep(-1,nrow(SWCData))
-			for(i in 1:length(SubTrees)){
-				SWCData$SubTree[SWCData$PointNo%in%unique(unlist(SubTrees[[i]]))]=i
-			}
-			# New (and more correct method for assigning parents)
-			SWCData$Parent=-1
-			for (tree in SubTrees){
-				for(s in tree){
-					SWCData$Parent[s[-1]]=s[-length(s)]
-				}
-			}
-		}
-	} else {
-		# I believe that my new ParseEdgeLists is robust to this now
-		#if(StartPoint!=1) warning(paste(filename,": StartPoint is",StartPoint,"not 1 - this may break parsing routine"))
-		SegList=ParseEdgeList(Neighbours,RootPoint=StartPoint)
-	}
-	
-	# New (and more correct method for assigning parents)
-	# Check, since we may already have done this for multi subtree neurons
-	if(is.null(SWCData$Parent)){
-		SWCData$Parent=-1
-		for(s in SegList){
-			SWCData$Parent[s[-1]]=s[-length(s)]
-		}		
-	}
-	
-	if(is.null(SWCData$Label)){
-		# set up a default label if there was not label information
-		SWCData$Label=2
-	}
-	firstFields=c("PointNo","Label","X","Y","Z","W","Parent")
-	remainingFields=setdiff(names(SWCData),firstFields)
-	SWCData=SWCData[,c(firstFields,remainingFields)]
-	
-	# Remove any Branch or End points that didn't make it into SegList
-	PointsInSubTree=unique(unlist(SegList))
-	EndPoints=subset(EndPoints,PointNo%in%PointsInSubTree)
-	BranchPoints=subset(BranchPoints,PointNo%in%PointsInSubTree)
-	
-	if(length(SegList)>0){
-		#OK There's at least one segment
-		ParsedNeuron<-list(NeuronName=NeuronNameFromFileName(filename),
-				InputFileName=filename,
-				CreatedAt=Sys.time(),
-				NodeName=Sys.info()["nodename"],
-				InputFileStat=file.info(filename)[1,],
-				InputFileMD5=md5sum(path.expand(filename)),
-				NumPoints=nrow(SWCData),
-				StartPoint=StartPoint, # NB I am assuming that this is always 1
-				BranchPoints=BranchPoints$PointNo,
-				EndPoints=EndPoints$PointNo,
-				NumSegs=length(SegList),
-				SegList=SegList,
-				nTrees=nTrees,
-				d=SWCData	)
-		if(nTrees>1){
-			# If there are multiple subtrees then make that data available 
-			# as well.
-			ParsedNeuron$SubTrees=SubTrees
-		}
-		if(!is.null(datalist$SegmentProps)){
-			# If we have materials information for the segments, keep that
-			ParsedNeuron$SegmentProps=datalist$SegmentProps
-		}
-		return(as.neuron(ParsedNeuron))
-	} else {
-		cat("0 length Seglist for",filename,"\n")
-		return(NULL)
-	}
+	return(as.neuron(ParsedNeuron))
 }
 
 ParseEdgeList<-function(Nb,Silent=TRUE,Verbose=!Silent,RootPoint=1){
