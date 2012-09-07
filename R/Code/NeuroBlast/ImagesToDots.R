@@ -405,7 +405,7 @@ transform.dotprops<-function(dp,reg,k, RecalculateDotProps=T,na.action=c('warn',
 	naPoints=is.na(pointst[,1])
 	if(any(naPoints)){
 		if(na.action=='warn')
-			warn("Dropping ",sum(naPoints),' points')
+			warning("Dropping ",sum(naPoints),' points')
 		else if (na.action=='error')
 			stop("Error: Failed to transform ",sum(naPoints),' points')
 		
