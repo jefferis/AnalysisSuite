@@ -89,26 +89,41 @@ nearestpoint<-function(dp,point,k=1){
 
 #' Subset points in dotprops object that match given conditions
 #'
-#' Either takes a logical input, in which case this is simply applied to 
-#' the matrices that define the points, etc for the dotprops object
+#' subset defines either logical or numeric indices, in which case these are
+#' simply applied to the matrices that define the points, vect etc
 #' OR a function (which is called with the 3d points array and returns T/F vector)
 #' OR another dotprops in which case prune.dotprops is called
 #' @param dp A dotprops object
-#' @param inds indices into points, function or another dotprops (see Details)
+#' @param subset indices, function or another dotprops (see Details)
 #' @param ... Additional parameters passed to prune.dotprops (see Details)
 #' @return subsetted dotprops object
 #' @export
 #' @seealso \code{\link{prune.dotprops}}
-subset.dotprops<-function(dp,inds,...){
-	if(inherits(inds,'function')){
+#' @examples
+#' \dontrun{
+#' s3d=select3d()
+#' dp1=subset(dp,s3d(points))
+#' # special case of previous version
+#' dp2=subset(dp,s3d)
+#' stopifnot(all.equal(dp1,dp2))
+#' dp2=subset(dp,alpha>0.5 & s3d(pointd))
+#' dp3=subset(dp,1:10)
+#' }
+subset.dotprops<-function(dp,subset,...){
+	e <- substitute(subset)
+	r <- eval(e, dp, parent.frame())
+	if (!is.logical(r) && !is.numeric(r)) {
 		# a function that tells us whether a point is in or out
-		inds=inds(dp$points)
-	} else if(is.dotprops(inds)){
-		return(prune.dotprops(dp,inds,...))
+		if(is.function(r)) r=subset(dp$points)
+		else if(is.dotprops(r)) return(prune.dotprops(dp,subset,...))
+		else stop("Cannot evaluate subset")
 	}
-	dp$points=dp$points[inds,,drop=F]
-	dp$alpha=dp$alpha[inds]
-	dp$vect=dp$vect[inds,,drop=F]
+	if(is.logical(r)) r <- r & !is.na(r)
+	else if(!is.numeric(r)) stop("Subset must evaluate to a logical or numeric index")
+	
+	dp$points=dp$points[r,,drop=F]
+	dp$alpha=dp$alpha[r]
+	dp$vect=dp$vect[r,,drop=F]
 	dp
 }
 
