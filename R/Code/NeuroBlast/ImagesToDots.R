@@ -9,6 +9,7 @@ is.dotprops<-function(dp) inherits(dp,"dotprops")
 as.dotprops<-function(dp){
 	if(is.null(dp)) return (NULL)
 	if(!is.dotprops(dp)) class(dp)=c("dotprops",class(dp))
+	if(is.null(colnames(dp$points))) colnames(dp$points) <-c("X","Y","Z") 
 	dp
 }
 
