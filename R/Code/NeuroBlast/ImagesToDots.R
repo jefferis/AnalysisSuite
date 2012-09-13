@@ -125,6 +125,7 @@ subset.dotprops<-function(dp,subset,...){
 	dp$points=dp$points[r,,drop=F]
 	dp$alpha=dp$alpha[r]
 	dp$vect=dp$vect[r,,drop=F]
+	if(!is.null(dp$labels)) dp$labels=dp$labels[r]
 	dp
 }
 
@@ -151,7 +152,9 @@ digest.dotprops<-function(dp,...){
   digest(dp,...)
 }
 
-DotProperties<-function(points,k=20){
+DotProperties<-function(points,k=20,UseLabels=TRUE){
+	# store labels from SWC format data if this is a neuron
+	Labels=if(UseLabels && is.neuron(points)) points$d$Label else NULL
 	points=xyzmatrix(points)
 	npoints=nrow(points)
 	if(npoints<k) stop("Too few points to calculate properties")
@@ -185,6 +188,7 @@ DotProperties<-function(points,k=20){
 		vect[i,]=v1d1$vectors[,1]
 	}
 	rlist=list(points=points,alpha=alpha,vect=vect)
+	rlist$labels=Labels
 	attr(rlist,'k')=k
 	return(as.dotprops(rlist))
 }
