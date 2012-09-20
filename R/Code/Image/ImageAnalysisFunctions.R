@@ -85,6 +85,7 @@ findCDFCorner<-function(x,grad=1,scaleXTo1=TRUE)
 CalculateBackgroundParams<-function(images,filestems=basename,truncate=0.1,
 	max=c("signal","range"))
 {
+	max=match.arg(max)
 	if(length(images)==1 && file.info(images)$isdir)
 		images=dir(images,full=TRUE)
 	imagesdf=data.frame(HistogramFile=images,stringsAsFactors=F)
