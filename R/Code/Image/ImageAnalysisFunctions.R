@@ -68,3 +68,91 @@ findCDFCorner<-function(x,grad=1,scaleXTo1=TRUE)
 	# find x val where derivative is closest to grad
 	ls$x[which.min(abs(ls$y-grad))]
 }
+
+#' Calculate table of estimated background intensity parameters for histograms 
+#'
+#' By default only looks at the bottom 10% of image histogram (param truncate)
+#' Suggests a default threshold of background.mu+2*background.sigma
+#' By default the dataframe will have rownames of the name of the input file
+#' @param images Paths to image histograms in nrrd format (or a directory)
+#' @param filestems Character vector of filestems or function that can calculate them
+#' @return data.frame with cols including background.mu, background.sigma
+#' @export
+#' @seealso \code{\link{NrrdHisto},\link{ReadHistogramFromNrrd}, 
+#' \link{FitCumulativeGaussianToHistogram}, \link{UpdateOrCalculateBackgroundParams}}
+CalculateBackgroundParams<-function(images,filestems=basename,truncate=0.1)
+{
+	if(length(images)==1 && file.info(images)$isdir)
+		images=dir(images,full=TRUE)
+	imagesdf=data.frame(HistogramFile=images,stringsAsFactors=F)
+	if(is.function(filestems))
+		rownames(imagesdf)=filestems(images)
+	else
+		rownames(imagesdf)=filestems
+	imagesdf$filestem=rownames(imagesdf)
+	imagesdf$background.mu=NA
+	imagesdf$background.sigma=NA
+	# imagesdf$min=NA
+	imagesdf$max=NA
+
+	for(r in rownames(imagesdf)){
+		histogramfile=imagesdf[r,"HistogramFile"]
+		if(file.exists(histogramfile)){
+			imagesdf[r,"max"]=ReadNrrdHeader(histogramfile)$axismaxs
+			params<-try(FitCumulativeGaussianToHistogram(ReadHistogramFromNrrd(histogramfile),trunc=0.1,plot=F))
+			if(!inherits(params,"try-error")) {
+				imagesdf[r,"background.mu"]=params["mu"]
+				imagesdf[r,"background.sigma"]=params["sigma"]
+				cat("+")				
+			} else cat("file",basename(histogramfile),"has error",params,"\n")
+		} else cat("missing",basename(histogramfile),"\n")
+	}
+	imagesdf$threshold=imagesdf$background.mu+imagesdf$background.sigma*2
+	imagesdf$md5=md5sum(imagesdf$HistogramFile)
+	imagesdf$mtime=file.info(imagesdf$HistogramFile)$mtime
+
+	attr(imagesdf,"changed")=TRUE
+	imagesdf
+}
+
+#' Update a table of calculate background params with new/modified histograms
+#'
+#' @param images Histograms in nrrd format
+#' @param imagesdf Existing dataframe to start from
+#' @return data.frame of background params
+#' @export
+#' @seealso \code{\link{CalculateBackgroundParams}}
+UpdateOrCalculateBackgroundParams<-function(images,imagesdf,...)
+{
+	# with one argument just go ahead and calculate
+	if(missing(imagesdf)) return(CalculateBackgroundParams(images))
+	
+	if(is.character(imagesdf$mtime)){
+		imagesdf$mtime=as.POSIXct(strptime(imagesdf$mtime, "%d/%m/%Y %H:%M"))
+	} 
+	
+	# a flag to know if we changed anything
+	attr(imagesdf,"changed")=FALSE
+	# else just try to calculate new
+	newImages<-setdiff(images,imagesdf$HistogramFile)
+	# and changed images
+	currentMD5s<-md5sum(imagesdf$HistogramFile)
+	imagesToCalculate<-c(newImages,imagesdf$HistogramFile[imagesdf$md5!=currentMD5s])
+	imagesToKeep<-setdiff(imagesdf$HistogramFile,imagesToCalculate)
+	
+	# nothing changed so just return what we were given
+	if(length(imagesToCalculate)<1) return(imagesdf)
+	
+	# if we got this far, something has changed 
+	newdf=CalculateBackgroundParams(imagesToCalculate,...)
+	attr(newdf,"changed")=TRUE
+	# if we had to (re)calculate everbody then we're done
+	if(length(imagesToKeep)<1) return(newdf)
+	
+	# splice the calculated and recalculated images together
+	newdf=rbind(newdf,subset(imagesdf,HistogramFile%in%imagesToKeep))
+	# and sort by HistogramFile
+	newdf=newdf[order(newdf$HistogramFile),]
+	attr(newdf,"changed")=TRUE
+	newdf
+}
