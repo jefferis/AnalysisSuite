@@ -77,11 +77,13 @@ findCDFCorner<-function(x,grad=1,scaleXTo1=TRUE)
 #' @param images Paths to image histograms in nrrd format (or a directory)
 #' @param filestems Character vector of filestems or function that can calculate them
 #' @param truncate fraction of histogram to use for background calculations
+#' @param max Whether the max col should be upper range of hist or max signal
 #' @return data.frame with cols including background.mu, background.sigma
 #' @export
 #' @seealso \code{\link{NrrdHisto},\link{ReadHistogramFromNrrd}, 
 #' \link{FitCumulativeGaussianToHistogram}, \link{UpdateOrCalculateBackgroundParams}}
-CalculateBackgroundParams<-function(images,filestems=basename,truncate=0.1)
+CalculateBackgroundParams<-function(images,filestems=basename,truncate=0.1,
+	max=("signal","range"))
 {
 	if(length(images)==1 && file.info(images)$isdir)
 		images=dir(images,full=TRUE)
@@ -99,9 +101,12 @@ CalculateBackgroundParams<-function(images,filestems=basename,truncate=0.1)
 	for(r in rownames(imagesdf)){
 		histogramfile=imagesdf[r,"HistogramFile"]
 		if(file.exists(histogramfile)){
-			imagesdf[r,"max"]=ReadNrrdHeader(histogramfile)$axismaxs
-			params<-try(FitCumulativeGaussianToHistogram(
-				ReadHistogramFromNrrd(histogramfile),truncate=truncate,plot=F))
+			h<-ReadHistogramFromNrrd(histogramfile)
+			if(max=='range')
+				imagesdf[r,"max"]=ReadNrrdHeader(histogramfile)$axismaxs
+			else
+				imagesdf[r,"max"]=h$breaks[max(which(h$counts>0))+1]
+			params<-try(FitCumulativeGaussianToHistogram(h,truncate=truncate,plot=F))
 			if(!inherits(params,"try-error")) {
 				imagesdf[r,"background.mu"]=params["mu"]
 				imagesdf[r,"background.sigma"]=params["sigma"]
