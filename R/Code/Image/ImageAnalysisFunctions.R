@@ -120,7 +120,7 @@ CalculateBackgroundParams<-function(images,filestems=basename,truncate=0.1)
 #' Update a table of calculated background params with new/modified histograms
 #'
 #' For details see CalculateBackgroundParams.
-#' @param images Histograms in nrrd format
+#' @param images Histograms in nrrd format (or a single directory)
 #' @param imagesdf Existing dataframe to start from
 #' @param ... Additional options passed to CalculateBackgroundParams
 #' @return data.frame of background params
@@ -130,6 +130,9 @@ UpdateOrCalculateBackgroundParams<-function(images,imagesdf,...)
 {
 	# with one argument just go ahead and calculate
 	if(missing(imagesdf)) return(CalculateBackgroundParams(images))
+	
+	if(length(images)==1 && file.info(images)$isdir)
+		images=dir(images,full=TRUE)
 	
 	if(is.character(imagesdf$mtime)){
 		imagesdf$mtime=as.POSIXct(strptime(imagesdf$mtime, "%d/%m/%Y %H:%M"))
