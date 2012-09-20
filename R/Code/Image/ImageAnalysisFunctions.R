@@ -135,7 +135,7 @@ CalculateBackgroundParams<-function(images,filestems=basename,truncate=0.1,
 UpdateOrCalculateBackgroundParams<-function(images,imagesdf,...)
 {
 	# with one argument just go ahead and calculate
-	if(missing(imagesdf)) return(CalculateBackgroundParams(images))
+	if(missing(imagesdf)) return(CalculateBackgroundParams(images,...))
 	
 	if(length(images)==1 && file.info(images)$isdir)
 		images=dir(images,full=TRUE)
