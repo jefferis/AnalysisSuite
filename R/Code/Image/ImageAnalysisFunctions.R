@@ -76,6 +76,7 @@ findCDFCorner<-function(x,grad=1,scaleXTo1=TRUE)
 #' By default the dataframe will have rownames of the name of the input file
 #' @param images Paths to image histograms in nrrd format (or a directory)
 #' @param filestems Character vector of filestems or function that can calculate them
+#' @param truncate fraction of histogram to use for background calculations
 #' @return data.frame with cols including background.mu, background.sigma
 #' @export
 #' @seealso \code{\link{NrrdHisto},\link{ReadHistogramFromNrrd}, 
@@ -99,7 +100,8 @@ CalculateBackgroundParams<-function(images,filestems=basename,truncate=0.1)
 		histogramfile=imagesdf[r,"HistogramFile"]
 		if(file.exists(histogramfile)){
 			imagesdf[r,"max"]=ReadNrrdHeader(histogramfile)$axismaxs
-			params<-try(FitCumulativeGaussianToHistogram(ReadHistogramFromNrrd(histogramfile),trunc=0.1,plot=F))
+			params<-try(FitCumulativeGaussianToHistogram(
+				ReadHistogramFromNrrd(histogramfile),truncate=truncate,plot=F))
 			if(!inherits(params,"try-error")) {
 				imagesdf[r,"background.mu"]=params["mu"]
 				imagesdf[r,"background.sigma"]=params["sigma"]
@@ -115,10 +117,12 @@ CalculateBackgroundParams<-function(images,filestems=basename,truncate=0.1)
 	imagesdf
 }
 
-#' Update a table of calculate background params with new/modified histograms
+#' Update a table of calculated background params with new/modified histograms
 #'
+#' For details see CalculateBackgroundParams.
 #' @param images Histograms in nrrd format
 #' @param imagesdf Existing dataframe to start from
+#' @param ... Additional options passed to CalculateBackgroundParams
 #' @return data.frame of background params
 #' @export
 #' @seealso \code{\link{CalculateBackgroundParams}}
