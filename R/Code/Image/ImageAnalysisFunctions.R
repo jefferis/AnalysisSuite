@@ -83,7 +83,7 @@ findCDFCorner<-function(x,grad=1,scaleXTo1=TRUE)
 #' @seealso \code{\link{NrrdHisto},\link{ReadHistogramFromNrrd}, 
 #' \link{FitCumulativeGaussianToHistogram}, \link{UpdateOrCalculateBackgroundParams}}
 CalculateBackgroundParams<-function(images,filestems=basename,truncate=0.1,
-	max=("signal","range"))
+	max=c("signal","range"))
 {
 	if(length(images)==1 && file.info(images)$isdir)
 		images=dir(images,full=TRUE)
