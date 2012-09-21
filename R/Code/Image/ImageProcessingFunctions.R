@@ -245,8 +245,16 @@ AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
 	if(UseLock) unlink(lockfile)
 }
 
-NormaliseAndSmoothNrrd<-function(infile,outfile,outdir,threshold,max,newmax=1,
-	out_type=c("float","int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64","double"),
+#' Quantise and smooth a nrrd, by default producing (0,1) range float image
+#'
+#' Details
+#' @param summary of each parameter
+#' @return return value
+#' @export
+#' @seealso \code{\link{somefun}}
+#' @examples
+NormaliseAndSmoothNrrd<-function(infile,outfile,outdir,threshold,max,
+	out_type=c("float","uint8", "uint16", "uint32"),
 	centering=c("node","cell"), scalefactor="x1 x1 x1",sigma=3,kernelsigmacutoff=2.5,
 	DryRun=FALSE, gzip=FALSE,UseLock=FALSE)
 {
@@ -259,7 +267,7 @@ NormaliseAndSmoothNrrd<-function(infile,outfile,outdir,threshold,max,newmax=1,
 	haveRun=FALSE
 	cmd=paste("unu 3op clamp ",threshold,infile,max)
 	cmd=paste(cmd, "| unu 2op - - ",threshold)
-	cmd=paste(cmd, "| unu 2op / - ",(max-threshold)/newmax,"-t ",out_type)
+	cmd=paste(cmd, "| unu 2op / - ",(max-threshold),"-t float")
 	kernel=paste("--kernel gauss:",sigma,",",kernelsigmacutoff,sep="")
 	cmd=paste(cmd, "| unu resample --size",scalefactor,kernel)
 	cmd=paste(cmd,"--center",centering)
@@ -267,6 +275,10 @@ NormaliseAndSmoothNrrd<-function(infile,outfile,outdir,threshold,max,newmax=1,
 	if(UseLock && !makelock(lockfile)) return (haveRun)
 
 	# nb 9f means max compression (9), specialised for filtered data
+	if(out_type!='float') {
+		bits=as.integer(sub("uint","",out_type))
+		cmd=paste(cmd,"|unu quantize -b",bits,'-min',0,'-max',1)
+	}
 	if(gzip) cmd=paste(cmd,"| unu save --format nrrd --encoding gz:9f -o",outfile)
 	else cmd=paste(cmd,"-o",outfile)
 	if(DryRun) print(cmd)
