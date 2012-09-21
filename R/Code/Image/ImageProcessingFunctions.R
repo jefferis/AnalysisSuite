@@ -245,22 +245,24 @@ AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
 	if(UseLock) unlink(lockfile)
 }
 
-NormaliseAndSmoothNrrd<-function(infile,outfile,outdir,threshold,max,
-	scalefactor="x1 x1 x1",sigma=3,kernelsigmacutoff=2.5,DryRun=FALSE,
-	gzip=FALSE,UseLock=FALSE)
+NormaliseAndSmoothNrrd<-function(infile,outfile,outdir,threshold,max,newmax=1,
+	out_type=c("float","int8", "uint8", "int16", "uint16", "int32", "uint32", "int64", "uint64","double"),
+	centering=c("node","cell"), scalefactor="x1 x1 x1",sigma=3,kernelsigmacutoff=2.5,
+	DryRun=FALSE, gzip=FALSE,UseLock=FALSE)
 {
 	if(missing(outfile) && !missing(outdir))
 		outfile=file.path(outdir,basename(infile))
 	else if(missing(outdir) && missing(outfile))
 		outfile=sub("(\\.[^.]+)$",paste("-nsmooth","\\1",sep=""),infile)
-		
+	centering=match.arg(centering)
+	out_type=match.arg(out_type)
 	haveRun=FALSE
 	cmd=paste("unu 3op clamp ",threshold,infile,max)
 	cmd=paste(cmd, "| unu 2op - - ",threshold)
-	cmd=paste(cmd, "| unu 2op / - ",(max-threshold),"-t float")
+	cmd=paste(cmd, "| unu 2op / - ",(max-threshold)/newmax,"-t ",out_type)
 	kernel=paste("--kernel gauss:",sigma,",",kernelsigmacutoff,sep="")
 	cmd=paste(cmd, "| unu resample --size",scalefactor,kernel)
-
+	cmd=paste(cmd,"--center",centering)
 	lockfile=paste(outfile,sep=".","lock")
 	if(UseLock && !makelock(lockfile)) return (haveRun)
 
