@@ -13,9 +13,11 @@ FitCumulativeGaussian<-function(x,cumfreq,muest,sigmaest,...){
 }
 
 FitCumulativeGaussianToHistogram<-function(h,truncate=1.0,plot=T,...){
+	# convert to numeric to avoid integer overflow issues with larg histograms
+	counts=as.numeric(h$counts)
 	xs=h$breaks[-length(h$breaks)]
 	# find cumsum
-	cumfreq=cumsum(h$counts)/sum(h$counts)
+	cumfreq=cumsum(counts)/sum(counts)
 	x=xs;
 	if(truncate!=1.0) {
 		ids=seq(1,by=1,to=truncate*length(h$counts))
@@ -26,7 +28,7 @@ FitCumulativeGaussianToHistogram<-function(h,truncate=1.0,plot=T,...){
 	}
 	params=FitCumulativeGaussian(x,cumfreq)
 	if(plot){
-		plot(xs,cumsum(h$counts)/sum(h$counts))
+		plot(xs,cumsum(counts)/sum(counts))
 		lines(xs,cumnorm(xs,mu= params["mu"],sigma= params["sigma"]),type='l',col='red')
 		if(truncate!=1.0) abline(v=x[length(x)])
 	}

@@ -418,6 +418,7 @@ ReadHistogramFromNrrd<-function(filename,...){
 	density=d/sum(d)
 	
 	halfwidth=(h$axismaxs-h$axismins)/h$sizes/2
+	density=d/sum(as.numeric(d))
 
 	# return it as an R histogram	
 	structure(list(
