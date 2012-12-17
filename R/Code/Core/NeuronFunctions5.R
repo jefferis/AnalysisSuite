@@ -1835,3 +1835,34 @@ write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am',
     stop("Unimplemented file type ",ftype)
   }
 }
+
+#' transform a neuron using a function, an affine matrix, or CMTK registration
+#'
+#' If a CMTK registration file is supplied the warping registration will be
+#' applied.
+#' @param x A neuron
+#' @param reg matrix, path or function describing registration to apply
+#' @return transformed neuron
+#' @export
+#' @seealso \code{\link{transform.dotprops}}
+transform.neuron<-function(x,reg,na.action=c('error','drop','warn'),...) {
+	na.action=match.arg(na.action)
+	xyz=xyzmatrix(x)
+	if(is.function(reg)){
+	  # we've been given a function - apply this to points
+	  pointst=reg(xyz)
+	} else if(is.matrix(reg)) {
+		# we've been given an affine transformation matrix
+		pointst=TransformPoints(xyz,reg)
+	} else {
+		# assume we've been given a CMTK registration file
+		pointst=transformedPoints(xyzs=xyz,warpfile=reg,transforms='warp',...)[['warp']]
+	}
+	
+	naPoints=is.na(pointst[,1])
+	if(any(naPoints)){
+		stop("Don't know how to handle points that fail to transform for neurons")
+	}
+	xyzmatrix(x)<-pointst
+	x
+}
