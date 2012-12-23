@@ -1804,7 +1804,7 @@ write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am',
     } else {
       # use the file type to specify the suffix
       ftype=match.arg(ftype)
-      suffix=sub(".*(\\.[^.]+)$","\\1",ftype)      
+      suffix=sub(".*?([^.]+)$",".\\1",ftype)
     }
   } else {
     ext=sub(".*(\\.[^.]+)$","\\1",filename)
