@@ -18,14 +18,14 @@ dotprops2nml<-function(x,f,id,neurite_diam=1,soma_diam=4,notes=NULL,...){
 		# just ignore incoming template for time being
 		tc=textConnection("segments",open='w')
 		on.exit(close(tc))
-		if(grepl('segments',btpl)){
+		if(grepl('segments',btpl,fixed=TRUE)){
 			for(i in seq(nrow(x$points))){
 				segment_id=i
 				p1=c(x$points[i,]-x$vect[i,]/2,neurite_diam)
 				p2=c(x$points[i,]+x$vect[i,]/2,neurite_diam)
 				brew(text=seg_tpl_txt,output=tc)
 			}
-		} else if(grepl('soma',btpl)){
+		} else if(grepl('soma',btpl,fixed=TRUE)){
 			segment_id=0
 			p1=p2=c(unlist(x$soma),soma_diam)
 			brew(text=seg_tpl_txt,output=tc)
