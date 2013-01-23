@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2  http://neuroml.svn.sourceforge.net/viewvc/neuroml/NeuroML2/Schemas/NeuroML2/NeuroML_v2alpha.xsd" id="<%=id%>">
+
+    <cell id="<%=id%>">
+
+        <notes>
+        <%=notes%>
+        </notes>
+
+        <morphology id="morphology_<%=id%>">
+
+            <%%soma%%>
+            <%%segments%%>
+            <segmentGroup id="Soma">
+                <member segment="<%=soma_id%>"/>
+            </segmentGroup>
+
+            <segmentGroup id="all">
+                <include segmentGroup="Soma"/>
+            </segmentGroup>
+
+            <segmentGroup id="soma_group">
+                <include segmentGroup="Soma"/>
+            </segmentGroup>
+            
+        </morphology>
+
+    </cell>
+    
+</neuroml>
