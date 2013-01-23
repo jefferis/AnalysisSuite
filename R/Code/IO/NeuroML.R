@@ -1,7 +1,23 @@
 # code to provide simple IO to neuro ML 
 # see e.g. https://raw.github.com/openworm/CElegansNeuroML/master/CElegans/generatedNeuroML2/AIAL.nml
 
-dotprops2nml<-function(x,f,id,neurite_diam=1,soma_diam=4,notes=NULL,...){
+#' Convert a dotprops neuron representation into NeuroML format
+#'
+#' @ details Note that this representation currently produces neurons without any 
+#' connections betweeng segments that will consequently be regarded as invalid
+#' by most software, including neuroConstruct.
+#' @references see http://www.neuroml.org/ for details
+#' @param x Dotprops object
+#' @param f Path to neuroML ouptut file
+#' @param id NeuroML string id for cell
+#' @param neurite_diam,soma_diam Default diams for neurites and soma, respectively
+#' @param notes Comment block for NeuroML
+#' @param ... Additional arguments that could be used to specify neuroml 
+#'  blocks FIXME not yet implemented
+#' @return Last argument evaluated by brew function
+#' @export
+#' @seealso \code{\link{brew},\link{dotprops}}
+dotprops2nml<-function(x,f,id,neurite_diam=1,soma_diam=4,notes,...){
 	require(brew)
 	neuroml_tpl=file.path(CodeDir,'IO','NeuroML.brew')
 	seg_tpl=file.path(dirname(neuroml_tpl),'NeuroML_segment.brew')
@@ -15,7 +31,6 @@ dotprops2nml<-function(x,f,id,neurite_diam=1,soma_diam=4,notes=NULL,...){
 	soma_id=0
 
 	segmentParser<-function(btpl){
-		# just ignore incoming template for time being
 		tc=textConnection("segments",open='w')
 		on.exit(close(tc))
 		if(grepl('segments',btpl,fixed=TRUE)){
