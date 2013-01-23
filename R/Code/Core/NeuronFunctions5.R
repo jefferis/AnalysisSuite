@@ -348,6 +348,9 @@ plot3d.neuronlist<-function(nl,subset,col,...){
 			# no neurons left, so just return
 			return()
 		}
+        # check that subset expression produced sensible result
+		if(!is.logical(r)) stop("Subset did not evaluate to logical vector")
+		if(length(r)!=length(nl)) stop("Subset result does not have same length as neuronlist nl")
 		# now just select the neurons we want
 		nl=nl[r]
 	} 
