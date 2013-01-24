@@ -1,4 +1,0 @@
-<segment id="<%=segment_id%>" name="seg_<%=segment_id%>">
-    <proximal x="<%=p1[1]%>" y="<%=p1[2]%>" z="<%=p1[3]%>" diameter="<%=p1[4]%>"/>
-    <distal x="<%=p2[1]%>" y="<%=p2[2]%>" z="<%=p2[3]%>" diameter="<%=p2[4]%>"/>
-</segment>

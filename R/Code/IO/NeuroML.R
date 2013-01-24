@@ -18,12 +18,52 @@
 #' @export
 #' @seealso \code{\link{brew},\link{dotprops}}
 dotprops2nml<-function(x,f,id,neurite_diam=1,soma_diam=4,notes=NULL,...){
-	require(brew)
-	neuroml_tpl=file.path(CodeDir,'IO','NeuroML.brew')
-	seg_tpl=file.path(dirname(neuroml_tpl),'NeuroML_segment.brew')
-	# save time by reading this to memory once
-	seg_tpl_txt=paste(readLines(seg_tpl),collapse='\n')
+neuroml_tpl_txt<-'<?xml version="1.0" encoding="UTF-8"?>
+<neuroml xmlns="http://www.neuroml.org/schema/neuroml2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.neuroml.org/schema/neuroml2  http://neuroml.svn.sourceforge.net/viewvc/neuroml/NeuroML2/Schemas/NeuroML2/NeuroML_v2alpha.xsd" id="<%=id%>">
 
+    <cell id="<%=id%>">
+
+        <notes>
+        <%=notes%>
+        </notes>
+
+        <morphology id="morphology_<%=id%>">
+
+            <%%soma%%>
+            <%%segments%%>
+            <segmentGroup id="Soma">
+                <member segment="<%=soma_id%>"/>
+            </segmentGroup>
+
+            <segmentGroup id="Neurites">
+                <%%neuritesegments%%>
+            </segmentGroup>
+
+            <segmentGroup id="all">
+                <include segmentGroup="Soma"/>
+                <include segmentGroup="Neurites"/>
+            </segmentGroup>
+
+            <segmentGroup id="soma_group">
+                <include segmentGroup="Soma"/>
+            </segmentGroup>
+            
+        </morphology>
+
+    </cell>
+    
+</neuroml>
+'
+
+seg_tpl_txt<-'<segment id="<%=segment_id%>" name="seg_<%=segment_id%>">
+    <proximal x="<%=p1[1]%>" y="<%=p1[2]%>" z="<%=p1[3]%>" diameter="<%=p1[4]%>"/>
+    <distal x="<%=p2[1]%>" y="<%=p2[2]%>" z="<%=p2[3]%>" diameter="<%=p2[4]%>"/>
+</segment>
+'
+	# indent by correct amount
+	seg_tpl_txt<-gsub('\n','\n            ',seg_tpl_txt,perl=F)
+	require(brew)
+	
 	if(is(f,'connection')) con<-f
 	else con=file(f,open='wt')
 	on.exit(close(con))
@@ -33,7 +73,7 @@ dotprops2nml<-function(x,f,id,neurite_diam=1,soma_diam=4,notes=NULL,...){
 	segmentParser<-function(btpl){
 		tc=textConnection("segments",open='w')
 		on.exit(close(tc))
-		#browser()
+
 		if(btpl=='segments'){
 			for(i in seq(nrow(x$points))){
 				segment_id=i
@@ -46,14 +86,14 @@ dotprops2nml<-function(x,f,id,neurite_diam=1,soma_diam=4,notes=NULL,...){
 			p1=p2=c(unlist(x$soma),soma_diam)
 			brew(text=seg_tpl_txt,output=tc)
 		} else if(btpl=='neuritesegments'){
-			return(paste('<member segment="',
+			return(paste('                <member segment="',
 						seq.int(len=nrow(x$points)),
-						'"/>',sep='',
-						collapse='\n'))
+						'"/>',
+						sep='',collapse='\n'))
 		}
 		
 		paste(segments,collapse='\n')
 	}
 
-	brew(neuroml_tpl,con,tplParser=segmentParser)
+	brew(text=neuroml_tpl_txt,output=con,tplParser=segmentParser)
 }
