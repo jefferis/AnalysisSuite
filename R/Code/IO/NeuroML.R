@@ -55,9 +55,9 @@ neuroml_tpl_txt<-'<?xml version="1.0" encoding="UTF-8"?>
 </neuroml>
 '
 
-seg_tpl_txt<-'<segment id="<%=segment_id%>" name="seg_<%=segment_id%>">
-    <proximal x="<%=p1[1]%>" y="<%=p1[2]%>" z="<%=p1[3]%>" diameter="<%=p1[4]%>"/>
-    <distal x="<%=p2[1]%>" y="<%=p2[2]%>" z="<%=p2[3]%>" diameter="<%=p2[4]%>"/>
+seg_tpl_txt<-'<segment id="%d" name="seg_%d">
+    <proximal x="%g" y="%g" z="%g" diameter="%g"/>
+    <distal x="%g" y="%g" z="%g" diameter="%g"/>
 </segment>
 '
 	# indent by correct amount
@@ -71,27 +71,27 @@ seg_tpl_txt<-'<segment id="<%=segment_id%>" name="seg_<%=segment_id%>">
 	soma_id=0
 
 	segmentParser<-function(btpl){
-		tc=textConnection("segments",open='w')
-		on.exit(close(tc))
-
 		if(btpl=='segments'){
-			for(i in seq(nrow(x$points))){
-				segment_id=i
-				p1=c(x$points[i,]-x$vect[i,]/2,neurite_diam)
-				p2=c(x$points[i,]+x$vect[i,]/2,neurite_diam)
-				brew(text=seg_tpl_txt,output=tc)
-			}
+			ids=seq.int(len=nrow(x$points))
+			p1=x$points-x$vect/2
+			p2=x$points+x$vect/2
+			segments<-sprintf(seg_tpl_txt,
+				ids,ids,
+				p1[,1],p1[,2],p1[,3],neurite_diam,
+				p2[,1],p2[,2],p2[,3],neurite_diam)
 		} else if(btpl=='soma'){
 			segment_id=0
 			p1=p2=c(unlist(x$soma),soma_diam)
-			brew(text=seg_tpl_txt,output=tc)
+			segments<-sprintf(seg_tpl_txt,
+				segment_id,segment_id,
+				p1[1],p1[2],p1[3],soma_diam,
+				p2[1],p2[2],p2[3],soma_diam)
 		} else if(btpl=='neuritesegments'){
 			return(paste('                <member segment="',
 						seq.int(len=nrow(x$points)),
 						'"/>',
 						sep='',collapse='\n'))
 		}
-		
 		paste(segments,collapse='\n')
 	}
 
