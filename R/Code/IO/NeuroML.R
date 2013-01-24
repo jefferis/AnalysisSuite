@@ -17,7 +17,7 @@
 #' @return Last argument evaluated by brew function
 #' @export
 #' @seealso \code{\link{brew},\link{dotprops}}
-dotprops2nml<-function(x,f,id,neurite_diam=1,soma_diam=4,notes,...){
+dotprops2nml<-function(x,f,id,neurite_diam=1,soma_diam=4,notes=NULL,...){
 	require(brew)
 	neuroml_tpl=file.path(CodeDir,'IO','NeuroML.brew')
 	seg_tpl=file.path(dirname(neuroml_tpl),'NeuroML_segment.brew')
