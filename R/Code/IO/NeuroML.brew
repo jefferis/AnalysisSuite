@@ -15,8 +15,13 @@
                 <member segment="<%=soma_id%>"/>
             </segmentGroup>
 
+            <segmentGroup id="Neurites">
+                <%%neuritesegments%%>
+            </segmentGroup>
+
             <segmentGroup id="all">
                 <include segmentGroup="Soma"/>
+                <include segmentGroup="Neurites"/>
             </segmentGroup>
 
             <segmentGroup id="soma_group">
