@@ -58,7 +58,7 @@ This is strongly recommended if you plan to use this code on a regular basis
 Running AnalysisSuite in R
 ==========================
   * You can now start AnalysisSuite (in this and future R sessions) by doing 
-     `source(options()$gjanalysissuite.startup)`
+     `source(getOption('gjanalysissuite.startup'))`
   * See [our wiki](http://flybrain.mrc-lmb.cam.ac.uk/dokuwiki/doku.php?id=warping_manual:start) for further details.
 
 Moving the location of AnalysiSuite
