@@ -321,21 +321,25 @@ nlapply<-function (X, FUN, ...){
 
 #' 3D plots of the elements in a neuronlist, optionally using a subset expression
 #'
+#' @details the col and subset parameters are evaluated in the context of the
+#' dataframe attribute of the neuronlist
 #' @param nl a neuron list (where omitted will use MyNeurons as default)
 #' @param subset - an expression passed to subset.neuronlist
 #' @param col Optional colours passed to plot3d with mapply
 #' @param ... options passed on to plot3d (such as colours, line width etc)
 #' @return value of plot3d 
 #' @export
-#' plot3d(MyNeurons,glomerulus=="DA1",col='red')
-#' plot3d(MyNeurons,glomerulus=="VA1lm",col='green')
+#' plot3d(MyNeurons,Glomerulus=="DA1",col='red')
+#' plot3d(MyNeurons,Glomerulus=="VA1lm",col='green')
+#' plot3d(MyNeurons,Glomerulus%in%c("DA1",'VA1lm'),
+#'   col=c("red","green")[factor(Glomerulus)])
 plot3d.neuronlist<-function(nl,subset,col,...){
 	if(!is.neuronlist(nl)){
 		subset=nl
 		nl=MyNeurons
 	}
+	df=attr(nl,'df')
 	if(!missing(subset)){
-		df=attr(nl,'df')
 		if(is.null(df)) stop("Can't use a subset unless neuronlist has an attached dataframe")
 		# convert subset (which may a language expression) into an expression that won't get
 		# evaluated until we say so
@@ -353,9 +357,15 @@ plot3d.neuronlist<-function(nl,subset,col,...){
 		if(length(r)!=length(nl)) stop("Subset result does not have same length as neuronlist nl")
 		# now just select the neurons we want
 		nl=nl[r]
+		df=df[r,]
 	} 
-	if(missing(col) && length(nl)>1){
-		col=rainbow(length(nl))
+	if(length(nl)>1){
+		if(missing(col)){
+			col=rainbow(length(nl))
+		} else {
+			e <- substitute(col)
+			col <- eval(e, df, parent.frame())
+		}
 	}
 	invisible(mapply(plot3d,nl,col=col,...))
 }
