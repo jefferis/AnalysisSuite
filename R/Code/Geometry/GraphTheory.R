@@ -115,7 +115,10 @@ RerootNeuron<-function(ANeuron,root=1){
   # ANeuron$SegList=sl
   ANeuron$d=d
   # Now that we have recalculated SWC data we should 
-  # use that to recalculate core neuron fields including seglist 
+  # use that to recalculate core neuron fields including seglist
+  # FIXME - This makes no sense if root is not == 1 because
+  # ParseSWC assumes root = 1
+  if(root!=1) stop("ParseSWC cannot cope with root!=1")
   coreneuron=ParseSWC(ANeuron$d)
   ANeuron[names(coreneuron)]<-coreneuron
   ANeuron
@@ -298,7 +301,19 @@ AmiraDataFromSWC<-function(d){
 	list(PointList=d,EdgeList=el,Origin=Origin)
 }
 
+EdgeListFromNeuron<-function(n){
+	EdgeListFromSWC(n$d)
+}
+
+EdgeListFromSWC<-function(d){
+	el=subset(d,Parent!=-1,sel=c(Parent,PointNo))
+	DoubleFromSingleEdgeList(el)
+}
+
+CoreNeuronFromAmiraData<-function(l){
 	
+}
+
 DoubleFromSingleEdgeList<-function(el){
 	el=matrix(unlist(el),ncol=2)
 #	as.matrix(el)

@@ -321,21 +321,25 @@ nlapply<-function (X, FUN, ...){
 
 #' 3D plots of the elements in a neuronlist, optionally using a subset expression
 #'
+#' @details the col and subset parameters are evaluated in the context of the
+#' dataframe attribute of the neuronlist
 #' @param nl a neuron list (where omitted will use MyNeurons as default)
 #' @param subset - an expression passed to subset.neuronlist
 #' @param col Optional colours passed to plot3d with mapply
 #' @param ... options passed on to plot3d (such as colours, line width etc)
 #' @return value of plot3d 
 #' @export
-#' plot3d(MyNeurons,glomerulus=="DA1",col='red')
-#' plot3d(MyNeurons,glomerulus=="VA1lm",col='green')
+#' plot3d(MyNeurons,Glomerulus=="DA1",col='red')
+#' plot3d(MyNeurons,Glomerulus=="VA1lm",col='green')
+#' plot3d(MyNeurons,Glomerulus%in%c("DA1",'VA1lm'),
+#'   col=c("red","green")[factor(Glomerulus)])
 plot3d.neuronlist<-function(nl,subset,col,...){
 	if(!is.neuronlist(nl)){
 		subset=nl
 		nl=MyNeurons
 	}
+	df=attr(nl,'df')
 	if(!missing(subset)){
-		df=attr(nl,'df')
 		if(is.null(df)) stop("Can't use a subset unless neuronlist has an attached dataframe")
 		# convert subset (which may a language expression) into an expression that won't get
 		# evaluated until we say so
@@ -353,9 +357,15 @@ plot3d.neuronlist<-function(nl,subset,col,...){
 		if(length(r)!=length(nl)) stop("Subset result does not have same length as neuronlist nl")
 		# now just select the neurons we want
 		nl=nl[r]
+		df=df[r,]
 	} 
-	if(missing(col) && length(nl)>1){
-		col=rainbow(length(nl))
+	if(length(nl)>1){
+		if(missing(col)){
+			col=rainbow(length(nl))
+		} else {
+			e <- substitute(col)
+			col <- eval(e, df, parent.frame())
+		}
 	}
 	invisible(mapply(plot3d,nl,col=col,...))
 }
@@ -1807,7 +1817,7 @@ write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am',
     } else {
       # use the file type to specify the suffix
       ftype=match.arg(ftype)
-      suffix=sub(".*(\\.[^.]+)$","\\1",ftype)      
+      suffix=sub(".*?([^.]+)$",".\\1",ftype)
     }
   } else {
     ext=sub(".*(\\.[^.]+)$","\\1",filename)
@@ -1837,4 +1847,35 @@ write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am',
   } else {
     stop("Unimplemented file type ",ftype)
   }
+}
+
+#' transform a neuron using a function, an affine matrix, or CMTK registration
+#'
+#' If a CMTK registration file is supplied the warping registration will be
+#' applied.
+#' @param x A neuron
+#' @param reg matrix, path or function describing registration to apply
+#' @return transformed neuron
+#' @export
+#' @seealso \code{\link{transform.dotprops}}
+transform.neuron<-function(x,reg,na.action=c('error','drop','warn'),...) {
+	na.action=match.arg(na.action)
+	xyz=xyzmatrix(x)
+	if(is.function(reg)){
+	  # we've been given a function - apply this to points
+	  pointst=reg(xyz)
+	} else if(is.matrix(reg)) {
+		# we've been given an affine transformation matrix
+		pointst=TransformPoints(xyz,reg)
+	} else {
+		# assume we've been given a CMTK registration file
+		pointst=transformedPoints(xyzs=xyz,warpfile=reg,transforms='warp',...)[['warp']]
+	}
+	
+	naPoints=is.na(pointst[,1])
+	if(any(naPoints)){
+		stop("Don't know how to handle points that fail to transform for neurons")
+	}
+	xyzmatrix(x)<-pointst
+	x
 }

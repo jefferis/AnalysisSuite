@@ -65,6 +65,6 @@ local({
   add_path_to_rprofile(startup)
   message("********************* Install completed ********************")
   message("You can start AnalysisSuite (now and in the future) by doing")
-  message("source(options()$gjanalysissuite.startup)")
+  message("source(getOption('gjanalysissuite.startup'))")
   message("************************************************************")
 })
