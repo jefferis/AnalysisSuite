@@ -45,7 +45,7 @@ NrrdMinMax<-function(filename, Blind8=FALSE, ...){
 	if(Blind8) args=c(args,"-blind8 true")
 	minmax=.callunu("minmax",args,intern=TRUE,...)
 	if(length(minmax)==0) return(c(NA,NA))
-	as.numeric(sub("(min|max): ","",minmax))
+	as.numeric(sub("(min|max): ","",minmax[1:2]))
 }
 
 #' Resample a nrrd with simple or complex filters
