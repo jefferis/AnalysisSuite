@@ -317,13 +317,14 @@ CMTKStatistics<-function(f,mask,masktype=c("label","binary"),exe="statistics"){
 		args=c(ifelse(masktype=='label','--Mask','--mask'),mask,args)
 	}
 	rval=system2(exe,args,stdout=TRUE)
+	# there is a bug in CMTK statistics when used with a mask
+	# the header says that there are two entropy columns (H1,H2)
+	# but in fact there is only 1
+	rval[2]=sub('H1\tH2','H',rval[2])
+	rval[2]=sub('#M','MaskLevel',rval[2])
 	tc=textConnection(rval)
 	on.exit(close(tc))
-	t=try(read.table(tc,header=TRUE,skip=1,comment.char=""))
-	if(inherits(t,'try-error')){
-		t=read.table(tc,header=FALSE,skip=2,comment.char="")
-	}
-	t
+	read.table(tc,header=TRUE,skip=1,comment.char="")
 }
 
 CMTKSimilarity<-function(floating,reference,exe="similarity",simargs=NULL,...){
