@@ -424,7 +424,7 @@ ReadHistogramFromNrrd<-function(filename,...){
 		warning ("This does not appear to be a 1d nrrd histogram")
 		return(d)
 	}
-	halfwidth=(h$axismaxs-h$axismins)/h$sizes/2
+	halfwidth=(h$axismaxs-h$axismins)/(h$sizes-1)/2
 	mids=seq(h$axismins,h$axismaxs,len=h$sizes)
 	breaks=seq(from=h$axismins-halfwidth,to=h$axismax+halfwidth,len=h$sizes+1)
 	density=d/sum(as.numeric(d))
