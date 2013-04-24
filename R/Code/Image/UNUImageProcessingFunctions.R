@@ -143,26 +143,38 @@ NrrdResample<-function(infile,outfile,size,voxdims=NULL,
 	else system(fullcmd,...)
 }
 
-NrrdHisto<-function(infile,outfile=sub("\\.([^.]+)$",".histo.\\1",infile),maskfile,bins,min,max,...){
-	if (missing(min) || missing(max)) {
-		# calculate the minimum and maximum
-		r=NrrdMinMax(infile)
-		if(any(is.na(r))) stop("Unable to find min and max from: ",infile)
-		if(missing(min)) min=r[1]
-		if(missing(max)) max=r[2]
-	}
+NrrdHisto<-function(infile,outfile=sub("\\.([^.]+)$",".histo.\\1",infile),
+	maskfile,bins,min,max,blind8=TRUE,...){
+	h=ReadNrrdHeader(infile)
+	nrrdType=.standardNrrdType(h$type)
+	unuhistooptions=''
+	if(nrrdType%in%c("uint8","int8") && blind8 && missing(min) && missing(max)){
+		# this is an 8 bit image
+		# and we're going to use unu histo's blind8 option (default) to
+		# assume uchar [0,255], signed char is [-128,127]
+		bins=256
+	} else {
+	    if (missing(min) || missing(max)) {
+			# calculate the minimum and maximum
+			r=NrrdMinMax(infile)
+			if(any(is.na(r))) stop("Unable to find min and max from: ",infile)
+			if(missing(min)) min=r[1]
+			if(missing(max)) max=r[2]
+    	}  
+		unuhistooptions=paste("-min",min,"-max",max)
+	} 
 	if(missing(bins)){
 		# check if this is a float data type
-		if(ReadNrrdHeader(infile)$type%in%c("float","double"))
+		if(nrrdType%in%c("float","double"))
 			bins=1000
 		else {
 			bins=as.integer((max-min)+1)
 			if(bins>2^16) bins=1000
 		}
 	}
-	options=paste("-b",bins,"-min",min,"-max",max)
-	if(!missing(maskfile)) options=paste(options,"-w",shQuote(maskfile))
-	.callunu("histo",paste(options,"-i",shQuote(infile),"-o",shQuote(outfile)),...)
+	unuhistooptions=paste(unuhistooptions,"-b",bins)
+	if(!missing(maskfile)) unuhistooptions=paste(options,"-w",shQuote(maskfile))
+	.callunu("histo",paste(unuhistooptions,"-i",shQuote(infile),"-o",shQuote(outfile)),...)
 	return(outfile)
 }
 
