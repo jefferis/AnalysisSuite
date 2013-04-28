@@ -26,7 +26,7 @@ test.ReadLongairNeuron.SinglePath<-function(){
 	"StartPoint", "BranchPoints", "EndPoints", "NumSegs", "SegList", 
 	"d"))
 	
-	result.new=ReadNeuronsFromLongairTraces(file.path(TestDir,"IO","SinglePath.traces"))[[1]]
+	result.new=ReadNeuronsFromLongairTraces(file.path(TestDir,"Data","neurons","SinglePath.traces"))[[1]]
 	checkEquals(result,result.new[fieldsToCheck],tol=1e-6)	
 }
 
@@ -756,7 +756,7 @@ test.ReadLongairNeuron.PathsJoiningFirstPath<-function(){
 	"StartPoint", "BranchPoints", "EndPoints", "NumSegs", "SegList", 
 	"d"))
 	
-	result.new=ReadNeuronsFromLongairTraces(file.path(TestDir,"IO","MultiplePathsJoinedToMainPath.traces"))[[1]]
+	result.new=ReadNeuronsFromLongairTraces(file.path(TestDir,"Data","neurons","MultiplePathsJoinedToMainPath.traces"))[[1]]
 	checkEquals(result,result.new[fieldsToCheck],tol=1e-6)	
 }
 
@@ -1256,6 +1256,6 @@ test.ReadLongairNeuron.HigherOrderPath<-function(){
 	"StartPoint", "BranchPoints", "EndPoints", "NumSegs", "SegList", 
 	"d"))
 	
-	result.new=ReadNeuronsFromLongairTraces(file.path(TestDir,"IO","SequentiallyBranchingTrace.traces"))[[1]]
+	result.new=ReadNeuronsFromLongairTraces(file.path(TestDir,"Data","neurons","SequentiallyBranchingTrace.traces"))[[1]]
 	checkEquals(result,result.new[fieldsToCheck],tol=1e-6)	
 }
