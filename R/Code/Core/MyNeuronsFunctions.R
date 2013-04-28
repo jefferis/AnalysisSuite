@@ -48,20 +48,9 @@ SortMyNeurons<-function(){
 # are subsetted, factor levels are retained from the original dataframe
 # even if the corresponding rows have been dropped.
 # Originally from QDG Code Base
-
 DropMissingFactorLevels<-function(df){
-	# This sweeps through a data frame dropping the missing factor levels
-	# from all factor variables
-	for(Column in variable.names(df)){
-		if(is.factor(df[,Column])){
-			# Check if the factor has 1 or more levels
-			# since trying to drop levels on a factor 
-			# with no levels seems to cause a problem
-			if (nlevels(df[,Column])>0)
-			df[,Column]<-factor(df[,Column])
-		}
-	}
-	return(df)
+	.Deprecated('droplevels')
+	droplevels(df)
 }
 
 MakeMNInfo<-function(){
