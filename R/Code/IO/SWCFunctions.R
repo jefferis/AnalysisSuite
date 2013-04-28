@@ -47,9 +47,13 @@
 # MyNeuron<-SWC2Neuron(ReadSWCFile("A:File:Path:JL2R.swc"),"JL2R")
 # plotneuron2d(MyNeuron,ToFile=T) # produce a rotater file
 
+ReadNeuronFromSWC<-function(f){
+	d=ReadSWCFile(f)
+	SWC2Neuron(d,f)
+}
+
 # ReadSWCFile reads in an SWC format file
 # returning an array containing all the data points
-
 ReadSWCFile<-function(FileName,...){  
 	# According to http://www.soton.ac.uk/~dales/morpho/morpho_doc/
 	# SWC file format has a radius not a diameter specification
