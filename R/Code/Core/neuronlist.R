@@ -1,9 +1,26 @@
+#' Test if object is a neuronlist
+#'
+#' Uses a relaxed definition to cope with older lists of neurons that do not
+#' have a class attribute of neuronlist
+#' @param nl A neuronlist object
+#' @return return value
+#' @export
 is.neuronlist<-function(nl) {
 	inherits(nl,"neuronlist") ||
 		(is.list(nl) && length(nl)>1 && is.neuron(nl[[1]]))
 }
 
-# so that you can make an empty neuronlist
+#' Create a neuronlist from zero or more neurons
+#'
+#' It is perfectly acceptable not to pass any parameters, generating an empty
+#' neuronlist
+#' @param summary of each parameter
+#' @return return value
+#' @export
+#' @seealso \code{\link{as.neuronlist}}
+#' @examples
+#' # generate an empty neuronlist
+#' nl=neuronlist()
 neuronlist <- function(...) as.neuronlist(list(...))
 
 #' Make a list of neurons that can be used for coordinate plotting/analysis
