@@ -49,9 +49,9 @@ test.CMTKStatistics<-function(){
 		"min", "max", "mean", "sdev", "n", "nnz", "Entropy", "sum"), class = "data.frame", row.names = c(NA, 
 		-2L))
 	} else {
-		baseline_c = structure(list(X.M = 0:1, min = c(0, 0), max = c(0, 100), mean = c(0, 
+		baseline_c = structure(list(MaskLevel = 0:1, min = c(0, 0), max = c(0, 100), mean = c(0, 
 		0.00349), sdev = c(0, 0.5906), n = c(96331L, 28669L), Entropy = c(0, 
-		0.00039), sum = c(0, 100)), .Names = c("X.M", "min", "max", "mean", 
+		0.00039), sum = c(0, 100)), .Names = c("MaskLevel", "min", "max", "mean", 
 		"sdev", "n", "Entropy", "sum"), class = "data.frame", row.names = c(NA, 
 		-2L))
 	}
