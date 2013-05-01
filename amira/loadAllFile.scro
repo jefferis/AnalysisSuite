@@ -151,6 +151,7 @@ $this proc loadFiles {} {
 	
 	set fileList [$this getVar fileList]	
 	set lvList [$this getVar lvList]
+	set scoreList ""
 	#echo $fileList
 	#set hideStatus [set hideNewModules]
 	#set hideNewModules 1	
@@ -175,6 +176,7 @@ $this proc loadFiles {} {
 		lappend lvList "$justfilename.lv"
 		# echo "adding $justfilename.lv to list"
 		incr counter
+		lappend scoreList 1
 	}
 	# echo "$lvList"
 	#set hideNewModules 0
@@ -182,7 +184,7 @@ $this proc loadFiles {} {
 	echo $this getVar lvList
 	$this numObjects setValue $counter
 	$this numDisplayedObjects setValue $counter
-
+	$this setVar scoreList $scoreList
 }
 
 $this proc loadFileList { } {
@@ -240,7 +242,7 @@ $this proc showLineViews { mask } {
 				$lineView setViewerMask 1
 				incr numDisplayed
 			} else {
-				$lineView setViewerMask 0
+			  $lineView setViewerMask 0
 			}
 		} elseif {$lvstatus && $mask == 0} {
 				$lineView setViewerMask 0
