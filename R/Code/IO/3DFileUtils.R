@@ -840,9 +840,9 @@ ParseRegFile<-function(AFileName){
     
     # See if we've been given a gzip file
     if (any(grep(".gz$", AFileName))){
-	myFile=gzfile(AFileName)
+        myFile=gzfile(AFileName)
     } else {
-	myFile=open(AFileName)
+        myFile=file(AFileName)
     }
     
     # Read in all the lines of the file
