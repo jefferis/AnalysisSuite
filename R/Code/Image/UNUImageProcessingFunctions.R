@@ -443,3 +443,34 @@ NrrdFlip<-function(infile,outfile,axes,suffix=NULL,endian=c("big","little"),
 	if(rval!=0) stop("unu error ",rval," in NrrdProject")
 	return(TRUE)
 }
+
+#' Save a nrrd file in a different encoding / format
+#'
+#' In outfile is missing, will overwrite infile
+#' @param infile, outfile Paths to input and output nrrds
+#' @param UseLock Whether to make a lockfile (useful for parallel processing)
+#' @return path to ouput file
+#' @export
+#' @seealso \code{\link{NrrdCrc}}
+NrrdSave<-function(infile,outfile,format=c("nrrd","pnm","text","vtk","png","eps"),
+  encoding=ifelse(format=='nrrd','gzip','raw'),
+  UseLock=FALSE,DryRun=FALSE){
+  format=match.arg(format)
+  encoding=pmatch(encoding,c("raw","ascii","hex","gzip","bzip2"))
+  if(is.na(encoding)) stop("Invalid encoding")
+  
+  if(missing(outfile)) outfile=infile
+  
+  cmd=paste('unu save','--format',format,'-e',encoding,'-i',shQuote(infile),'-o',shQuote(outfile))
+  if(DryRun) return(cmd)
+
+  if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile),recursive = TRUE)
+  lockfile=paste(outfile,sep=".","lock")
+  # return FALSE to signal output doesn't (yet) exist
+  if(UseLock && !makelock(lockfile)) return (FALSE)
+  on.exit(unlink(lockfile))
+
+  rval=system(cmd)==0
+  attr(rval,'outfile')=outfile
+  rval
+}
