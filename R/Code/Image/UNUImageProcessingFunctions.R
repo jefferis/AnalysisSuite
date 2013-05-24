@@ -460,10 +460,14 @@ NrrdSave<-function(infile,outfile,format=c("nrrd","pnm","text","vtk","png","eps"
   encoding=ifelse(format=='nrrd','gzip','raw'),
   CreateDirs=TRUE,UseLock=FALSE,DryRun=FALSE){
   format=match.arg(format)
-  encoding=charmatch(encoding,c("raw","ascii","hex","gzip","bzip2"))
+  encodings=c("raw","ascii","hex","gzip","bzip2")
+  encoding=encodings[pmatch(encoding,encodings)]
   if(is.na(encoding)) stop("Invalid encoding")
   
-  if(missing(outfile)) outfile=infile
+  if(missing(outfile)) {
+    outfile=infile
+    samefile=TRUE
+  } else samefile=FALSE
   
   cmd=paste('unu save','--format',format,'-e',encoding,'-i',shQuote(infile),'-o',shQuote(outfile))
   if(DryRun) return(cmd)
