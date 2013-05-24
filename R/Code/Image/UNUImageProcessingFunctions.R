@@ -448,13 +448,17 @@ NrrdFlip<-function(infile,outfile,axes,suffix=NULL,endian=c("big","little"),
 #'
 #' In outfile is missing, will overwrite infile
 #' @param infile, outfile Paths to input and output nrrds
+#' @param format (one of 6 supported by unu save, default nrrd)
+#' @param encoding (one of 5 supported by unu save, default gz when nrrd)
+#' @param CreateDirs Whether to make missing direcories implied by output path
 #' @param UseLock Whether to make a lockfile (useful for parallel processing)
+#' @param DryRun Return command instead of running it
 #' @return path to ouput file
 #' @export
 #' @seealso \code{\link{NrrdCrc}}
 NrrdSave<-function(infile,outfile,format=c("nrrd","pnm","text","vtk","png","eps"),
   encoding=ifelse(format=='nrrd','gzip','raw'),
-  UseLock=FALSE,DryRun=FALSE){
+  CreateDirs=TRUE,UseLock=FALSE,DryRun=FALSE){
   format=match.arg(format)
   encoding=pmatch(encoding,c("raw","ascii","hex","gzip","bzip2"))
   if(is.na(encoding)) stop("Invalid encoding")
