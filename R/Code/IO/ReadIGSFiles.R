@@ -296,3 +296,65 @@ ReadIGSLandmarks<-function(...){
 	rownames(x)=rn
 	x
 }
+
+#' Convert a CMTK registration to Amira format (suitable for ResultViewer.hx)
+#'
+#' Prints matrix row-wise by default which is how Amira expects the file 
+#' to look, but strangely enough not how it displays in the console.
+#' @cmtkreg Path to registration file or folder 
+#' @Transpose Transpose matrix to print out row-wise (default TRUE)
+#' @Invert Invert the affine matrix (to go from Sample->Template, default FALSE)
+#' @Overwrite Overwrite output file if already exists (Default TRUE)
+#' @amiraregfile name of output file (ResultViewer expects hxtransform)
+#' @return name of output file
+#' @export
+#' @seealso \code{\link{ComposeAffineFromIGSParams}}
+AmiraRegFromCMTK<-function(cmtkreg,Transpose=TRUE,Invert=FALSE,Overwrite=TRUE,
+	amiraregfile='hxtransform'){
+	aff=HomogenousAffineFromCMTK(cmtkreg)
+	if(Invert) aff=solve(aff)
+	if(Transpose) aff=t(aff)
+	
+	# check if we were given registration directory or the actual file
+	if(file.info(cmtkreg)$isdir){
+		dir = cmtkreg
+	}
+	else {
+		dir=dirname(cmtkreg)
+	}
+	amirareg=file.path(dir,amiraregfile)
+	if(Overwrite || !file.exists(amirareg))
+		write(aff,file=amirareg,ncolumns=16)
+	amiraregfile
+}
+
+#' Convert an Amira registration (4x4 affine) to CMTK format
+#'
+#' Reads in matrix row-wise by default which is how Steffen Prohaska's
+#' Amira ResultViewer.hx script expects the file to look,
+#' but strangely enough not how it displays in the console.
+#' @amirareg Path to registration file or folder 
+#' @cmtkregfolder name of output folder (usually CMTK .list folder)
+#' @Transpose Transpose Amira matrix ie read in row-wise (default TRUE)
+#' @Invert Invert the affine matrix (to go from Sample->Template, default FALSE)
+#' @return name of output file
+#' @export
+#' @seealso \code{\link{ComposeAffineFromIGSParams}}
+CMTKRegFromAmira<-function(amirareg,cmtkregfolder=NULL,Transpose=TRUE,Invert=FALSE){
+	if(file.info(amirareg)$isdir) amirareg=file.path(amirareg,"hxtransform")
+	if(is.null(cmtkregfolder)) cmtkregfolder=dirname(amirareg)
+	
+	# backup any existing registration
+	cmtkregpath=file.path(cmtkregfolder,"registration")
+	if(file.exists(cmtkregpath))
+		file.rename(cmtkregpath,paste(cmtkregpath,'bak',sep="."))
+	# now make new CMTK format registration
+	cmd='mat2dof'
+	if(Invert) cmd=paste(cmd,'--invert')
+	if(!Transpose) cmd=paste(cmd,'--transpose')
+	cmd=paste(cmd,"--list",shQuote(cmtkregfolder),"<",shQuote(amirareg))
+	res=system(cmd)
+	if(res!=0)
+		stop("Unable to make CMTK registration from amira reg:",amirareg)
+	cmtkregpath
+}
