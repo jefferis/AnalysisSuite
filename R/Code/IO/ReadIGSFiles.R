@@ -358,3 +358,15 @@ CMTKRegFromAmira<-function(amirareg,cmtkregfolder=NULL,Transpose=TRUE,Invert=FAL
 		stop("Unable to make CMTK registration from amira reg:",amirareg)
 	cmtkregpath
 }
+
+#' Read a CMTK registration and convert it to homogeneous affine matrix
+#' 
+#' Note that this matrix will have the 4th row 0 0 0 1
+HomogenousAffineFromCMTK<-function(cmtkregfolder){
+	cmd="dof2mat"
+	cmd=paste(cmd,shQuote(cmtkregfolder))
+	rval=system(cmd,intern=TRUE)
+	numbers=as.numeric(unlist(strsplit(rval,"\t")))
+	mat=matrix(numbers,ncol=4)
+	mat
+}
