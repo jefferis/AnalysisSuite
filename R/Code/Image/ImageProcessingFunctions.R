@@ -332,7 +332,7 @@ CMTKSimilarity<-function(floating,reference,exe="similarity",simargs=NULL,...){
 		return(t(mapply(CMTKSimilarity,floating,reference,
 			MoreArgs=list(exe=exe,simargs=simargs))))
 	}	
-	rval=system2(exe,c(simargs,reference,floating),stdout=TRUE,...)
+	rval=system2(exe,c(simargs,shQuote(reference),shQuote(floating)),stdout=TRUE,...)
 	scorelines=grep("^SIM",rval,val=T)
 	tc=textConnection(scorelines)
 	on.exit(close(tc))
