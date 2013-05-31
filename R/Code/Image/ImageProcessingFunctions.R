@@ -37,27 +37,49 @@ ResampleImages<-function(images,outdir,targetspec,registrations,suffix="-resampl
 	invisible(resampledfiles)
 }
 
-FlipAndORMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),gzip=TRUE){
-	flipAxis=match.arg(flipAxis)
-	if(!file.exists(outdir)) dir.create(outdir)
-	for (infile in masks){
-		flippedresampledfile=file.path(outdir,
+#' Flip nrrd files by applying CMTK axis flipping registration + bridging reg.
+#'
+#' @param images Path to input images
+#' @param outdir Path to ouput directory
+#' @param FlipBridgingReg Bridging registration mapping flipped -> original
+#' @param flipAxis Axis to flip (X,Y,Z)
+#' @param gzip=TRUE (whether to gzip ouput files, default TRUE)
+#' @param ... additional arguments passed to ReformatImage
+#' @return path to ouput files
+#' @export
+#' @seealso \code{\link{ReformatImage},\link{FlipAndORMasks}}
+FlipImagesWithBridgingReg<-function(images,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),
+	gzip=TRUE,...){
+		flipAxis=match.arg(flipAxis)
+		if(!file.exists(outdir)) dir.create(outdir)
+		outfiles=file.path(outdir,
 			sub(".nrrd$","-flip.nrrd",basename(infile)))
-		orfile=file.path(outdir,
-			sub(".nrrd$","-OR.nrrd",basename(infile)))
+		for (i in seq(masks)){
+			infile=masks[i]
+			outfile=outfiles[i]
+			# make flipping registration
+			if(!exists("horizontalFlipReg") || !file.exists(horizontalFlipReg))
+				horizontalFlipReg=WriteFlipRegistration(infile,axis=flipAxis)
+			# and flip all masks, applying the horiz bridging registration
+			ReformatImage(infile,target=infile,
+				registrations=c(FlipBridgingReg,horizontalFlipReg),
+				filesToIgnoreModTimes=horizontalFlipReg, OverWrite='update', Verbose=T,
+				output=outfile,...)
+		}
+		unlink(horizontalFlipReg)
+	outfiles
+}
 
-		# make flipping registration
-		if(!exists("horizontalFlipReg") || !file.exists(horizontalFlipReg))
-			horizontalFlipReg=WriteFlipRegistration(infile,axis=flipAxis)
-		# and flip all masks, applying the horiz bridging registration
-		ReformatImage(infile,target=infile,
-			registrations=c(FlipBridgingReg,horizontalFlipReg),
-			filesToIgnoreModTimes=horizontalFlipReg, OverWrite='update', Verbose=T,
-			output=flippedresampledfile,reformatoptions="-v --pad-out 0 --nn",dryrun=FALSE)
-		# and OR ing those results
-		Nrrd2op(c(infile,flippedresampledfile),orfile,'max',gzip=gzip)
+FlipAndORMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),gzip=TRUE){
+	flippedimages=FlipImages(masks,outdir=outdir,FlipBridgingReg=FlipBridgingReg,
+		flipAxis=flipAxis,gzip=gzip,reformatoptions="-v --pad-out 0 --nn")
+	orfiles=file.path(outdir,
+		sub(".nrrd$","-OR.nrrd",basename(masks)))
+
+	# now we need to or the outputs
+	for (i in seq(masks)){
+		Nrrd2op(c(masks[i],flippedimages[i]),orfiles[i],'max',gzip=gzip)
 	}
-	unlink(horizontalFlipReg)
 }
 
 .makeReformatxTargetSpecification<-function(target){
