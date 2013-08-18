@@ -50,24 +50,24 @@ ResampleImages<-function(images,outdir,targetspec,registrations,suffix="-resampl
 #' @seealso \code{\link{ReformatImage},\link{FlipAndORMasks}}
 FlipImagesWithBridgingReg<-function(images,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),
 	gzip=TRUE,...){
-		flipAxis=match.arg(flipAxis)
-		if(!file.exists(outdir)) dir.create(outdir)
-		outfiles=file.path(outdir,
-			sub(".nrrd$","-flip.nrrd",basename(infile)))
-		for (i in seq(masks)){
-			infile=masks[i]
-			outfile=outfiles[i]
-			# make flipping registration
-			if(!exists("horizontalFlipReg") || !file.exists(horizontalFlipReg))
-				horizontalFlipReg=WriteFlipRegistration(infile,axis=flipAxis)
-			# and flip all masks, applying the horiz bridging registration
-			ReformatImage(infile,target=infile,
-				registrations=c(FlipBridgingReg,horizontalFlipReg),
-				filesToIgnoreModTimes=horizontalFlipReg, OverWrite='update', Verbose=T,
-				output=outfile,...)
-		}
-		unlink(horizontalFlipReg)
-	outfiles
+	flipAxis=match.arg(flipAxis)
+	if(!file.exists(outdir)) dir.create(outdir)
+	outfiles=file.path(outdir,
+		sub(".nrrd$","-flip.nrrd",basename(images)))
+	for (i in seq(images)){
+		infile=images[i]
+		outfile=outfiles[i]
+		# make flipping registration
+		if(!exists("horizontalFlipReg") || !file.exists(horizontalFlipReg))
+			horizontalFlipReg=WriteFlipRegistration(infile,axis=flipAxis)
+		# and flip all images, applying the horiz bridging registration
+		ReformatImage(infile,target=infile,
+			registrations=c(FlipBridgingReg,horizontalFlipReg),
+			filesToIgnoreModTimes=horizontalFlipReg, OverWrite='update', Verbose=T,
+			output=outfile,...)
+	}
+	unlink(horizontalFlipReg)
+	invisible(outfiles)
 }
 
 FlipAndORMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),gzip=TRUE){
@@ -354,7 +354,7 @@ CMTKSimilarity<-function(floating,reference,exe="similarity",simargs=NULL,...){
 		return(t(mapply(CMTKSimilarity,floating,reference,
 			MoreArgs=list(exe=exe,simargs=simargs))))
 	}	
-	rval=system2(exe,c(simargs,reference,floating),stdout=TRUE,...)
+	rval=system2(exe,c(simargs,shQuote(reference),shQuote(floating)),stdout=TRUE,...)
 	scorelines=grep("^SIM",rval,val=T)
 	tc=textConnection(scorelines)
 	on.exit(close(tc))
