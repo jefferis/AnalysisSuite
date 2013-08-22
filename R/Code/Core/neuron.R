@@ -221,23 +221,31 @@ write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am',
 #' applied.
 #' @param x A neuron
 #' @param reg matrix, path or function describing registration to apply
+#' @param na.action What to do if a point can't be transformed
+#' @param FallBackToAffine Whether to try calculating affine for a CMTK 
+#'   registration if the warp fails.
 #' @return transformed neuron
 #' @export
 #' @seealso \code{\link{transform.dotprops}}
-transform.neuron<-function(x,reg,na.action=c('error','drop','warn'),...) {
+transform.neuron<-function(x,reg,na.action=c('error','drop','warn'),FallBackToAffine=FALSE,...) {
 	na.action=match.arg(na.action)
 	xyz=xyzmatrix(x)
 	if(is.function(reg)){
-	  # we've been given a function - apply this to points
-	  pointst=reg(xyz)
+		# we've been given a function - apply this to points
+		pointst=reg(xyz)
 	} else if(is.matrix(reg)) {
 		# we've been given an affine transformation matrix
 		pointst=TransformPoints(xyz,reg)
 	} else {
 		# assume we've been given a CMTK registration file
 		pointst=transformedPoints(xyzs=xyz,warpfile=reg,transforms='warp',...)[['warp']]
+		naPoints=is.na(pointst[,1])
+		if(any(naPoints) && FallBackToAffine){
+			affpoints=transformedPoints(xyzs=xyz[naPoints,],warpfile=reg,
+				transforms='affine',...)[['affine']]
+			pointst[naPoints,]=affpoints
+		}
 	}
-	
 	naPoints=is.na(pointst[,1])
 	if(any(naPoints)){
 		stop("Don't know how to handle points that fail to transform for neurons")
