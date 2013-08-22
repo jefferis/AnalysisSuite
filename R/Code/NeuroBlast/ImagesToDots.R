@@ -152,6 +152,13 @@ digest.dotprops<-function(dp,...){
   digest(dp,...)
 }
 
+# Set up a private function that directly accesses internal LAPACK routine of eigen
+if(R.version$major<3){
+  .internal_lars<-function(x) .Call("La_rs", x, only.values=FALSE, PACKAGE = "base")
+} else {
+  .internal_lars<-function(x) .Internal(La_rs(x, only.values=FALSE))
+}
+
 DotProperties<-function(points,k=20,UseLabels=TRUE){
 	# store labels from SWC format data if this is a neuron
 	Labels=if(UseLabels && is.neuron(points)) points$d$Label else NULL
@@ -180,7 +187,7 @@ DotProperties<-function(points,k=20,UseLabels=TRUE){
 		inertia[2,3]<-inertia[3,2]<-sum(cpt[2,]*cpt[3,])
 		
 		# call internal LAPACK routine of eigen directly
-		z<-.Call("La_rs", inertia, only.values=FALSE, PACKAGE = "base")
+		z<-.internal_lars(inertia)
 		ord <- rev(seq_along(z$values))
 		v1d1=list(values = z$values[ord], vectors = z$vectors[,ord, drop = FALSE])
 
