@@ -66,6 +66,57 @@ xyzmatrix<-function(x,y=NULL,z=NULL,Transpose=FALSE) {
   else stop("Not a neuron or dotprops object or a matrix-like object with XYZ volnames")
   n
 }
+#' Arithmetic for dotprops objects
+#' @param n A dotprops object
+#' @param x A scalar or 3-vector that will be applied to the dotprops object
+#' @return A new dotprops object
+#' @export
+#' @rdname dotprops_arithmetic
+"*.dotprops" <- function(n,x) {
+  lx=length(x)
+  if(!lx%in%c(1,3)) stop("expects a numeric vector of length 1 or 3")
+  xyzmatrix(n)<-t(t(xyzmatrix(n))*x)
+  n
+}
+
+#' @export
+#' @rdname dotprops_arithmetic
+"+.dotprops" <- function(n,x) {
+  lx=length(x)
+  if(!lx%in%c(1,3)) stop("expects a numeric vector of length 1 or 3")
+  xyzmatrix(n)<-t(t(xyzmatrix(n))+x)
+  n
+}
+
+#' @export
+#' @rdname dotprops_arithmetic
+"-.dotprops" <- function(n,x) n+(-x)
+#' @export
+#' @rdname dotprops_arithmetic
+"/.dotprops" <- function(n,x) n*(1/x)
+
+
+scale.dotprops<-function(x,center=TRUE,scale=TRUE){
+  d=xyzmatrix(x)
+  if(!is.logical(center) && any(is.na(center))){
+    # NA signals that we don't want to touch an axis
+    dd=d[,!is.na(center)]
+    centers=center[!is.na(center)]
+    dds=scale(dd,center=centers,scale=FALSE)
+    ds=d
+    ds[,!is.na(center)]=dds
+  } else if(is.logical(center) && length(center)>1){
+      # FALSE signals that we don't want to touch an axis
+      dd=d[,center]
+      dds=scale(dd,center=TRUE,scale=FALSE)
+      ds=d
+      ds[,center]=dds
+  } else {
+    ds=scale(d,scale=scale,center=center)
+  }
+  xyzmatrix(x)=ds
+  x
+}
 
 #' Find the nearest point(s) in a neuron/dotprops to a 3d point
 #'
