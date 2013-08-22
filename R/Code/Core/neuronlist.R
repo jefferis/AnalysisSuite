@@ -159,6 +159,14 @@ nlapply<-function (X, FUN, ...){
 	structure(lapply(X,FUN,...),class=cl,df=attr(X,'df'))
 }
 
+#' Evaluate expression in the context of dataframe attached to a neuronlist.
+#' @param data A neuronlist object
+#' @param expr The expression to evaluate
+#' @param ... Ignored
+with.neuronlist<-function(data,expr,...) {
+  eval(substitute(expr), attr(data,'df'), enclos = parent.frame())
+}
+
 #' 3D plots of the elements in a neuronlist, optionally using a subset
 #' expression
 #' 
