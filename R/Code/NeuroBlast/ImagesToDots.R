@@ -210,10 +210,14 @@ if(R.version$major<3){
   .internal_lars<-function(x) .Internal(La_rs(x, only.values=FALSE))
 }
 
-DotProperties<-function(points,k=20,UseLabels=TRUE){
+DotProperties<-function(points,k=20,UseLabels=TRUE,na.rm=FALSE){
 	# store labels from SWC format data if this is a neuron
 	Labels=if(UseLabels && is.neuron(points)) points$d$Label else NULL
 	points=xyzmatrix(points)
+	if(na.rm){
+		narows=rowSums(is.na(points))>0
+		if(any(narows)) points=points[!narows,]
+	}
 	npoints=nrow(points)
 	if(npoints<k) stop("Too few points to calculate properties")
 	if(ncol(points)!=3) stop("points must be a N x 3 matrix")
