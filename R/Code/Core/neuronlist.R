@@ -212,7 +212,7 @@ plot3d.neuronlist<-function(nl,subset,col=NULL,colpal=rainbow,...){
 			# no neurons left, so just return
 			return()
 		}
-        # check that subset expression produced sensible result
+				# check that subset expression produced sensible result
 		if(!is.logical(r)) stop("Subset did not evaluate to logical vector")
 		if(length(r)!=length(nl)) stop("Subset result does not have same length as neuronlist nl")
 		# now just select the neurons we want
@@ -223,33 +223,33 @@ plot3d.neuronlist<-function(nl,subset,col=NULL,colpal=rainbow,...){
 	col.sub <- substitute(col)
 	cols <- eval(col.sub, attr(nl,'df'), parent.frame())
 	if(!is.character(cols)){
-	  if(is.null(cols)) {
-	    if(is.function(colpal)) colpal=colpal(length(nl))
-	    cols=colpal[seq(nl)]
-    }
-	  else if(is.function(cols)) cols=cols(length(nl))
-	  else if(is.numeric(cols)) {
-	    if(is.function(colpal)) colpal=colpal(max(cols))
-	    cols=colpal[cols]
-    }
-    else if (is.factor(cols)) {
-      # I think dropping missing levels is what we will always want
-      cols=droplevels(cols)
-	    if(!is.null(names(colpal))) {
-	      # we have a named palette
-	      cols=colpal[as.character(cols)]
-	      if(any(is.na(cols))){
-	        # handle missing colours
-	        # first check if there is an unnamed entry in palette
-	        unnamed=which(names(colpal)=="")
-	        cols[is.na(cols)] = if(length(unnamed)) unnamed[1] else 'black'
-	      }
-      } else {
-        if(is.function(colpal)) colpal=colpal(nlevels(cols))
-        cols=colpal[cols]
-      }
-	  }
-	  else stop("Cannot evaluate col")
+		if(is.null(cols)) {
+			if(is.function(colpal)) colpal=colpal(length(nl))
+			cols=colpal[seq(nl)]
+		}
+		else if(is.function(cols)) cols=cols(length(nl))
+		else if(is.numeric(cols)) {
+			if(is.function(colpal)) colpal=colpal(max(cols))
+			cols=colpal[cols]
+		}
+		else if (is.factor(cols)) {
+			# I think dropping missing levels is what we will always want
+			cols=droplevels(cols)
+			if(!is.null(names(colpal))) {
+				# we have a named palette
+				cols=colpal[as.character(cols)]
+				if(any(is.na(cols))){
+					# handle missing colours
+					# first check if there is an unnamed entry in palette
+					unnamed=which(names(colpal)=="")
+					cols[is.na(cols)] = if(length(unnamed)) unnamed[1] else 'black'
+				}
+			} else {
+				if(is.function(colpal)) colpal=colpal(nlevels(cols))
+				cols=colpal[cols]
+			}
+		}
+		else stop("Cannot evaluate col")
 	}
 
 	invisible(mapply(plot3d,nl,col=cols,...))
