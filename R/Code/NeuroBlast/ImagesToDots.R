@@ -72,7 +72,7 @@ xyzmatrix<-function(x,y=NULL,z=NULL,Transpose=FALSE) {
 #' @return A new dotprops object
 #' @export
 #' @rdname dotprops_arithmetic
-"*.dotprops" <- function(n,x) {
+`*.dotprops` <- function(n,x) {
   lx=length(x)
   if(!lx%in%c(1,3)) stop("expects a numeric vector of length 1 or 3")
   xyzmatrix(n)<-t(t(xyzmatrix(n))*x)
@@ -81,7 +81,7 @@ xyzmatrix<-function(x,y=NULL,z=NULL,Transpose=FALSE) {
 
 #' @export
 #' @rdname dotprops_arithmetic
-"+.dotprops" <- function(n,x) {
+`+.dotprops` <- function(n,x) {
   lx=length(x)
   if(!lx%in%c(1,3)) stop("expects a numeric vector of length 1 or 3")
   xyzmatrix(n)<-t(t(xyzmatrix(n))+x)
@@ -90,10 +90,10 @@ xyzmatrix<-function(x,y=NULL,z=NULL,Transpose=FALSE) {
 
 #' @export
 #' @rdname dotprops_arithmetic
-"-.dotprops" <- function(n,x) n+(-x)
+`-.dotprops` <- function(n,x) n+(-x)
 #' @export
 #' @rdname dotprops_arithmetic
-"/.dotprops" <- function(n,x) n*(1/x)
+`/.dotprops` <- function(n,x) n*(1/x)
 
 
 scale.dotprops<-function(x,center=TRUE,scale=TRUE){
