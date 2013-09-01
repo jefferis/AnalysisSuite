@@ -32,7 +32,9 @@ plot3d.dotprops<-function(dp, scalevecs=1.0, alpharange=NULL,
 	invisible(rlist)
 }
 
-xyzmatrix<-function(x,y=NULL,z=NULL,Transpose=FALSE) {
+xyzmatrix<-function(x, ...) UseMethod("xyzmatrix")
+
+xyzmatrix.default<-function(x,y=NULL,z=NULL,Transpose=FALSE,...) {
 	# quick function that gives a generic way to extract coords from 
 	# classes that we care about and returns a matrix
 	# nb unlike xyz.coords this returns a matrix (not a list)
@@ -44,6 +46,8 @@ xyzmatrix<-function(x,y=NULL,z=NULL,Transpose=FALSE) {
 	mx=data.matrix(x)
 	if(Transpose) t(mx) else mx
 }
+
+`xyzmatrix<-`<-function(n, value, ...) UseMethod("xyzmatrix<-")
 
 #' Assign xyz elements of neuron or dotprops object
 #'
@@ -59,7 +63,7 @@ xyzmatrix<-function(x,y=NULL,z=NULL,Transpose=FALSE) {
 #' stopifnot(isTRUE(
 #'   all.equal(xyzmatrix(n),xyzmatrix(MyNeurons[[1]]))
 #' ))
-`xyzmatrix<-`<-function(n,value){
+`xyzmatrix<-.default`<-function(n, value, ...){
   if(is.neuron(n)) n$d[,c("X","Y","Z")]=value
   else if(is.dotprops(n)) n$points[,c("X","Y","Z")]=value
   else if(c("X","Y","Z") %in% colnames(n)) n[,c("X","Y","Z")]=value
