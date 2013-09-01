@@ -172,7 +172,7 @@ with.neuronlist<-function(data,expr,...) {
 #' 
 #' @details the col and subset parameters are evaluated in the context of the 
 #'   dataframe attribute of the neuronlist.If col evaluates to a factor and
-#'   colpal is a named vector then that colours will be assigned by matching
+#'   colpal is a named vector then colours will be assigned by matching
 #'   factor levels against the named elements of colpal. If col evaluates to a
 #'   factor and colpal is a function then it will be used to generate colours
 #'   with the same number of levels as are used in col.
