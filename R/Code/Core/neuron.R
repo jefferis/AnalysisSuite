@@ -19,7 +19,7 @@ is.neuron<-function(n,Strict=FALSE) {
 #' n2<-MyNeurons[[1]]*c(2,2,2,2)
 #' stopifnot(all.equal(n1,n2))
 #' n3<-MyNeurons[[1]]*c(2,2,4)
-"*.neuron" <- function(n,x) {
+`*.neuron` <- function(n,x) {
 	# TODO look into S3 generics for this functionality
 	
 	nd=n$d[,c("X","Y","Z","W")]
@@ -32,7 +32,7 @@ is.neuron<-function(n,Strict=FALSE) {
 	n
 }
 
-"+.neuron" <- function(n,x) {
+`+.neuron` <- function(n,x) {
 	if(!is.numeric(x))
 		stop("expects a numeric vector")
 	nd=n$d[,c("X","Y","Z","W")]
@@ -44,8 +44,8 @@ is.neuron<-function(n,Strict=FALSE) {
 	n
 }
 
-"-.neuron" <- function(n,x) n+(-x)
-"/.neuron" <- function(n,x) n*(1/x)
+`-.neuron` <- function(n,x) n+(-x)
+`/.neuron` <- function(n,x) n*(1/x)
 
 #' Divide neuron coords by a factor (and optionally center)
 #'
