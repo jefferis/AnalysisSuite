@@ -41,3 +41,13 @@ test.xyzpos.gjdens<-function(x)
 	pixels=rbind(c(1,1,1),dim(d))
 	checkEquals(xyzpos.gjdens(d,pixels),corners)
 }
+
+test.getBoundingBox<-function(){
+	lhfile=file.path(TestDir,'Data','LHMask.nrrd')
+	lh=Read3DDensityFromNrrd(lhfile)
+	checkEqualsNumeric(c(0, 68.6, 0, 68.6, 0, 68.6),getBoundingBox(lh),tol=1e-6)
+	checkEquals(getBoundingBox(lh),getBoundingBox(lhfile))
+	checkEqualsNumeric(structure(c(-0.7, 69.3, -0.7, 69.3, -0.7, 69.3), .Dim = 2:3),
+		getBounds(lh),tol=1e-6)
+	checkEquals(getBounds(lh),getBounds(lhfile))
+}
