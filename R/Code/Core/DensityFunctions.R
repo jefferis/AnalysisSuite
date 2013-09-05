@@ -332,8 +332,11 @@ getBounds<-function(b){
 	if(is.character(b)) {
 		if(toupper(b)=='LH') return(c(95,165,60,130,0,70))
 		if(toupper(b)=='MB') return(c(45,115,60,130,60,95))
-		stop(paste("Don't know bounds for",b))
-	} else if(!is.null(attr(b,"bounds"))) return(attr(b,"bounds"))
+		if(file.exists(b)){
+			b=read.im3d(b,ReadData=FALSE)
+		} else stop(paste("Don't know how to get bounds for",b))
+	}
+	if(!is.null(attr(b,"bounds"))) return(attr(b,"bounds"))
 	else if(!is.null(attr(b,"BoundingBox"))){
 		bounds<-matrix(attr(b,"BoundingBox"),nrow=2)
 		# nb if any of the dimensions are 1 then the voxel dimension
@@ -362,7 +365,10 @@ getBoundingBox<-function(b,bounds=attr(b,"bounds"),voxdim=voxdim.gjdens(b)){
 		# zap small gets rid of FP rounding errors
 		return(zapsmall(bounds))
 	}
-	else return(NULL)
+	else if(is.character(b) && file.exists(b)){
+		return(attr(read.im3d(b,ReadData=FALSE),'BoundingBox'))
+	}
+	return(NULL)
 }
 
 #' read 3d image using one of the available readers returning in gjdens format
