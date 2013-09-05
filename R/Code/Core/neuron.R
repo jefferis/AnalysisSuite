@@ -189,7 +189,7 @@ write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am',
     ext=sub(".*(\\.[^.]+)$","\\1",filename)
     ftype_from_ext=switch(tolower(ext),.swc='swc',.asc='neurolucida.asc',
       .am='lineset.am',.amiramesh='lineset.am',.borst='borst',.rds='rds',NA)
-    if(!is.na(ftype_from_ext) && length(ftype!=1))
+    if(!is.na(ftype_from_ext) && length(ftype)!=1)
       ftype=ftype_from_ext
     else ftype=match.arg(ftype)
   }
