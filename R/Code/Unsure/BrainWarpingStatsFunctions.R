@@ -183,11 +183,26 @@ TransformSurfFile<-function(surffile,outfile,warpfile=NULL,transform=c("warp","a
 	system(cmd)
 }
 
+#' Mirror neuron across midplane of axis, optionally correcting for asymmetry
+#'
+#' @param n A neuron
+#' @param mirrorAxisSize The size of the axis to mirror across. If vector of 
+#'  length 2 then assume this represents min and max bouding box for this axis.
+#' @param mirrorAxis One of X,Y or Z
+#' @warpfunction A function that corrects for any asymmetry after s simple
+#'  mirroring.
+#' @details If there is a non-zero origin, we want to sum min and max bounds 
+#'  to get the equivalent of midline pos x 2 for the mirroring since
+#'  newpos = midline_pos * 2 - oldpos
+#' @seealso \code{\link{transform.neuron},\link{TransformNeuron}}
+#' @export
 MirrorNeuron<-function(n,mirrorAxisSize,mirrorAxis=c("X","Y","Z"),warpfunction,...){
 	mirrorAxis=match.arg(mirrorAxis)
-	# function to transform a neuron into contralateral hemisphere
-	# will require a warp that describes the transformation of a horizontally 
-	# flipped brain onto original image
+	# if there is a non-zero origin, we want to sum min and max bounds to get
+	# the equivalent of midline pos x 2 for the mirroring since
+	# newpos = midline_pos * 2 - oldpos
+	if(length(mirrorAxisSize)==2) mirrorAxisSize=sum(mirrorAxisSize)
+	
 	n$d[,mirrorAxis]=mirrorAxisSize-1*n$d[,mirrorAxis]
 	if(!missing(warpfunction))
 	warpfunction(n,...)
