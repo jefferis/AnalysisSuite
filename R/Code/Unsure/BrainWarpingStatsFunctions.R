@@ -188,16 +188,27 @@ TransformSurfFile<-function(surffile,outfile,warpfile=NULL,transform=c("warp","a
 #' @param n A neuron
 #' @param mirrorAxisSize The size of the axis to mirror across. If vector of 
 #'  length 2 then assume this represents min and max bouding box for this axis.
-#' @param mirrorAxis One of X,Y or Z
+#' @param mirrorAxis One of X,Y or Z. Can also be a gjdens object or 3d image file
 #' @warpfunction A function that corrects for any asymmetry after s simple
 #'  mirroring.
+#' @details If mirrorAxis specifies an image file or a gjdens object 
+#'  (ie loaded 3d image data) then \code{getBoundingBox} will be used to find
+#'  the appropriate min and max bounding box values for the 
 #' @details If there is a non-zero origin, we want to sum min and max bounds 
 #'  to get the equivalent of midline pos x 2 for the mirroring since
-#'  newpos = midline_pos * 2 - oldpos
-#' @seealso \code{\link{transform.neuron},\link{TransformNeuron}}
+#'  newpos = midline_pos * 2 - oldpos == max_bound + min_bound - oldpos
+#' @seealso \code{\link{transform.neuron},\link{TransformNeuron},
+#'  \link{getBoundingBox}}
 #' @export
 MirrorNeuron<-function(n,mirrorAxisSize,mirrorAxis=c("X","Y","Z"),warpfunction,...){
 	mirrorAxis=match.arg(mirrorAxis)
+	if(!is.numeric(mirrorAxisSize)){
+		# assume that this represents an object or file that we want to use to find
+		# bounding box
+		bb=matrix(getBoundingBox(mirrorAxisSize),
+			ncol=3,dimnames=list(NULL,c("X","Y","Z")))
+		mirrorAxisSize=bb[,mirrorAxis]
+	} 
 	# if there is a non-zero origin, we want to sum min and max bounds to get
 	# the equivalent of midline pos x 2 for the mirroring since
 	# newpos = midline_pos * 2 - oldpos
