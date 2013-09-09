@@ -251,8 +251,12 @@ plot3d.neuronlist<-function(nl,subset,col=NULL,colpal=rainbow,...){
 		}
 		else stop("Cannot evaluate col")
 	}
-
-	invisible(mapply(plot3d,nl,col=cols,...))
+	rval=mapply(plot3d,nl,col=cols,...)
+	df=attr(nl,'df')
+	if(is.null(df)) df=data.frame(key=names(nl),stringsAsFactors=FALSE)
+	df$col=cols
+	attr(rval,'df')=df
+	invisible(rval)
 }
 
 #' Read one or more neurons from file to a neuronlist in memory
