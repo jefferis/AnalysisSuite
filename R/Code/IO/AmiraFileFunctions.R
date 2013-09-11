@@ -733,9 +733,9 @@ ParseEdgeList<-function(Nb,Silent=TRUE,Verbose=!Silent,RootPoint=1){
 ParseEdgeListForAllSubTrees<-function(Nb,Origin=NULL,Silent=T){
 	# Repeatedly call ParseEdgeList with different roots until all points
 	# accounted for
-	if(is.null(names(Nb))) names(Nb)=c("Neighbour","CurPoint")
-	pointsRemaining=sort(unique(Nb$CurPoint))
-	EndPoints=pointsRemaining[table(Nb$CurPoint)==1]
+	if(is.null(colnames(Nb))) colnames(Nb)=c("Neighbour","CurPoint")
+	pointsRemaining=sort(unique(Nb[,'CurPoint']))
+	EndPoints=pointsRemaining[table(Nb[,'CurPoint'])==1]
 	SegLists=list()
 	if(!is.null(Origin) && any(Origin==EndPoints)) StartPoint=Origin else StartPoint=min(EndPoints)
 	cat("Origin=",Origin,"StartPoint=",StartPoint,"\n")
