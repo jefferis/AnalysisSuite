@@ -94,24 +94,76 @@ ReducedAdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
 	A[toKeep,toKeep]
 }
 
-RerootNeuron<-function(ANeuron,root=1,...){
-  am=AdjacencyMatrixFromSegList(ANeuron$SegList)
-  gam=graph.adjacency(am,'undirected')
-  dfs=graph.dfs(gam,root,father=TRUE)
-  
+RerootNeuron<-function(ANeuron,origin=1,...){
+  gam=Neuron2Graph(ANeuron)
+  # will use a depth first search to reorder tree starting from origin
+  dfs=graph.dfs(gam,origin,father=TRUE)
+  coreneuron=SegListFromFullGraph(gam,dfs=dfs)
+  ANeuron[names(coreneuron)]<-coreneuron
+  # Now fix the SWC data chunk as well
   d=ANeuron$d
   d$Parent=dfs$father
   # SWC says that the root will have parent -1
   d$Parent[d$Parent==0]=-1L
-  d$NeighbourCount=0
-  tdp=table(d$Parent)
-  tdp=tdp[names(tdp)!="-1"]
-  d$NeighbourCount[as.integer(tdp)]=tdp
-  del=EdgeListFromSWC(d)
-  # FIXME this doesn't work yet - something to do with ordering assumptions
-  coreneuron=CoreNeuronFromPointAndEdgeData(d,del,Origin=root,...)
-  ANeuron[names(coreneuron)]<-coreneuron
+  
+  ANeuron$d=d
   ANeuron
+}
+
+#' Given a graph of all nodes and a root , construct a SegList
+#'
+#' Uses a depth first search on the tree to reorder using the given origin.
+#' @details Either one of origin and dfs must be specified.
+#' @param g An igraph
+#' @param origin the 1-indexed root vertex id
+#' @param dfs result of graph.dfs
+#' @param dfs 
+#' @return A list with elements:
+#'  (NumPoints,StartPoint,BranchPoints,EndPoints,NumSegs,SegList)
+#' @export
+#' @seealso \code{\link{graph.dfs}}
+SegListFromFullGraph<-function(g,origin=NULL,dfs=NULL){
+  if(is.null(dfs)){
+    if(is.null(origin)) stop("Must specify at least one of dfs or origin")
+    if(origin<1 || origin>vcount(g)) stop("invalid origin:",origin)
+    dfs=graph.dfs(g,root=origin,father=TRUE)
+  } else {
+    # dfs seems to have origin 0-indexed (but everything else 1-indexed)
+    if(is.null(origin)) origin=dfs$root+1
+    else {
+      # check that the origin we were given matches dfs
+      stop("origin specified in ")
+    }
+  }
+  ncount=neighborhood.size(g,order=1)-1
+  # put the first vertex into the first segment
+  curseg=dfs$order[1]
+  if(length(ncount)==1) sl=list(curseg)
+  else {
+    sl=list()
+    # we have more than 1 point in graph and some work to do!
+    for(i in seq.int(from=2,to=length(dfs$order))){
+      curpoint=dfs$order[i]
+      if(length(curseg)==0){
+        # segment start, so initialise with parent
+        curseg=dfs$father[curpoint]
+      }
+      # always add current point
+      curseg=c(curseg,curpoint)
+      # now check if we need to close the segment
+      if(ncount[curpoint]!=2){
+        # branch or end point
+        sl[[length(sl)+1]]=curseg
+        curseg=integer(0)
+      }
+    }
+  }
+  list(NumPoints=length(ncount),
+  StartPoint=origin,
+  BranchPoints=seq.int(length.out=length(ncount))[ncount>2],
+  EndPoints=seq.int(length.out=length(ncount))[ncount==1],
+  NumSegs=length(sl),
+  SegList=sl)
 }
 
 AdjacencyMatrixFromEdgeList<-function(EdgeList,Undirected=FALSE){
