@@ -94,36 +94,25 @@ ReducedAdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
 	A[toKeep,toKeep]
 }
 
-RerootNeuron<-function(ANeuron,root=1){
+RerootNeuron<-function(ANeuron,root=1,...){
   am=AdjacencyMatrixFromSegList(ANeuron$SegList)
   gam=graph.adjacency(am,'undirected')
-  dgam=dfs(igraph.to.graphNEL(gam),as.character(root))
-  canon_nodeorder=as.integer(dgam$discovered)
-  d=ANeuron$d
-  d$Parent=-1L
-  for(i in seq(nrow(d))){
-    if(i==root) next
-    # nb graph vertices are 0 indexed
-    nbs=neighbors(gam,i)
-    # find neighbor that comes earliest in canon_nodeorder
-    nbcanonpos=sapply(nbs,function(x) which(canon_nodeorder==x))
-    # nb convert back to 1-indexed
-    d$Parent[i]=nbs[which.min(nbcanonpos)]
-  }
+  dfs=graph.dfs(gam,root,father=TRUE)
   
-  # sl=CanonicalSegList(ANeuron$SegList,root=root)
-  # ANeuron$SegList=sl
-  ANeuron$d=d
-  # Now that we have recalculated SWC data we should 
-  # use that to recalculate core neuron fields including seglist
-  # FIXME - This makes no sense if root is not == 1 because
-  # ParseSWC assumes root = 1
-  if(root!=1) stop("ParseSWC cannot cope with root!=1")
-  coreneuron=ParseSWC(ANeuron$d)
+  d=ANeuron$d
+  d$Parent=dfs$father
+  # SWC says that the root will have parent -1
+  d$Parent[d$Parent==0]=-1L
+  d$NeighbourCount=0
+  tdp=table(d$Parent)
+  tdp=tdp[names(tdp)!="-1"]
+  d$NeighbourCount[as.integer(tdp)]=tdp
+  del=EdgeListFromSWC(d)
+  # FIXME this doesn't work yet - something to do with ordering assumptions
+  coreneuron=CoreNeuronFromPointAndEdgeData(d,del,Origin=root,...)
   ANeuron[names(coreneuron)]<-coreneuron
   ANeuron
 }
-
 
 AdjacencyMatrixFromEdgeList<-function(EdgeList,Undirected=FALSE){
 	# this makes an adjacency matrix from an edge list
