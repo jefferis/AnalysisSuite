@@ -425,17 +425,11 @@ Neuron2Graph<-function(x){
 }
 
 GetShortestPath.Neuron<-function(x,from,to){
-	# nb igraph is 0 indexed
-	g=Neuron2Graph(x)
-	p=get.shortest.paths(g,from=from-1,to=to-1)
+	# nb igraph is 1-indexed
+	g=as.igraph(x)
+	p=get.shortest.paths(g,from=from,to=to)
 	if(length(p)!=1) stop("Unable to find unique shortest path between those points")
-	p[[1]]+1
-}
-
-GetShortestPath.Neuron.ggm<-function(x,from,to){
-	# just for checking
-	require(ggm)
-	p=findPath(am,from,to)
+	p[[1]]
 }
 
 GetSubNeuron<-function(x,seglist=NULL,from,to){
