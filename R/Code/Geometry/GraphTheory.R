@@ -109,18 +109,17 @@ RerootNeuron<-function(ANeuron,origin=1,...){
   ANeuron
 }
 
-#' Given a graph of all nodes and a root , construct a SegList
+#' Construct SegList (+ other core fields) from graph of all nodes and origin
 #'
 #' Uses a depth first search on the tree to reorder using the given origin.
 #' @details Either one of origin and dfs must be specified.
 #' @param g An igraph
 #' @param origin the 1-indexed root vertex id
 #' @param dfs result of graph.dfs
-#' @param dfs 
 #' @return A list with elements:
 #'  (NumPoints,StartPoint,BranchPoints,EndPoints,NumSegs,SegList)
 #' @export
-#' @seealso \code{\link{graph.dfs}}
+#' @seealso \code{\link{graph.dfs},\link{RerootNeuron}}
 SegListFromFullGraph<-function(g,origin=NULL,dfs=NULL){
   if(is.null(dfs)){
     if(is.null(origin)) stop("Must specify at least one of dfs or origin")
@@ -131,7 +130,8 @@ SegListFromFullGraph<-function(g,origin=NULL,dfs=NULL){
     if(is.null(origin)) origin=dfs$root+1
     else {
       # check that the origin we were given matches dfs
-      stop("origin specified in ")
+      stop("origin specified in dfs: ",dfs$root+1,
+        ' does not match that on command line: ',origin)
     }
   }
   ncount=neighborhood.size(g,order=1)-1
