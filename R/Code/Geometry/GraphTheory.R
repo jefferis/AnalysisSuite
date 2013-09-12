@@ -109,6 +109,42 @@ RerootNeuron<-function(ANeuron,origin=1,...){
   ANeuron
 }
 
+#' Construct EdgeList matrix with start and end points from SegList
+#'
+#' @param SegList from a \code{neuron}
+#' @return A 2 column matrix, \code{cbind(starts,ends)}
+#' @export
+EdgeListFromSegList<-function(SegList){
+  lsl=sapply(SegList,length)
+  sl=SegList[lsl>1]
+  lsl=lsl[lsl>1]
+  ends=unlist(lapply(sl,function(x) x[-1]))
+  starts=unlist(lapply(sl,function(x) x[-length(x)]))
+  cbind(starts,ends)
+}
+
+#' Construct an igraph object from a neuron
+#'
+#' @details note that the 'swc' and 'seglist' methods may generate different
+#'  graphs, but these should always be isomorphic and this can be checked by
+#'  using canonical.permutation()
+#' @param x The neuron to be converted
+#' @param directed Whether to produce a directed graph (default FALSE)
+#' @param method Whether to use the seglist or swc data blocks to generate
+#'  the graph.
+#' @param ... Additional arguments, currently ignored
+#' @return A matrix, \code{cbind(starts,ends)}
+#' @method as.igraph neuron
+#' @export
+as.igraph.neuron<-function(x,directed=FALSE,method=c("swc",'seglist'),...){
+  method=match.arg(method,several.ok=TRUE)
+  if('swc'%in%method && !is.null(x$d$Parent) && !is.null(x$d$PointNo))
+    el=data.matrix(subset(x$d,Parent!=-1,sel=c(Parent,PointNo)))
+  else
+    el=EdgeListFromSegList(x$SegList)
+  graph.edgelist(el,directed=directed)
+}
+
 #' Construct SegList (+ other core fields) from graph of all nodes and origin
 #'
 #' Uses a depth first search on the tree to reorder using the given origin.
