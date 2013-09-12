@@ -93,19 +93,29 @@ ReducedAdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
 	A[toKeep,toKeep]
 }
 
-RerootNeuron<-function(ANeuron,origin=1,...){
-  gam=Neuron2Graph(ANeuron)
+#' Reroot a neuron on the given origin using depth first search reordering
+#'
+#' Uses a depth first search on the tree to reorder using the given origin.
+#' NB this does _not_ reorder the vertex ids - it changes the origin and then
+#' changes the parents in SWC data block and SegList accordingly.
+#' @details Either one of origin and dfs must be specified.
+#' @param ANeuron Neuron to be rerooted
+#' @param origin the 1-indexed root vertex id
+#' @param graph.method See method argument of \code{\link{as.igraph.neuron}}
+#' @return A list with elements:
+#'  (NumPoints,StartPoint,BranchPoints,EndPoints,NumSegs,SegList)
+#' @export
+#' @seealso \code{\link{graph.dfs},\link{as.igraph.neuron}}
+RerootNeuron<-function(ANeuron,origin=1,graph.method=c("swc",'seglist')){
+  gam=as.igraph(ANeuron,method=graph.method)
   # will use a depth first search to reorder tree starting from origin
   dfs=graph.dfs(gam,origin,father=TRUE)
   coreneuron=SegListFromFullGraph(gam,dfs=dfs)
   ANeuron[names(coreneuron)]<-coreneuron
   # Now fix the SWC data chunk as well
-  d=ANeuron$d
-  d$Parent=dfs$father
+  ANeuron$dParent=dfs$father
   # SWC says that the root will have parent -1
-  d$Parent[d$Parent==0]=-1L
-  
-  ANeuron$d=d
+  ANeuron$d$Parent[ANeuron$d$Parent==0]=-1L
   ANeuron
 }
 
