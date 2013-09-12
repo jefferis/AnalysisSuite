@@ -48,7 +48,6 @@
 # package
 
 require(igraph)
-require(RBGL)
 
 # Adjacency matrix
 AdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
