@@ -371,6 +371,8 @@ SingleFromDoubleEdgeList<-function(el){
 }
 
 Neuron2Graph<-function(x){
+	.Deprecated("as.igraph.neuron",
+	  'Deprecated, due to use of dense adjacency matrix')
 	# returns an igraph graph object
 	require(igraph)
 	am=AdjacencyMatrixFromSegList(x$SegList)
