@@ -34,25 +34,10 @@
 #################
 #ENDMAINCOPYRIGHT
 
-# Started this after listening to Hermann Cuntz' talk
-# at the Hausser lab meeting
-
-# Looks like there is some interesting stuff in the ggm package
-# according to their definitions, the adjacency matrix has
-# (i,j)=1 if there is a connection from i to j
-# while the Edge Matrix has
-# (j,i)=1 if there is a connection from i to j
-# and also has 1s along the diagonal
-
-# the igraph package looks like it may be a more general purpose graph
-# package
-
 require(igraph)
 
 # Adjacency matrix
 AdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
-	#ps=sort(unique(unlist(SegList)))
-	#nps=length(ps)
 	nps=max(unlist(SegList))
 	if(is.na(nps) || nps<1) stop("No valid points in passed SegList")
 	A=matrix(0,ncol=nps,nrow=nps)
@@ -64,10 +49,7 @@ AdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
 			# A(i,j)=1 if i->j
 			A[s[j],s[j+1]]=1
 			if(Undirected) A[s[j+1],s[j]]=1
-			#A[s[j],s[j]]=1
-		}			
-		#c=cbind(s[-length(s)],s[-1])
-		#apply(c,1,function(x) A[x[2],x[1]]=1)
+		}
 	}
 	A
 }
@@ -324,62 +306,6 @@ FindSubTreesFromEdgeList<-function(Nb){
 	return(NbTrees)
 }
 
-# FindRootedSubTree<-function(Nb,root){
-# 	Points=unique(Nb$CurPoint)
-# 	BranchPoints=as.numeric(names(which(table(Nb$CurPoint)>2)))
-# 	VisitedBranchPoints=NULL
-# 	EndPoints=as.numeric(names(which(table(Nb$CurPoint)==1)))
-# 	
-# 	SegList=list()
-# 	parseSeg=function(headPoint){
-# 		curParent=headPoint
-# 		splitPoint=0
-# 		curPoint=curParent
-# 		while(nrow(Nb)>0){
-# 			possPoints=Nb$Neighbour[Nb$CurPoint==curPoint]
-# 			# Pick the smallest point that is >0 (will use -1)
-# 			nextPoint=min(PossPoints[PossPoints>0])
-# 			Nb[Nb$CurPoint==nextPoint,]=-1
-# 			if(any(BranchPoints==thisPoint)){
-# 				#is this a new branch point?
-# 				if(all(VisitedBranchPoints!=nextPoint)){
-# 					VisitedBranchPoints=c(VisitedBranchPoints,nextPoint)
-# 					splitPoint=curParent
-# 					SegList=list(SegList,curParent)
-# 					curPoint=nextPoint
-# 					# parse the first seg
-# 					rval=parseSeg(curParent)
-# 					while(rval!=0){
-# 						# parse subsequent segs
-# 						rval=parseSeg(splitPoint)
-# 					}
-# 				} else {
-# 					# a split
-# 					return(curParent)
-# 				}
-# 			}  # not a fork
-# 			else if(any(EndPoints==nextPoint)){
-# 				return(0)
-# 		}
-# 		
-# 			
-	
-	
-
-SWCFromAdjacencyAndVertices<-function(A,d){
-	# A has cols and rows corresponding to points in d
-	colnames(A)=seq(ncol(A))
-	rownames(A)=seq(nrow(A))
-	# leftmost col
-	# Pick first element
-	# cross off that element
-	# and its reciprocal
-	# Branch
-}
-
-# A=rbind(c(0,0,0,0),c(1,0,0,0),c(0,1,0,0),c(0,1,0,0))
-
-
 AmiraDataFromSWC<-function(d){
 	el=subset(d,Parent!=-1,sel=c(Parent,PointNo))
 	el=DoubleFromSingleEdgeList(el)
@@ -394,10 +320,6 @@ EdgeListFromNeuron<-function(n){
 EdgeListFromSWC<-function(d){
 	el=subset(d,Parent!=-1,sel=c(Parent,PointNo))
 	DoubleFromSingleEdgeList(el)
-}
-
-CoreNeuronFromAmiraData<-function(l){
-	
 }
 
 DoubleFromSingleEdgeList<-function(el){
