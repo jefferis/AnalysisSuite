@@ -162,7 +162,7 @@ SegListFromFullGraph<-function(g,origin=NULL,dfs=NULL){
         ' does not match that on command line: ',origin)
     }
   }
-  ncount=neighborhood.size(g,order=1)-1
+  ncount=degree(g)
   # put the first vertex into the first segment
   curseg=dfs$order[1]
   if(length(ncount)==1) sl=list(curseg)
