@@ -318,8 +318,7 @@ FindSubTreesFromEdgeList<-function(Nb){
 }
 
 AmiraDataFromSWC<-function(d){
-	el=subset(d,Parent!=-1,sel=c(Parent,PointNo))
-	el=DoubleFromSingleEdgeList(el)
+	el=DoubleEdgeListFromSWC(d)
 	Origin=subset(d,Parent==-1)$CurPoint
 	list(PointList=d,EdgeList=el,Origin=Origin)
 }
@@ -328,9 +327,17 @@ EdgeListFromNeuron<-function(n){
 	EdgeListFromSWC(n$d)
 }
 
+DoubleEdgeListFromNeuron<-function(n){
+	DoubleFromSingleEdgeList(EdgeListFromNeuron(n))
+}
+
 EdgeListFromSWC<-function(d){
-	el=subset(d,Parent!=-1,sel=c(Parent,PointNo))
-	DoubleFromSingleEdgeList(el)
+	subset(d,Parent!=-1,sel=c(Parent,PointNo))
+}
+
+DoubleEdgeListFromSWC<-function(d){
+  el=EdgeListFromSWC(d)
+  DoubleFromSingleEdgeList(el)
 }
 
 DoubleFromSingleEdgeList<-function(el){
