@@ -162,6 +162,11 @@ as.igraph.swc<-function(x, directed=TRUE, prune=TRUE, keep.ids=prune, ...){
   g
 }
 
+CoreNeuronFromSWC<-function(swc,origin=NULL){
+  g=as.igraph.swc(swc,directed=TRUE)
+  CoreNeuronFromGraph(g)
+}
+
 #' Construct SegList (+ other core fields) from graph of all nodes and origin
 #'
 #' Uses a depth first search on the tree to reorder using the given origin.
