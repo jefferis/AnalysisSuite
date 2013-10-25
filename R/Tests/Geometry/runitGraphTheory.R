@@ -86,3 +86,9 @@ testRerootNeuron<-function(){
   checkEquals(RerootNeuron(testn,origin=5)$d$Parent,c(2, 3, 4, 5, -1, 3))
   checkEquals(RerootNeuron(testn,origin=6)$d$Parent,c(2, 3, 6, 3, 4, -1))
 }
+
+test.CoreNeuronFromGraph<-function(){
+  g<-as.igraph(testn)
+  cn=CoreNeuronFromGraph(g,1)
+  checkEquals(testn$SegList,cn$SegList)
+}
