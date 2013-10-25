@@ -121,20 +121,45 @@ EdgeListFromSegList<-function(SegList){
 #'  graphs, but these should always be isomorphic and this can be checked by
 #'  using canonical.permutation()
 #' @param x The neuron to be converted
-#' @param directed Whether to produce a directed graph (default FALSE)
+#' @param directed Whether to produce a directed graph (default TRUE)
 #' @param method Whether to use the seglist or swc data blocks to generate
 #'  the graph.
+#' @param prune Whether to prune the graph of any vertices not contained in
+#'  the input graph (default TRUE)
+#' @param keep.ids Whether to keep the original numeric ids for each vertex
 #' @param ... Additional arguments, currently ignored
 #' @return A matrix, \code{cbind(starts,ends)}
 #' @method as.igraph neuron
+#' @rdname as.igraph
 #' @export
-as.igraph.neuron<-function(x,directed=FALSE,method=c("swc",'seglist'),...){
+as.igraph.neuron<-function(x,directed=TRUE,method=c("swc",'seglist'),
+  prune=TRUE, keep.ids=prune, ...){
   method=match.arg(method,several.ok=TRUE)
-  if('swc'%in%method && !is.null(x$d$Parent) && !is.null(x$d$PointNo))
-    el=data.matrix(subset(x$d,Parent!=-1,sel=c(Parent,PointNo)))
-  else
-    el=EdgeListFromSegList(x$SegList)
-  graph.edgelist(el,directed=directed)
+  if('swc'%in%method && !is.null(x$d$Parent) && !is.null(x$d$PointNo)){
+    as.igraph.swc(x$d, directed=directed, prune=prune, keep.ids=keep.ids)
+  } else {
+    as.igraph.seglist(x$SegList, directed=directed, prune=prune, keep.ids=keep.ids)
+  }
+}
+
+#' @rdname as.igraph
+#' @export
+as.igraph.seglist<-function(x, directed=TRUE, prune=TRUE, keep.ids=prune, ...){
+  el=EdgeListFromSegList(x)
+  g=graph.edgelist(el,directed=directed)
+  if(keep.ids) g=set.vertex.attribute(g,'label',value=igraph::V(g))
+  if(prune) g=delete.vertices(g,setdiff(igraph::V(g),unique(unlist(x))))
+  g
+}
+
+#' @rdname as.igraph
+#' @export
+as.igraph.swc<-function(x, directed=TRUE, prune=TRUE, keep.ids=prune, ...){
+  el=EdgeListFromSWC(x)
+  g=graph.edgelist(data.matrix(el),directed=directed)
+  if(keep.ids) g=set.vertex.attribute(g,'label',value=igraph::V(g))
+  if(prune) g=delete.vertices(g,setdiff(igraph::V(g),x$PointNo))
+  g
 }
 
 #' Construct SegList (+ other core fields) from graph of all nodes and origin
