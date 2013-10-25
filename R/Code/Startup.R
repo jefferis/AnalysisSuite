@@ -33,6 +33,8 @@
 #################
 #ENDMAINCOPYRIGHT
 
+# save location of current directory
+owd=getwd()
 # Identify location of startup script ...
 if(interactive()){
 	CodeDir<-dirname(attr(body(function() {}),'srcfile')$filename)
@@ -121,9 +123,8 @@ for (MyPath in SourcePaths) {
 	try(source(MyPath))
 }
 
-setwd(ObjDir)
-
-cat("Type: load(\"MyNeurons.rda\")  to load in the main dataset\n")
+setwd(owd)
+cat("Type: load(\"",file.path(ObjDir,'MyNeurons.rda'),"\")  to load in the main dataset\n",sep='')
 #cat("Use runScript() or runFig() to run additional code\n")
 
 # GJ 
