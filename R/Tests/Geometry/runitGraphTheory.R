@@ -38,10 +38,12 @@ test.as.igraph<-function(){
   g3=as.igraph(testn3)
   checkEquals(g2,g3)
   
-  g1s=as.igraph(testn,graph.method='seglist')
-  g2s=as.igraph(testn2,graph.method='seglist')
-  g3s=as.igraph(testn3,graph.method='seglist')
+  g1s=as.igraph(testn,method='seglist')
+  g2s=as.igraph(testn2,method='seglist')
+  g3s=as.igraph(testn3,method='seglist')
   checkEquals(g2s,g3s)
+  
+  # checkEquals(as.igraph(testn),as.igraph(testn,meth))
   
   checkTrue(graph.isomorphic(g1,g2))
   checkTrue(graph.isomorphic(g1s,g1))
