@@ -43,10 +43,14 @@ test.as.igraph<-function(){
   g3s=as.igraph(testn3,method='seglist')
   checkEquals(g2s,g3s)
   
-  # checkEquals(as.igraph(testn),as.igraph(testn,meth))
-  
   checkTrue(graph.isomorphic(g1,g2))
   checkTrue(graph.isomorphic(g1s,g1))
+  checkTrue(graph.isomorphic(g2s,g2))
+  
+  # check equivalence of 2 methods for a more complicated graph
+  am3da=read.neuron(file.path(TestDir,"Data","neurons","testneuron_am3d_ascii.am"))
+  g2<-as.igraph(am3da,meth='swc')
+  g2s<-as.igraph(am3da,meth='seglist')
   checkTrue(graph.isomorphic(g2s,g2))
 }
 
