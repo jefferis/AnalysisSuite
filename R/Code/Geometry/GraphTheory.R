@@ -148,9 +148,20 @@ as.igraph.neuron<-function(x,directed=FALSE,method=c("swc",'seglist'),...){
 #'  (NumPoints,StartPoint,BranchPoints,EndPoints,NumSegs,SegList)
 #' @export
 #' @seealso \code{\link{graph.dfs},\link{RerootNeuron}}
-SegListFromFullGraph<-function(g,origin=NULL,dfs=NULL){
+CoreNeuronFromGraph<-function(g,origin=NULL,dfs=NULL){
   if(is.null(dfs)){
-    if(is.null(origin)) stop("Must specify at least one of dfs or origin")
+    if(is.null(origin)) {
+      # if we haven't specified an origin, then we can infer this for a
+      # directed graph.
+      if(is.directed(g)){
+        origin=rootpoints(g)
+        if(length(origin)>1){
+          warning("Graph has multiple origins. Using first")
+          origin=origin[1]
+        }
+      }
+      else stop("Must specify at least one of dfs or origin")
+    }
     if(origin<1 || origin>vcount(g)) stop("invalid origin:",origin)
     dfs=graph.dfs(g,root=origin,father=TRUE,neimode='all')
   } else {
