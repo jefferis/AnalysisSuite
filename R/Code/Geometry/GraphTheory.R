@@ -204,6 +204,59 @@ CoreNeuronFromGraph<-function(g,origin=NULL,dfs=NULL){
   SegList=sl)
 }
 
+#' Return the root or branch points of a neuron or graph
+#'
+#' A neuron may have multiple subtrees and therefore multiple roots
+#' @rdname rootpoints
+rootpoints<-function (x, ...)
+UseMethod("rootpoints")
+
+#' @rdname rootpoints
+rootpoints.neuron<-function(x, ...){
+  if(x$nTrees>1) sapply(x$SubTrees, function(y) y[[1]][1])
+  else x$StartPoint
+}
+
+#' @rdname rootpoints
+rootpoints.igraph<-function(x, original.ids=TRUE, ...){
+  if(is.directed(x)){ 
+    # root points are those without incoming edges
+    vertex_ids=igraph::V(x)[degree(x,mode='in')==0]
+    if(!original.ids) return(vertex_ids)
+    vertex_names=get.vertex.attribute(x,'label',index=vertex_ids)
+    if(!is.null(vertex_names)) vertex_names else vertex_ids
+  } else {
+    stop("Cannot establish root points for undirected graph")
+  }
+}
+
+#' Return the branchpoints of a neuron or graph
+#' @param x neuron or graph
+#' @param ... Additional parameters
+#' @export
+#' @rdname rootpoints
+#' @alias branchpoints
+branchpoints<-function (x, ...)
+UseMethod("branchpoints")
+
+#' @rdname rootpoints
+#' @detail returns a list if more than one subtree is specified
+branchpoints.neuron<-function(x, subtrees=1, ...){
+  if(isTRUE(subtrees==1)) x$BranchPoints
+  else if(any(subtrees>x$nTrees)) stop("neuron only has ",x$nTrees," subtrees")
+  else lapply(x$SubTrees[subtrees],
+    function(x) branchpoints(as.igraph.seglist(x)))
+}
+
+#' @rdname rootpoints
+#' @param original.ids Whether to return original point ids when available
+branchpoints.igraph<-function(x, original.ids=TRUE, ...){
+  vertex_ids=igraph::V(x)[degree(x)>2]
+  if(!original.ids) return(vertex_ids)
+  vertex_names=get.vertex.attribute(x,'label',index=vertex_ids)
+  if(!is.null(vertex_names)) vertex_names else vertex_ids
+}
+
 AdjacencyMatrixFromEdgeList<-function(EdgeList,Undirected=FALSE){
 	# this makes an adjacency matrix from an edge list
 	# ie a Nx2 matrix where each row defines an edge
