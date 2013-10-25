@@ -85,14 +85,20 @@ WriteSWCFile<-function(ANeuron,
 
 #' Convert SWC style definition of a neuron into complete neuron object
 #'
-#' Details
+#' As of 2013-10-25 SWC2Neuron uses CoreNeuronFromSWC as the parser to generate
+#' seglist etc. This produces a seglist starting at the root and proceeding
+#' in a depth first search through the other nodes. The old method ParseSWC
+#' does not start from the root node, and therefore produces SegLists that
+#' finish at the root node.
 #' @param swc Matrix or data.frame with swc style definition of neuron
+#' @param parse.method See details
 #' @return List with class neuron
 #' @export
 #' @seealso \code{\link{is.neuron}},\code{\link{read.neuron}}, \code{\link{ReadNeuronFromSWC}}, \code{\link{ParseSWC}}
 #' @examples
-SWC2Neuron<-function(swc,filename){
-	neuron_core=ParseSWC(data.frame(swc))
+SWC2Neuron<-function(swc,filename,parse.method=c("CoreNeuronFromSWC","ParseSWC")){
+	parse.method=match.arg(parse.method)
+	neuron_core=match.fun(parse.method)(data.frame(swc))
 	neuron_extra=list(NeuronName=NeuronNameFromFileName(filename),
 		InputFileName=filename,
 		CreatedAt=Sys.time(),
