@@ -152,7 +152,7 @@ SegListFromFullGraph<-function(g,origin=NULL,dfs=NULL){
   if(is.null(dfs)){
     if(is.null(origin)) stop("Must specify at least one of dfs or origin")
     if(origin<1 || origin>vcount(g)) stop("invalid origin:",origin)
-    dfs=graph.dfs(g,root=origin,father=TRUE)
+    dfs=graph.dfs(g,root=origin,father=TRUE,neimode='all')
   } else {
     # dfs seems to have origin 0-indexed (but everything else 1-indexed)
     if(is.null(origin)) origin=dfs$root+1
