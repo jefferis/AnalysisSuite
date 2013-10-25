@@ -91,8 +91,8 @@ ReducedAdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
 RerootNeuron<-function(ANeuron,origin=1,graph.method=c("swc",'seglist')){
   gam=as.igraph(ANeuron,method=graph.method)
   # will use a depth first search to reorder tree starting from origin
-  dfs=graph.dfs(gam,root=origin,father=TRUE)
-  coreneuron=SegListFromFullGraph(gam,dfs=dfs)
+  dfs=graph.dfs(gam,root=origin,father=TRUE,neimode='all')
+  coreneuron=CoreNeuronFromGraph(gam,dfs=dfs)
   ANeuron[names(coreneuron)]<-coreneuron
   # Now fix the SWC data chunk as well
   ANeuron$d$Parent=dfs$father
