@@ -203,7 +203,7 @@ CoreNeuronFromGraph<-function(g,origin=NULL,dfs=NULL){
         ' does not match that on command line: ',origin)
     }
   }
-  ncount=degree(g)
+  ncount=igraph::degree(g)
   # put the first vertex into the first segment
   curseg=dfs$order[1]
   if(length(ncount)==1) sl=list(curseg)
@@ -251,7 +251,7 @@ rootpoints.neuron<-function(x, ...){
 rootpoints.igraph<-function(x, original.ids=TRUE, ...){
   if(is.directed(x)){ 
     # root points are those without incoming edges
-    vertex_ids=igraph::V(x)[degree(x,mode='in')==0]
+    vertex_ids=igraph::V(x)[igraph::degree(x,mode='in')==0]
     if(!original.ids) return(vertex_ids)
     vertex_names=get.vertex.attribute(x,'label',index=vertex_ids)
     if(!is.null(vertex_names)) vertex_names else vertex_ids
@@ -281,7 +281,7 @@ branchpoints.neuron<-function(x, subtrees=1, ...){
 #' @rdname rootpoints
 #' @param original.ids Whether to return original point ids when available
 branchpoints.igraph<-function(x, original.ids=TRUE, ...){
-  vertex_ids=igraph::V(x)[degree(x)>2]
+  vertex_ids=igraph::V(x)[igraph::degree(x)>2]
   if(!original.ids) return(vertex_ids)
   vertex_names=get.vertex.attribute(x,'label',index=vertex_ids)
   if(!is.null(vertex_names)) vertex_names else vertex_ids
