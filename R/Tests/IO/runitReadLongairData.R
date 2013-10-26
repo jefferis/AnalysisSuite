@@ -9,7 +9,7 @@ test.ReadLongairNeuron.SinglePath<-function(){
 	
 	result<-structure(list(NumPoints = 11L, StartPoint = 1, 
 	    BranchPoints = numeric(0), EndPoints = c(1, 11), NumSegs = 1L, 
-	    SegList = list(c(11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1)), d = structure(list(
+	    SegList = list(1:11), d = structure(list(
 	        PointNo = 1:11, Label = c(2, 2, 2, 2, 2, 2, 2, 2, 2, 
 	        2, 2), X = c(228.337419509888, 228.337419509888, 228.337419509888, 
 	        227.788531482220, 227.788531482220, 227.239643454552, 
