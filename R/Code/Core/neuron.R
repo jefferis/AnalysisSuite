@@ -116,8 +116,8 @@ read.neuron<-function(f, ...){
 	else if(ext=="swc")
 		n=ReadNeuronFromSWC(f, ...)
 	else if(ext=="rds")
-		n=readRDS(file)
 	else {
+		n=readRDS(f)
     h=readLines(f,1) # nb readLines can cope with gzipped data
     
 		if(regexpr("amira",h,ignore.case=TRUE)>0){
