@@ -110,14 +110,18 @@ read.neuron<-function(f, ...){
 	# should return exactly one neuron on success
 	if(!file.exists(f)) stop("Unable to read file: ",f)
 	ext=tolower(sub(".*\\.([^.]+$)","\\1",basename(f)))
-  
+
 	if(ext=="asc")
 		n=ReadNeuronFromAsc(f, ...)
 	else if(ext=="swc")
 		n=ReadNeuronFromSWC(f, ...)
 	else if(ext=="rds")
-	else {
 		n=readRDS(f)
+	else if(ext=="rda"){
+		objname=load(f,envir=environment())
+		if(length(objname)>1) stop("More than 1 object in file:",f)
+		n=get(objname,envir=environment())
+	} else {
     h=readLines(f,1) # nb readLines can cope with gzipped data
     
 		if(regexpr("amira",h,ignore.case=TRUE)>0){
