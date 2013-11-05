@@ -91,6 +91,7 @@ WriteSWCFile<-function(ANeuron,
 #' does not start from the root node, and therefore produces SegLists that
 #' finish at the root node.
 #' @param swc Matrix or data.frame with swc style definition of neuron
+#' @param filename Path to the original file 
 #' @param parse.method See details
 #' @return List with class neuron
 #' @export
