@@ -146,22 +146,30 @@ as.igraph.neuron<-function(x,directed=TRUE,method=c("swc",'seglist'),
 #' @export
 as.igraph.seglist<-function(x, directed=TRUE, prune=TRUE, keep.ids=prune, ...){
   el=EdgeListFromSegList(x)
-  g=graph.edgelist(el,directed=directed)
-  if(keep.ids) g=set.vertex.attribute(g,'label',value=igraph::V(g))
-  if(prune) g=delete.vertices(g,setdiff(igraph::V(g),unique(unlist(x))))
+  as.igraph.edgelist(el, directed=directed, prune=prune, keep.ids=keep.ids, ...)
+}
+
+#' @rdname as.igraph
+#' @export
+as.igraph.edgelist<-function(x, directed=TRUE, prune=TRUE, keep.ids=prune, ...){
+  g=graph.edgelist(x,directed=directed)
+  if(keep.ids) g=set.vertex.attribute(g, 'label', value=igraph::V(g))
+  if(prune) g=delete.vertices(g, setdiff(igraph::V(g), unique(as.vector(unlist(x)))))
   g
 }
 
 #' @rdname as.igraph
 #' @export
 as.igraph.swc<-function(x, directed=TRUE, prune=TRUE, keep.ids=prune, ...){
-  el=EdgeListFromSWC(x)
-  g=graph.edgelist(data.matrix(el),directed=directed)
-  if(keep.ids) g=set.vertex.attribute(g,'label',value=igraph::V(g))
-  if(prune) g=delete.vertices(g,setdiff(igraph::V(g),x$PointNo))
-  g
+  el=data.matrix(EdgeListFromSWC(x))
+  as.igraph.edgelist(el, directed=directed, prune=prune, keep.ids=keep.ids, ...)
 }
 
+#' Make core neuron elements from a block of SWC data
+#'
+#' @param swc Matrix or dataframe of swc format data
+#' @rdname CoreNeuron
+#' @seealso \code{\link{CoreNeuronFromGraph}}
 CoreNeuronFromSWC<-function(swc,origin=NULL){
   g=as.igraph.swc(swc,directed=TRUE)
   CoreNeuronFromGraph(g)
@@ -177,6 +185,7 @@ CoreNeuronFromSWC<-function(swc,origin=NULL){
 #' @return A list with elements:
 #'  (NumPoints,StartPoint,BranchPoints,EndPoints,NumSegs,SegList)
 #' @export
+#' @rdname CoreNeuron
 #' @seealso \code{\link{graph.dfs},\link{RerootNeuron}}
 CoreNeuronFromGraph<-function(g,origin=NULL,dfs=NULL){
   if(is.null(dfs)){
