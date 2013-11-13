@@ -253,7 +253,11 @@ plot3d.neuronlist<-function(nl,subset,col=NULL,colpal=rainbow,...){
 	}
 	rval=mapply(plot3d,nl,col=cols,...)
 	df=attr(nl,'df')
-	if(is.null(df)) df=data.frame(key=names(nl),stringsAsFactors=FALSE)
+	if(is.null(df)) {
+		keys=names(nl)
+		if(is.null(keys)) keys=seq_along(nl)
+		df=data.frame(key=keys,stringsAsFactors=FALSE)
+	}
 	df$col=cols
 	attr(rval,'df')=df
 	invisible(rval)
