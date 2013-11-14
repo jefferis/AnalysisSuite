@@ -34,26 +34,10 @@
 #################
 #ENDMAINCOPYRIGHT
 
-# Started this after listening to Hermann Cuntz' talk
-# at the Hausser lab meeting
-
-# Looks like there is some interesting stuff in the ggm package
-# according to their definitions, the adjacency matrix has
-# (i,j)=1 if there is a connection from i to j
-# while the Edge Matrix has
-# (j,i)=1 if there is a connection from i to j
-# and also has 1s along the diagonal
-
-# the igraph package looks like it may be a more general purpose graph
-# package
-
 require(igraph)
-require(RBGL)
 
 # Adjacency matrix
 AdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
-	#ps=sort(unique(unlist(SegList)))
-	#nps=length(ps)
 	nps=max(unlist(SegList))
 	if(is.na(nps) || nps<1) stop("No valid points in passed SegList")
 	A=matrix(0,ncol=nps,nrow=nps)
@@ -65,10 +49,7 @@ AdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
 			# A(i,j)=1 if i->j
 			A[s[j],s[j+1]]=1
 			if(Undirected) A[s[j+1],s[j]]=1
-			#A[s[j],s[j]]=1
-		}			
-		#c=cbind(s[-length(s)],s[-1])
-		#apply(c,1,function(x) A[x[2],x[1]]=1)
+		}
 	}
 	A
 }
@@ -94,36 +75,226 @@ ReducedAdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
 	A[toKeep,toKeep]
 }
 
-RerootNeuron<-function(ANeuron,root=1){
-  am=AdjacencyMatrixFromSegList(ANeuron$SegList)
-  gam=graph.adjacency(am,'undirected')
-  dgam=dfs(igraph.to.graphNEL(gam),as.character(root))
-  canon_nodeorder=as.integer(dgam$discovered)
-  d=ANeuron$d
-  d$Parent=-1L
-  for(i in seq(nrow(d))){
-    if(i==root) next
-    # nb graph vertices are 0 indexed
-    nbs=neighbors(gam,i)
-    # find neighbor that comes earliest in canon_nodeorder
-    nbcanonpos=sapply(nbs,function(x) which(canon_nodeorder==x))
-    # nb convert back to 1-indexed
-    d$Parent[i]=nbs[which.min(nbcanonpos)]
-  }
-  
-  # sl=CanonicalSegList(ANeuron$SegList,root=root)
-  # ANeuron$SegList=sl
-  ANeuron$d=d
-  # Now that we have recalculated SWC data we should 
-  # use that to recalculate core neuron fields including seglist
-  # FIXME - This makes no sense if root is not == 1 because
-  # ParseSWC assumes root = 1
-  if(root!=1) stop("ParseSWC cannot cope with root!=1")
-  coreneuron=ParseSWC(ANeuron$d)
+#' Reroot a neuron on the given origin using depth first search reordering
+#'
+#' Uses a depth first search on the tree to reorder using the given origin.
+#' NB this does _not_ reorder the vertex ids - it changes the origin and then
+#' changes the parents in SWC data block and SegList accordingly.
+#' @details Either one of origin and dfs must be specified.
+#' @param ANeuron Neuron to be rerooted
+#' @param origin the 1-indexed root vertex id
+#' @param graph.method See method argument of \code{\link{as.igraph.neuron}}
+#' @return A list with elements:
+#'  (NumPoints,StartPoint,BranchPoints,EndPoints,NumSegs,SegList)
+#' @export
+#' @seealso \code{\link{graph.dfs},\link{as.igraph.neuron}}
+RerootNeuron<-function(ANeuron,origin=1,graph.method=c("swc",'seglist')){
+  gam=as.igraph(ANeuron,method=graph.method)
+  # will use a depth first search to reorder tree starting from origin
+  dfs=graph.dfs(gam,root=origin,father=TRUE,neimode='all')
+  coreneuron=CoreNeuronFromGraph(gam,dfs=dfs)
   ANeuron[names(coreneuron)]<-coreneuron
+  # Now fix the SWC data chunk as well
+  ANeuron$d$Parent=dfs$father
+  # SWC says that the root will have parent -1
+  ANeuron$d$Parent[ANeuron$d$Parent==0]=-1L
   ANeuron
 }
 
+#' Construct EdgeList matrix with start and end points from SegList
+#'
+#' @param SegList from a \code{neuron}
+#' @return A 2 column matrix, \code{cbind(starts,ends)}
+#' @export
+EdgeListFromSegList<-function(SegList){
+  lsl=sapply(SegList,length)
+  sl=SegList[lsl>1]
+  lsl=lsl[lsl>1]
+  ends=unlist(lapply(sl,function(x) x[-1]))
+  starts=unlist(lapply(sl,function(x) x[-length(x)]))
+  cbind(starts,ends)
+}
+
+#' Construct an igraph object from a neuron
+#'
+#' @details note that the 'swc' and 'seglist' methods may generate different
+#'  graphs, but these should always be isomorphic and this can be checked by
+#'  using canonical.permutation()
+#' @param x The neuron to be converted
+#' @param directed Whether to produce a directed graph (default TRUE)
+#' @param method Whether to use the seglist or swc data blocks to generate
+#'  the graph.
+#' @param prune Whether to prune the graph of any vertices not contained in
+#'  the input graph (default TRUE)
+#' @param keep.ids Whether to keep the original numeric ids for each vertex
+#' @param ... Additional arguments, currently ignored
+#' @return A matrix, \code{cbind(starts,ends)}
+#' @method as.igraph neuron
+#' @rdname as.igraph
+#' @export
+as.igraph.neuron<-function(x,directed=TRUE,method=c("swc",'seglist'),
+  prune=TRUE, keep.ids=prune, ...){
+  method=match.arg(method,several.ok=TRUE)
+  if('swc'%in%method && !is.null(x$d$Parent) && !is.null(x$d$PointNo)){
+    as.igraph.swc(x$d, directed=directed, prune=prune, keep.ids=keep.ids)
+  } else {
+    as.igraph.seglist(x$SegList, directed=directed, prune=prune, keep.ids=keep.ids)
+  }
+}
+
+#' @rdname as.igraph
+#' @export
+as.igraph.seglist<-function(x, directed=TRUE, prune=TRUE, keep.ids=prune, ...){
+  el=EdgeListFromSegList(x)
+  as.igraph.edgelist(el, directed=directed, prune=prune, keep.ids=keep.ids, ...)
+}
+
+#' @rdname as.igraph
+#' @export
+as.igraph.edgelist<-function(x, directed=TRUE, prune=TRUE, keep.ids=prune, ...){
+  g=graph.edgelist(x,directed=directed)
+  if(keep.ids) g=set.vertex.attribute(g, 'label', value=igraph::V(g))
+  if(prune) g=delete.vertices(g, setdiff(igraph::V(g), unique(as.vector(unlist(x)))))
+  g
+}
+
+#' @rdname as.igraph
+#' @export
+as.igraph.swc<-function(x, directed=TRUE, prune=TRUE, keep.ids=prune, ...){
+  el=data.matrix(EdgeListFromSWC(x))
+  as.igraph.edgelist(el, directed=directed, prune=prune, keep.ids=keep.ids, ...)
+}
+
+#' Make core neuron elements from a block of SWC data
+#'
+#' @param swc Matrix or dataframe of swc format data
+#' @rdname CoreNeuron
+#' @seealso \code{\link{CoreNeuronFromGraph}}
+CoreNeuronFromSWC<-function(swc,origin=NULL){
+  g=as.igraph.swc(swc,directed=TRUE)
+  CoreNeuronFromGraph(g)
+}
+
+#' Construct SegList (+ other core fields) from graph of all nodes and origin
+#'
+#' Uses a depth first search on the tree to reorder using the given origin.
+#' @details Either one of origin and dfs must be specified.
+#' @param g An igraph
+#' @param origin the 1-indexed root vertex id
+#' @param dfs result of graph.dfs
+#' @return A list with elements:
+#'  (NumPoints,StartPoint,BranchPoints,EndPoints,NumSegs,SegList)
+#' @export
+#' @rdname CoreNeuron
+#' @seealso \code{\link{graph.dfs},\link{RerootNeuron}}
+CoreNeuronFromGraph<-function(g,origin=NULL,dfs=NULL){
+  if(is.null(dfs)){
+    if(is.null(origin)) {
+      # if we haven't specified an origin, then we can infer this for a
+      # directed graph.
+      if(is.directed(g)){
+        origin=rootpoints(g)
+        if(length(origin)>1){
+          warning("Graph has multiple origins. Using first")
+          origin=origin[1]
+        }
+      }
+      else stop("Must specify at least one of dfs or origin")
+    }
+    if(origin<1 || origin>vcount(g)) stop("invalid origin:",origin)
+    dfs=graph.dfs(g,root=origin,father=TRUE,neimode='all')
+  } else {
+    # dfs seems to have origin 0-indexed (but everything else 1-indexed)
+    if(is.null(origin)) origin=dfs$root+1
+    else {
+      # check that the origin we were given matches dfs
+      stop("origin specified in dfs: ",dfs$root+1,
+        ' does not match that on command line: ',origin)
+    }
+  }
+  ncount=igraph::degree(g)
+  # put the first vertex into the first segment
+  curseg=dfs$order[1]
+  if(length(ncount)==1) sl=list(curseg)
+  else {
+    sl=list()
+    # we have more than 1 point in graph and some work to do!
+    for(i in seq.int(from=2,to=length(dfs$order))){
+      curpoint=dfs$order[i]
+      if(length(curseg)==0){
+        # segment start, so initialise with parent
+        curseg=dfs$father[curpoint]
+      }
+      # always add current point
+      curseg=c(curseg,curpoint)
+      # now check if we need to close the segment
+      if(ncount[curpoint]!=2){
+        # branch or end point
+        sl[[length(sl)+1]]=curseg
+        curseg=integer(0)
+      }
+    }
+  }
+  list(NumPoints=length(ncount),
+  StartPoint=origin,
+  BranchPoints=seq.int(length.out=length(ncount))[ncount>2],
+  EndPoints=seq.int(length.out=length(ncount))[ncount==1],
+  NumSegs=length(sl),
+  SegList=sl)
+}
+
+#' Return the root or branch points of a neuron or graph
+#'
+#' A neuron may have multiple subtrees and therefore multiple roots
+#' @rdname rootpoints
+rootpoints<-function (x, ...)
+UseMethod("rootpoints")
+
+#' @rdname rootpoints
+rootpoints.neuron<-function(x, ...){
+  if(x$nTrees>1) sapply(x$SubTrees, function(y) y[[1]][1])
+  else x$StartPoint
+}
+
+#' @rdname rootpoints
+rootpoints.igraph<-function(x, original.ids=TRUE, ...){
+  if(is.directed(x)){ 
+    # root points are those without incoming edges
+    vertex_ids=igraph::V(x)[igraph::degree(x,mode='in')==0]
+    if(!original.ids) return(vertex_ids)
+    vertex_names=get.vertex.attribute(x,'label',index=vertex_ids)
+    if(!is.null(vertex_names)) vertex_names else vertex_ids
+  } else {
+    stop("Cannot establish root points for undirected graph")
+  }
+}
+
+#' Return the branchpoints of a neuron or graph
+#' @param x neuron or graph
+#' @param ... Additional parameters
+#' @export
+#' @rdname rootpoints
+#' @alias branchpoints
+branchpoints<-function (x, ...)
+UseMethod("branchpoints")
+
+#' @rdname rootpoints
+#' @detail returns a list if more than one subtree is specified
+branchpoints.neuron<-function(x, subtrees=1, ...){
+  if(isTRUE(subtrees==1)) x$BranchPoints
+  else if(any(subtrees>x$nTrees)) stop("neuron only has ",x$nTrees," subtrees")
+  else lapply(x$SubTrees[subtrees],
+    function(x) branchpoints(as.igraph.seglist(x)))
+}
+
+#' @rdname rootpoints
+#' @param original.ids Whether to return original point ids when available
+branchpoints.igraph<-function(x, original.ids=TRUE, ...){
+  vertex_ids=igraph::V(x)[igraph::degree(x)>2]
+  if(!original.ids) return(vertex_ids)
+  vertex_names=get.vertex.attribute(x,'label',index=vertex_ids)
+  if(!is.null(vertex_names)) vertex_names else vertex_ids
+}
 
 AdjacencyMatrixFromEdgeList<-function(EdgeList,Undirected=FALSE){
 	# this makes an adjacency matrix from an edge list
@@ -238,65 +409,8 @@ FindSubTreesFromEdgeList<-function(Nb){
 	return(NbTrees)
 }
 
-# FindRootedSubTree<-function(Nb,root){
-# 	Points=unique(Nb$CurPoint)
-# 	BranchPoints=as.numeric(names(which(table(Nb$CurPoint)>2)))
-# 	VisitedBranchPoints=NULL
-# 	EndPoints=as.numeric(names(which(table(Nb$CurPoint)==1)))
-# 	
-# 	SegList=list()
-# 	parseSeg=function(headPoint){
-# 		curParent=headPoint
-# 		splitPoint=0
-# 		curPoint=curParent
-# 		while(nrow(Nb)>0){
-# 			possPoints=Nb$Neighbour[Nb$CurPoint==curPoint]
-# 			# Pick the smallest point that is >0 (will use -1)
-# 			nextPoint=min(PossPoints[PossPoints>0])
-# 			Nb[Nb$CurPoint==nextPoint,]=-1
-# 			if(any(BranchPoints==thisPoint)){
-# 				#is this a new branch point?
-# 				if(all(VisitedBranchPoints!=nextPoint)){
-# 					VisitedBranchPoints=c(VisitedBranchPoints,nextPoint)
-# 					splitPoint=curParent
-# 					SegList=list(SegList,curParent)
-# 					curPoint=nextPoint
-# 					# parse the first seg
-# 					rval=parseSeg(curParent)
-# 					while(rval!=0){
-# 						# parse subsequent segs
-# 						rval=parseSeg(splitPoint)
-# 					}
-# 				} else {
-# 					# a split
-# 					return(curParent)
-# 				}
-# 			}  # not a fork
-# 			else if(any(EndPoints==nextPoint)){
-# 				return(0)
-# 		}
-# 		
-# 			
-	
-	
-
-SWCFromAdjacencyAndVertices<-function(A,d){
-	# A has cols and rows corresponding to points in d
-	colnames(A)=seq(ncol(A))
-	rownames(A)=seq(nrow(A))
-	# leftmost col
-	# Pick first element
-	# cross off that element
-	# and its reciprocal
-	# Branch
-}
-
-# A=rbind(c(0,0,0,0),c(1,0,0,0),c(0,1,0,0),c(0,1,0,0))
-
-
 AmiraDataFromSWC<-function(d){
-	el=subset(d,Parent!=-1,sel=c(Parent,PointNo))
-	el=DoubleFromSingleEdgeList(el)
+	el=DoubleEdgeListFromSWC(d)
 	Origin=subset(d,Parent==-1)$CurPoint
 	list(PointList=d,EdgeList=el,Origin=Origin)
 }
@@ -305,13 +419,17 @@ EdgeListFromNeuron<-function(n){
 	EdgeListFromSWC(n$d)
 }
 
-EdgeListFromSWC<-function(d){
-	el=subset(d,Parent!=-1,sel=c(Parent,PointNo))
-	DoubleFromSingleEdgeList(el)
+DoubleEdgeListFromNeuron<-function(n){
+	DoubleFromSingleEdgeList(EdgeListFromNeuron(n))
 }
 
-CoreNeuronFromAmiraData<-function(l){
-	
+EdgeListFromSWC<-function(d){
+	subset(d,Parent!=-1,sel=c(Parent,PointNo))
+}
+
+DoubleEdgeListFromSWC<-function(d){
+  el=EdgeListFromSWC(d)
+  DoubleFromSingleEdgeList(el)
 }
 
 DoubleFromSingleEdgeList<-function(el){
@@ -330,6 +448,8 @@ SingleFromDoubleEdgeList<-function(el){
 }
 
 Neuron2Graph<-function(x){
+	.Deprecated("as.igraph.neuron",
+	  'Deprecated, due to use of dense adjacency matrix')
 	# returns an igraph graph object
 	require(igraph)
 	am=AdjacencyMatrixFromSegList(x$SegList)
@@ -337,17 +457,11 @@ Neuron2Graph<-function(x){
 }
 
 GetShortestPath.Neuron<-function(x,from,to){
-	# nb igraph is 0 indexed
-	g=Neuron2Graph(x)
-	p=get.shortest.paths(g,from=from-1,to=to-1)
+	# nb igraph is 1-indexed
+	g=as.igraph(x)
+	p=get.shortest.paths(g,from=from,to=to)
 	if(length(p)!=1) stop("Unable to find unique shortest path between those points")
-	p[[1]]+1
-}
-
-GetShortestPath.Neuron.ggm<-function(x,from,to){
-	# just for checking
-	require(ggm)
-	p=findPath(am,from,to)
+	p[[1]]
 }
 
 GetSubNeuron<-function(x,seglist=NULL,from,to){

@@ -32,6 +32,28 @@ testn3=SWC2Neuron(data.frame(
   Parent=c(-1,1:3,3,5))
   ,'test')
 
+test.as.igraph<-function(){
+  g1=as.igraph(testn)
+  g2=as.igraph(testn2)
+  g3=as.igraph(testn3)
+  checkEquals(g2,g3)
+  
+  g1s=as.igraph(testn,method='seglist')
+  g2s=as.igraph(testn2,method='seglist')
+  g3s=as.igraph(testn3,method='seglist')
+  checkEquals(g2s,g3s)
+  
+  checkTrue(graph.isomorphic(g1,g2))
+  checkTrue(graph.isomorphic(g1s,g1))
+  checkTrue(graph.isomorphic(g2s,g2))
+  
+  # check equivalence of 2 methods for a more complicated graph
+  am3da=read.neuron(file.path(TestDir,"Data","neurons","testneuron_am3d_ascii.am"))
+  g2<-as.igraph(am3da,meth='swc')
+  g2s<-as.igraph(am3da,meth='seglist')
+  checkTrue(graph.isomorphic(g2s,g2))
+}
+
 testSWC2Neuron<-function(){
   checkEquals(testn$NumSegs,3)
   checkEquals(testn$NumPoints,6)
@@ -52,8 +74,21 @@ testRerootNeuron<-function(){
   identicalFields=c('NumSegs','NumPoints','EndPoints','BranchPoints')
   checkTrue(is.neuron(rn))
   checkEquals(rn[identicalFields],testn[identicalFields])
-  checkEquals(testn$StartPoint,1)
-  checkEquals(testn$d$Parent,c(-1, 1, 2, 3, 4, 3))
-  rn=RerootNeuron(testn,2)
+  checkEquals(rn$StartPoint,1)
+  checkEquals(rn$d$Parent,c(-1, 1, 2, 3, 4, 3))
+
+  rn=RerootNeuron(testn,origin=2)
   checkEquals(rn$StartPoint,2)
+  checkEquals(rn$d$Parent,c(2, -1, 2, 3, 4, 3))
+  
+  checkEquals(RerootNeuron(testn,origin=3)$d$Parent,c(2, 3, -1, 3, 4, 3))
+  checkEquals(RerootNeuron(testn,origin=4)$d$Parent,c(2, 3, 4, -1, 4, 3))
+  checkEquals(RerootNeuron(testn,origin=5)$d$Parent,c(2, 3, 4, 5, -1, 3))
+  checkEquals(RerootNeuron(testn,origin=6)$d$Parent,c(2, 3, 6, 3, 4, -1))
+}
+
+test.CoreNeuronFromGraph<-function(){
+  g<-as.igraph(testn)
+  cn=CoreNeuronFromGraph(g,1)
+  checkEquals(testn$SegList,cn$SegList)
 }

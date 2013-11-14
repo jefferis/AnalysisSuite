@@ -59,7 +59,6 @@ local({
   }
   message("Installing required packages")
   install_or_update_cran_package(c("rgl",'RANN','igraph'))
-  install_bioc('RBGL')
   startup=file.path(installpath,'R','Code','Startup.R')
   set_option(startup)
   add_path_to_rprofile(startup)
