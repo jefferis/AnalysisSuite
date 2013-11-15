@@ -192,7 +192,7 @@ with.neuronlist<-function(data,expr,...) {
 #' plot3d(jkn,col=sex,colpal=c(male='green',female='magenta'))
 #' plot3d(jkn,col=cut(cVA2,20),colpal=jet.colors)
 #' }
-plot3d.neuronlist<-function(nl,subset,col=NULL,colpal=rainbow,...){
+plot3d.neuronlist<-function(nl,subset,col=NULL,colpal=rainbow,skipRedraw=200,...){
 	if(!is.neuronlist(nl)){
 		subset=nl
 		nl=MyNeurons
@@ -250,6 +250,12 @@ plot3d.neuronlist<-function(nl,subset,col=NULL,colpal=rainbow,...){
 			}
 		}
 		else stop("Cannot evaluate col")
+	}
+	# Speed up drawing when there are lots of neurons
+	if(is.numeric(skipRedraw)) skipRedraw=ifelse(length(nl)>skipRedraw,TRUE,FALSE)
+	if(is.logical(skipRedraw)) {
+		op=par3d(skipRedraw=skipRedraw)
+		on.exit(par3d(op))
 	}
 	rval=mapply(plot3d,nl,col=cols,...)
 	df=attr(nl,'df')
