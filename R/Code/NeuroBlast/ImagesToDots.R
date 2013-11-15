@@ -66,7 +66,7 @@ xyzmatrix.default<-function(x,y=NULL,z=NULL,Transpose=FALSE,...) {
 `xyzmatrix<-.default`<-function(n, value, ...){
   if(is.neuron(n)) n$d[,c("X","Y","Z")]=value
   else if(is.dotprops(n)) n$points[,c("X","Y","Z")]=value
-  else if(c("X","Y","Z") %in% colnames(n)) n[,c("X","Y","Z")]=value
+  else if(all(c("X","Y","Z") %in% colnames(n))) n[,c("X","Y","Z")]=value
   else stop("Not a neuron or dotprops object or a matrix-like object with XYZ volnames")
   n
 }
