@@ -98,6 +98,11 @@ test.rootpoints<-function(){
   testd=data.frame(PointNo=1:6,Label=2,
                    X=c(1:5,3),Y=c(rep(1,5),2),Z=0,W=NA,
                    Parent=c(-1,1:4,-1))
-  testn.2roots=SWC2Neuron(testd,'test')
-  as.igraph.neuron()
+  testn.floating=SWC2Neuron(testd,'test')
+  checkEquals(rootpoints(testn.floating),1)
+  testd2=rbind(testd,c(7,2,1,1,0,NA,6))
+  testn.2trees=SWC2Neuron(testd2,'test')
+  # check that we get two roots when there are indeed 2 roots
+  rps=rootpoints(as.igraph(testn.2trees))
+  checkEquals(rps,c(1,6))
 }
