@@ -251,6 +251,9 @@ rootpoints<-function (x, ...)
 UseMethod("rootpoints")
 
 #' @rdname rootpoints
+rootpoints.default<-function(x, ...) rootpoints(as.igraph(x), ...)
+
+#' @rdname rootpoints
 rootpoints.neuron<-function(x, ...){
   if(x$nTrees>1) sapply(x$SubTrees, function(y) y[[1]][1])
   else x$StartPoint
@@ -279,6 +282,9 @@ rootpoints.igraph<-function(x, original.ids=TRUE, ...){
 #' @alias branchpoints
 branchpoints<-function (x, ...)
 UseMethod("branchpoints")
+
+#' @rdname rootpoints
+branchpoints.default<-function(x, ...) branchpoints(as.igraph(x), ...)
 
 #' @rdname rootpoints
 #' @detail returns a list if more than one subtree is specified
