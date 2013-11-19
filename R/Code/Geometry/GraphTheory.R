@@ -259,7 +259,7 @@ rootpoints.default<-function(x, ...) rootpoints(as.igraph(x), ...)
 #' @rdname rootpoints
 #' @export
 rootpoints.neuron<-function(x, ...){
-  if(x$nTrees>1) sapply(x$SubTrees, function(y) y[[1]][1])
+  if(isTRUE(x$nTrees>1)) sapply(x$SubTrees, function(y) y[[1]][1])
   else x$StartPoint
 }
 

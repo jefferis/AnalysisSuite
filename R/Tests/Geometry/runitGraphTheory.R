@@ -92,3 +92,12 @@ test.CoreNeuronFromGraph<-function(){
   cn=CoreNeuronFromGraph(g,1)
   checkEquals(testn$SegList,cn$SegList)
 }
+
+test.rootpoints<-function(){
+  checkEquals(rootpoints(testn),1)
+  testd=data.frame(PointNo=1:6,Label=2,
+                   X=c(1:5,3),Y=c(rep(1,5),2),Z=0,W=NA,
+                   Parent=c(-1,1:4,-1))
+  testn.2roots=SWC2Neuron(testd,'test')
+  as.igraph.neuron()
+}
