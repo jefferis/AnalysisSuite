@@ -246,6 +246,9 @@ CoreNeuronFromGraph<-function(g,origin=NULL,dfs=NULL){
 #' Return the root or branch points of a neuron or graph
 #'
 #' A neuron may have multiple subtrees and therefore multiple roots
+#' @param x Neuron or other object which might have roots
+#' @param ...
+#' @return Integer point number of root/branch point
 #' @rdname rootpoints
 rootpoints<-function (x, ...)
 UseMethod("rootpoints")
@@ -254,12 +257,15 @@ UseMethod("rootpoints")
 rootpoints.default<-function(x, ...) rootpoints(as.igraph(x), ...)
 
 #' @rdname rootpoints
+#' @export
 rootpoints.neuron<-function(x, ...){
   if(x$nTrees>1) sapply(x$SubTrees, function(y) y[[1]][1])
   else x$StartPoint
 }
 
 #' @rdname rootpoints
+#' @param original.ids Keep original numeric ids
+#' @export
 rootpoints.igraph<-function(x, original.ids=TRUE, ...){
   if(!is.directed(x))
     stop("Cannot establish root points for undirected graph")
