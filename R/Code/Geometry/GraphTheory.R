@@ -124,8 +124,8 @@ EdgeListFromSegList<-function(SegList){
 #' @param directed Whether to produce a directed graph (default TRUE)
 #' @param method Whether to use the seglist or swc data blocks to generate
 #'  the graph.
-#' @param prune Whether to prune the graph of any vertices not contained in
-#'  the input graph (default TRUE)
+#' @param prune Whether to prune the graph of any vertices not connected by
+#'  edges in the input graph (default TRUE)
 #' @param keep.ids Whether to keep the original numeric ids for each vertex
 #' @param ... Additional arguments, currently ignored
 #' @return A matrix, \code{cbind(starts,ends)}
