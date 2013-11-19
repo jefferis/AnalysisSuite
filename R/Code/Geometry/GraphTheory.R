@@ -265,13 +265,18 @@ rootpoints.neuron<-function(x, ...){
 
 #' @rdname rootpoints
 #' @param original.ids Keep original numeric ids
+#' @param exclude.isolated Do not count isolated vertices as root points
 #' @export
-rootpoints.igraph<-function(x, original.ids=TRUE, ...){
+rootpoints.igraph<-function(x, original.ids=TRUE, exclude.isolated=TRUE, ...){
   if(!is.directed(x))
     stop("Cannot establish root points for undirected graph")
 
   # root points are those without incoming edges
   vertex_ids=igraph::V(x)[igraph::degree(x,mode='in')==0]
+  if(exclude.isolated) {
+    # only include vertex_ids
+    vertex_ids=vertex_ids[igraph::degree(x,vertex_ids)>0]
+  }
   if(original.ids)
     vertex_names=get.vertex.attribute(x,'label',index=vertex_ids)
   if(original.ids || is.null(vertex_names))
