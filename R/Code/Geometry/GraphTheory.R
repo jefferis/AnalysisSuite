@@ -258,15 +258,17 @@ rootpoints.neuron<-function(x, ...){
 
 #' @rdname rootpoints
 rootpoints.igraph<-function(x, original.ids=TRUE, ...){
-  if(is.directed(x)){ 
-    # root points are those without incoming edges
-    vertex_ids=igraph::V(x)[igraph::degree(x,mode='in')==0]
-    if(!original.ids) return(vertex_ids)
-    vertex_names=get.vertex.attribute(x,'label',index=vertex_ids)
-    if(!is.null(vertex_names)) vertex_names else vertex_ids
-  } else {
+  if(!is.directed(x))
     stop("Cannot establish root points for undirected graph")
-  }
+
+  # root points are those without incoming edges
+  vertex_ids=igraph::V(x)[igraph::degree(x,mode='in')==0]
+  if(original.ids)
+    vertex_names=get.vertex.attribute(x,'label',index=vertex_ids)
+  if(original.ids || is.null(vertex_names))
+    as.integer(vertex_ids)
+  else
+    vertex_names
 }
 
 #' Return the branchpoints of a neuron or graph
@@ -291,9 +293,11 @@ branchpoints.neuron<-function(x, subtrees=1, ...){
 #' @param original.ids Whether to return original point ids when available
 branchpoints.igraph<-function(x, original.ids=TRUE, ...){
   vertex_ids=igraph::V(x)[igraph::degree(x)>2]
-  if(!original.ids) return(vertex_ids)
-  vertex_names=get.vertex.attribute(x,'label',index=vertex_ids)
-  if(!is.null(vertex_names)) vertex_names else vertex_ids
+  if(original.ids)
+    vertex_names=get.vertex.attribute(x,'label',index=vertex_ids)
+  if(original.ids || is.null(vertex_names))
+    as.integer(vertex_ids)
+  else vertex_names
 }
 
 AdjacencyMatrixFromEdgeList<-function(EdgeList,Undirected=FALSE){
