@@ -164,7 +164,8 @@ DirectPotentialSynapses<-function(a,b,s=2,maxlineseglength=0.5,returnDistanceLis
 			 & segs[,3]<=upperRange[3] & segs[,1]>=lowerRange[1]
 			 & segs[,2]>=lowerRange[2] & segs[,3]>=lowerRange[3],] )
 	}
-	selectedBSegs=apply(a,1,segswithin,b,maxlineseglength*2+s*2)
+# 	selectedBSegs=apply(a,1,segswithin,b,maxlineseglength*2+s*2)
+    selectedBSegs=lapply(seq.int(nrow(a)),function(i) segswithin(a[i,],b,maxlineseglength*2+s*2))
 	# This is redundant of course, but ...
 	# selectedBSegs=apply(b,1,segswithin,a,maxlineseglength*2+s*2)
 	if(length(selectedBSegs)==0)
@@ -172,6 +173,7 @@ DirectPotentialSynapses<-function(a,b,s=2,maxlineseglength=0.5,returnDistanceLis
 	# This part could fairly easily be rewritten with a sparse matrix
 	# rather than a list (which should be 
 	distances=list()
+  if(is.null(rownames(a))) rownames(a)=seq.int(nrow(a))
 	for(i in 1:nrow(a)){
         #cat("i =",i,"  ")
 		if(is.matrix(selectedBSegs[[i]]) && nrow(selectedBSegs[[i]])>0){
