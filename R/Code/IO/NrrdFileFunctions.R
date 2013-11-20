@@ -123,6 +123,20 @@ NrrdDataFiles<-function(nhdr,ReturnAbsPath=TRUE){
 	return(NULL)
 }
 
+#' Read nrrd file into 3d array in memory
+#' 
+#' @details ReadByteAsRaw=unsigned (the default) only reads unsigned byte data
+#'   as a raw array. This saves quite a bit of space and still allows data to be
+#'   used for logical indexing.
+#' @param filename Path to a 3D nrrd
+#' @param Verbose Show data length (default FALSE)
+#' @param ReadData When FALSE just return attributes (e.g. voxel size)
+#' @param AttachFullHeader Include the full nrrd header as an attribute of the
+#'   returned object (default FALSE)
+#' @param ReadByteAsRaw Read 8 bit data as an R raw object rather than integer
+#' @param origin Add a user specified origin (x,y,z) to the returned object
+#' @return a 3D data array with attributes compatible with gjdens objects
+#' @export
 Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,ReadData=TRUE,AttachFullHeader=!ReadData,
 	ReadByteAsRaw=c("unsigned","all","none"),origin){
 	ReadByteAsRaw=match.arg(ReadByteAsRaw)
