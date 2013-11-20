@@ -212,6 +212,8 @@ CoreNeuronFromGraph<-function(g,origin=NULL,dfs=NULL){
         ' does not match that on command line: ',origin)
     }
   }
+  # FIXME: teach this to cope with multiple clusters in input graph
+  # FIXME: Drop isolated vertices
   ncount=igraph::degree(g)
   # put the first vertex into the first segment
   curseg=dfs$order[1]
