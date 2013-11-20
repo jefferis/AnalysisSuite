@@ -119,3 +119,23 @@ test.NrrdMakeDetachedHeaderForNrrd<-function(){
       "Check absolute path for detached header not next to data file")
   
 }
+
+test.is.nrrd<-function(){
+  tmpdir=tempfile()
+  dir.create(tmpdir)
+  on.exit(unlink(tmpdir,recursive=TRUE))
+  
+  origlhmaskfile=file.path(TestDir,"Data","LHMask.nrrd")
+  lhmaskfile=file.path(tmpdir,sub("\\.nrrd$",'.something',basename(origlhmaskfile)))
+  file.copy(origlhmaskfile,lhmaskfile)
+
+  checkTrue(is.nrrd(origlhmaskfile))
+  checkTrue(is.nrrd(origlhmaskfile,TrustSuffix=TRUE))
+  checkException(is.nrrd(origlhmaskfile,ReturnVersion=TRUE,TrustSuffix=TRUE),
+                msg="Check error when asking for nrrd version using suffix",
+                silent=TRUE)
+  checkEqualsNumeric(is.nrrd(origlhmaskfile,ReturnVersion=TRUE),4)
+  
+  checkTrue(is.nrrd(lhmaskfile),msg='Can identify nrrd with funny suffix')
+  checkEquals(is.nrrd(lhmaskfile,TrustSuffix=TRUE),FALSE)
+}

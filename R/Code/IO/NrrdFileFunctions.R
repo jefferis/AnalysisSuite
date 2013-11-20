@@ -617,7 +617,7 @@ is.nrrd<-function(f,ReturnVersion=FALSE,TrustSuffix=FALSE){
 		stop("Cannot use return nrrd version without reading file to check nrrd magic")
 
 	if(TrustSuffix)
-		return(grepl("\\.n(hdr|rrd)$",ff,ignore.case=TRUE))
+		return(grepl("\\.n(hdr|rrd)$",f,ignore.case=TRUE))
 	
 	if(length(f)>1)
 		return(sapply(f,is.nrrd,ReturnVersion=ReturnVersion))
