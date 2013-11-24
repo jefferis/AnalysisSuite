@@ -311,7 +311,7 @@ ReadIGSLandmarks<-function(...){
 #' @seealso \code{\link{ComposeAffineFromIGSParams}}
 AmiraRegFromCMTK<-function(cmtkreg,Transpose=TRUE,Invert=FALSE,Overwrite=TRUE,
 	amiraregfile='hxtransform'){
-	aff=HomogenousAffineFromCMTK(cmtkreg)
+	aff=cmtk.dof2mat(cmtkreg)
 	if(Invert) aff=solve(aff)
 	if(Transpose) aff=t(aff)
 	
@@ -359,16 +359,17 @@ CMTKRegFromAmira<-function(amirareg,cmtkregfolder=NULL,Transpose=TRUE,Invert=FAL
 	cmtkregpath
 }
 
-#' Read a CMTK registration and convert it to homogeneous affine matrix
+#' Convert CMTK registration parameters into homogeneous affine matrix
 #' 
+#' @param params 5 x 3 matrix of CMTK registration parameters
 #' Note that this matrix will have the 4th row 0 0 0 1
-HomogenousAffineFromCMTK<-function(cmtkregfolder){
-	cmd="dof2mat"
-	cmd=paste(cmd,shQuote(cmtkregfolder))
-	rval=system(cmd,intern=TRUE)
-	numbers=as.numeric(unlist(strsplit(rval,"\t")))
-	mat=matrix(numbers,ncol=4)
-	mat
+HomogenousAffineFromCMTKParams<-function(params){
+  tf<-tempfile(fileext='.list')
+  on.exit(unlink(tf,recursive=TRUE))
+  WriteIGSRegistrationFolder(params,foldername=tf)
+  cmtk.dof2mat(tf,Transpose=TRUE)
+}
+
 #' Read CMTK registration with dof2mat and convert to homogeneous affine matrix
 #' 
 #' @details Transpose is true by default since this results in the orientation
