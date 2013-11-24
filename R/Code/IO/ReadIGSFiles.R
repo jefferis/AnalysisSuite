@@ -369,4 +369,48 @@ HomogenousAffineFromCMTK<-function(cmtkregfolder){
 	numbers=as.numeric(unlist(strsplit(rval,"\t")))
 	mat=matrix(numbers,ncol=4)
 	mat
+#' Read CMTK registration with dof2mat and convert to homogeneous affine matrix
+#' 
+#' @details Transpose is true by default since this results in the orientation
+#'   of cmtk output files matching the orientation in R.
+#' @param reg Path to input registration file
+#' @param Transpose ouput matrix so that form on disk matches R's convention
+cmtk.dof2mat<-function(reg,Transpose=TRUE){
+  cmd="dof2mat"
+  if(Transpose) cmd=paste(cmd,'--transpose')
+  cmd=paste(cmd,shQuote(reg))
+  rval=system(cmd,intern=TRUE)
+  numbers=as.numeric(unlist(strsplit(rval,"\t")))
+  mat=matrix(numbers,ncol=4,byrow=TRUE)
+}
+
+#' Use CMTK mat2dof to convert homogeneous affine matrix into CMTK registration
+#' 
+#' @details If no output file is supplied, 5x3 params matrix will be returned 
+#'   directly. Otherwise a logical will be returned indicating success or 
+#'   failure at writing to disk.
+#' @details Transpose is true by default since this results in an R matrix with 
+#'   the transpose in the fourth column being correctly interpreted by cmtk.
+#' @param m Homogenous affine matrix (4x4) last row 0 0 0 1 etc
+#' @param f Output file (optional)
+#' @param Transpose the input matrix so that it is read in as it appears on disk
+#' @return 5x3 matrix of CMTK registration parameters or logical
+cmtk.mat2dof<-function(m, f=NULL, Transpose=TRUE){
+  if(!is.matrix(m) || nrow(m)!=4 || ncol(m)!=4) stop("Please give me a homogeneous affine matrix (4x4)")
+  inf=tempfile()
+  on.exit(unlink(inf),add=TRUE)
+  
+  write.table(m, file=inf, sep='\t', row.names=F, col.names=F)
+  # always transpose because mat2dof appears to read the matrix with last column being 0 0 0 1
+  cmd="mat2dof"
+  if(Transpose) paste(cmd,'--transpose')
+  if(is.null(f)){
+    cmd=paste(cmd,sep="<",shQuote(inf))
+    params=read.table(text=system(cmd,intern=T),sep='\t',comment.char="")[,2]
+    if(length(params)!=15) stop("Trouble reading mat2dof response")
+    return(matrix(params,ncol=3,byrow=TRUE))
+  } else {
+    cmd=paste(cmd,'--list',shQuote(f),"<",shQuote(inf))
+    return(system(cmd)==0)
+  }
 }
