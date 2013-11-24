@@ -222,8 +222,8 @@ IGSParamsToIGSRegistration<-function(x,reference="dummy",model="dummy"){
 	# This could now be written out wiith WriteIGSTypedStream
 	affine_xform=unlist(apply(x,1,list),rec=F)
 	names(affine_xform)=c("xlate","rotate","scale","shear","center")
-	
-	
+	warning("Use of model_study entry in CMTK registrations is deprecated.",
+	        " See CMTKParamsToCMTKRegistration")
 	l=list(registration=list(reference_study=reference,
 						model_study=model,
 						affine_xform=affine_xform))
@@ -232,10 +232,92 @@ IGSParamsToIGSRegistration<-function(x,reference="dummy",model="dummy"){
 	l
 }
 
+#' Produce in-memory list representation from CMTK affine parameters
+#' 
+#' @details Note that this uses the modern CMTK notation of floating_study 
+#'   rather than model_study as used by IGSParamsToIGSRegistration (which 
+#'   results in an implicit inversion by CMTK tools).
+#' @details Note that the reference and floating fields have no impact on the 
+#'   transformation encoded in the resultant .list folder and can be overridden 
+#'   on the command line of CMTK tools.
+#' @param x 5x3 matrix of CMTK registration parameters
+#' @param reference,floating Path to refererence and floating images.
+#' @return list of registration parameters suitable for 
+#'   \code{\link{WriteIGSRegistration}}
+#' @export
+CMTKParamsToCMTKRegistration<-function(x,reference="dummy",floating="dummy"){
+  affine_xform=unlist(apply(x,1,list),rec=F)
+  names(affine_xform)=c("xlate","rotate","scale","shear","center")
+  
+  l=list(registration=list(reference_study=reference,
+                           floating_study=floating,
+                           affine_xform=affine_xform))
+  attr(l$registration$reference_study,"quoted")=TRUE
+  attr(l$registration$floating_study,"quoted")=TRUE
+  l
+}
+
+#' Convert homogeneous affine registration to CMTK registration list
+#' 
+#' @details Note that this uses the modern CMTK notation of a "floating" image 
+#'   rather than model.
+#' @param x 4x4 homogeneous affine matrix
+#' @param centre Optional centre of rotation
+#' @param reference, floating Optional paths to reference and floating images
+#' @return list of CMTK registration parameters
+#' @seealso
+#'   \code{\link{CMTKParamsToCMTKRegistration},\link{WriteIGSRegistrationFolder}}
+#' @export
+AffineToCMTKRegistration<-function(x,centre,reference,floating){
+  if(!missing(centre)) d=DecomposeAffineToIGSParams(x,centre=centre)
+  else d=DecomposeAffineToIGSParams(x)
+  IGSParamsToIGSRegistration(d,reference=reference,floating=floating)
+}
+
 AffineToIGSRegistration<-function(x,centre,reference,model){
+  warning("Use of model_study entry in CMTK registrations is deprecated.",
+          " See AffineToCMTKRegistration")
 	if(!missing(centre)) d=DecomposeAffineToIGSParams(x,centre=centre)
 	else d=DecomposeAffineToIGSParams(x)
 	IGSParamsToIGSRegistration(d,reference=reference,model=model)
+}
+
+#' Write out CMTK registration to folder
+#' 
+#' @details Note that transformation in the forward direction (i.e. sample->ref)
+#' e.g. as calculated from a set of landmarks where set 1 is the sample
+#' is considered an inverse transformation by the IGS software.
+#' So in order to use such a transformation as an initial affine with
+#' the registration command the switch --initial-inverse must be used
+#' specifying the folder name created by this function.
+#' @param reglist List specifying CMTK registration parameters
+#' @param foldername Path to registration folder (usually ending in .list)
+#' @return
+write.cmtkreg<-function(reglist,foldername){
+  # Makes a registration folder that could be used as the input to the
+  # registration command or warp
+  # A transformation in the forward direction (i.e. sample->ref)
+  # e.g. as calculated from a set of landmarks where set 1 is the sample
+  # is considered an inverse transformation by the IGS software.
+  # So in order to use such a transformation as an initial affine with
+  # the registration command the switch --initial-inverse must be used
+  # specifying the folder name created by this function.
+  dir.create(foldername,showWarnings=FALSE,recursive=TRUE)
+  if(!is.list(reglist)) reglist=CMTKParamsToCMTKRegistration(reglist)
+  WriteIGSTypedStream(reglist,file.path(foldername,"registration"))
+  
+  studysublist= list(studyname=reglist$registration$reference_study)
+  attr(studysublist$studyname,"quoted")=TRUE
+  studysublist2= studysublist
+  if ('model_study' %in% names(reglist$registration)) {
+    studysublist2$studyname=reglist$registration$model_study
+  } else {
+    studysublist2$studyname=reglist$registration$floating_study
+  }
+  studylist=list(studylist=list(num_sources=2),
+                 source= studysublist,source=studysublist2)
+  
+  WriteIGSTypedStream(studylist, file.path(foldername,"studylist"))		
 }
 
 WriteIGSRegistrationFolder<-function(reglist,foldername){
@@ -247,6 +329,7 @@ WriteIGSRegistrationFolder<-function(reglist,foldername){
 	# So in order to use such a transformation as an initial affine with
 	# the registration command the switch --initial-inverse must be used
 	# specifying the folder name created by this function.
+  warning("WriteIGSRegistrationFolder is deprecated in favour of write.cmtkreg")
 	dir.create(foldername,showWarnings=FALSE,recursive=TRUE)
 	if(!is.list(reglist)) reglist=IGSParamsToIGSRegistration(reglist)
 	WriteIGSTypedStream(reglist,file.path(foldername,"registration"))
@@ -366,7 +449,7 @@ CMTKRegFromAmira<-function(amirareg,cmtkregfolder=NULL,Transpose=TRUE,Invert=FAL
 HomogenousAffineFromCMTKParams<-function(params){
   tf<-tempfile(fileext='.list')
   on.exit(unlink(tf,recursive=TRUE))
-  WriteIGSRegistrationFolder(params,foldername=tf)
+  write.cmtkreg(params,foldername=tf)
   cmtk.dof2mat(tf,Transpose=TRUE)
 }
 
