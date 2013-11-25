@@ -465,7 +465,7 @@ cmtk.dof2mat<-function(reg,Transpose=TRUE){
   cmd=paste(cmd,shQuote(reg))
   rval=system(cmd,intern=TRUE)
   numbers=as.numeric(unlist(strsplit(rval,"\t")))
-  mat=matrix(numbers,ncol=4,byrow=TRUE)
+  matrix(numbers,ncol=4,byrow=TRUE)
 }
 
 #' Use CMTK mat2dof to convert homogeneous affine matrix into CMTK registration
