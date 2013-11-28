@@ -1507,7 +1507,7 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	return(d)
 }
 
-DecodeHxZip<-function(file,offset,uncompressedLength,compressedLength=NA,method=c('java','baseR'),...){
+DecodeHxZip<-function(file,offset,uncompressedLength,compressedLength=NA,method=c('baseR','java'),...){
   method=match.arg(method)
   if(method=='java'){
     JavaDir<-file.path(RootDir,"java")
