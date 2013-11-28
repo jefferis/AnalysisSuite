@@ -107,7 +107,7 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
 				x=as.integer(d)
 			} else {
 				if(df$RType[i]=="integer") whatval=integer(0) else whatval=numeric(0)
-				x=readBin(con,df$SimpleDataLength[i],size=df$Size[i],what=whatval,signed=df$Signed[i],endian=endian)				
+				x=readBin(con,df$SimpleDataLength[i],size=df$Size[i],what=whatval,signed=df$Signed[i],endian=endian)
 			}
 			# note that first dim is moving fastest
 			dims=unlist(df$Dims[i])
@@ -1476,7 +1476,7 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 			d=as.integer(d)
 		} else if(dataEncoding == "HXZIP"){
 			d=DecodeHxZip(filename,seek(fc),
-				uncompressedLength=dataLength,
+				uncompressedLength=dataLength, compressedLength=compressedLength,
 				what=dataTypes$what[i],size=dataTypes$size[i],
 				signed=dataTypes$signed[i],endian=endian)
 		} else if(dataEncoding==""){
@@ -1507,27 +1507,42 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	return(d)
 }
 
-DecodeHxZip<-function(file,offset,uncompressedLength,...){
-	JavaDir<-file.path(RootDir,"java")
-	if(!file.exists(file.path(JavaDir,"ReadHxZipdata.class"))) stop("Can't find ReadHxZipdata program")
-	tmp=tempfile()
-	system(paste("cd",shQuote(JavaDir),";",
-		"java ReadHxZipdata",shQuote(file),offset,uncompressedLength,shQuote(tmp)))
-	
-	d=readBin(tmp,n=uncompressedLength,...)
-	unlink(tmp)
+DecodeHxZip<-function(file,offset,uncompressedLength,compressedLength=NA,method=c('java','baseR'),...){
+  method=match.arg(method)
+  if(method=='java'){
+    JavaDir<-file.path(RootDir,"java")
+    if(!file.exists(file.path(JavaDir,"ReadHxZipdata.class"))) stop("Can't find ReadHxZipdata program")
+    tmp=tempfile()
+    on.exit(unlink(tmp))
+    system(paste("cd",shQuote(JavaDir),";",
+                 "java ReadHxZipdata",shQuote(file),offset,uncompressedLength,shQuote(tmp)))
+  } else {
+    if(is.na(compressedLength)) stop("Cannot use baseR decompression wiithout specifying compressedLength")
+    con=file(file,open='rb')
+    on.exit(close(con))
+    seek(con,where=offset)
+    zlib_data=readBin(con,what=raw(),n=compressedLength)
+    tmp=memDecompress(zlib_data,type='gzip')
+  }
+  d=readBin(tmp,n=uncompressedLength,...)
 	d
 }
 
-EncodeHxZip<-function(datafile){
-	JavaDir<-file.path(RootDir,"java")
-	if(!file.exists(file.path(JavaDir,"WriteHxZipdata.class"))) stop("Can't find WriteHxZipdata program")
-	tmpzip=tempfile()
-	system(paste("cd",shQuote(JavaDir),";",
-		"java WriteHxZipdata",shQuote(datafile),shQuote(tmpzip)))
-	
-	d=readBin(tmpzip,n=file.info(tmpzip)$size,what='raw')
-	unlink(tmpzip)
+EncodeHxZip<-function(datafile,method=c('baseR','java')){
+  method=match.arg(method)
+  if(method=='java'){
+    JavaDir<-file.path(RootDir,"java")
+    if(!file.exists(file.path(JavaDir,"WriteHxZipdata.class"))) stop("Can't find WriteHxZipdata program")
+    tmpzip=tempfile()
+    system(paste("cd",shQuote(JavaDir),";",
+                 "java WriteHxZipdata",shQuote(datafile),shQuote(tmpzip)))
+    
+    d=readBin(tmpzip,n=file.info(tmpzip)$size,what='raw')
+    unlink(tmpzip)
+  } else {
+    raw_block=readBin(datafile,n=file.info(datafile)$size,what='raw')
+    d=memCompress(raw_block,type='gzip')
+  }
 	d
 }
 
