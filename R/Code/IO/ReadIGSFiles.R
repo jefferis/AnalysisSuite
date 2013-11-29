@@ -487,7 +487,7 @@ cmtk.mat2dof<-function(m, f=NULL, Transpose=TRUE){
   write.table(m, file=inf, sep='\t', row.names=F, col.names=F)
   # always transpose because mat2dof appears to read the matrix with last column being 0 0 0 1
   cmd="mat2dof"
-  if(Transpose) paste(cmd,'--transpose')
+  if(Transpose) cmd=paste(cmd,'--transpose')
   if(is.null(f)){
     cmd=paste(cmd,sep="<",shQuote(inf))
     params=read.table(text=system(cmd,intern=T),sep='\t',comment.char="")[,2]
