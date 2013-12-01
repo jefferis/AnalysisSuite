@@ -440,17 +440,6 @@ CMTKRegFromAmira<-function(amirareg,cmtkregfolder=NULL,Transpose=TRUE,Invert=FAL
 	cmtkregpath
 }
 
-#' Convert CMTK registration parameters into homogeneous affine matrix
-#' 
-#' @param params 5 x 3 matrix of CMTK registration parameters
-#' Note that this matrix will have the 4th row 0 0 0 1
-HomogenousAffineFromCMTKParams<-function(params){
-  tf<-tempfile(fileext='.list')
-  on.exit(unlink(tf,recursive=TRUE))
-  write.cmtkreg(params,foldername=tf)
-  cmtk.dof2mat(tf,Transpose=TRUE)
-}
-
 #' Convert CMTK registration to homogeneous affine matrix with dof2mat
 #' 
 #' @details Transpose is true by default since this results in the orientation
