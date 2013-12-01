@@ -4,14 +4,16 @@
 # runTestFile(file.path(TestDir,"Geometry","runitAffine.R"))
 require(RUnit)
 
-checkM=function(m){
+checkM.orig=function(m){
 	m=matrix(m,ncol=3,byrow=TRUE)
-	checkEquals(m,DecomposeAffineToIGSParams(ComposeAffineFromIGSParams(m),cent=m[5,]))
+	checkEqualsNumeric(m,DecomposeAffineToIGSParams(ComposeAffineFromIGSParams(m),cent=m[5,]))
 }
 
-checkM2=function(m){
-  m=matrix(m,ncol=3,byrow=TRUE)
-  checkEquals(m,DecomposeAffineToIGSParams(HomogenousAffineFromCMTKParams(m),cent=m[5,]))
+checkM=function(params){
+  params=matrix(params,ncol=3,byrow=TRUE)
+  affmat=cmtk.dof2mat(params)
+  params2=cmtk.mat2dof(affmat,cent=params[5,])
+  checkEqualsNumeric(params,params2,tolerance=1e-4)
 }
 
 
