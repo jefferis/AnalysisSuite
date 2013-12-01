@@ -451,7 +451,7 @@ HomogenousAffineFromCMTKParams<-function(params){
   cmtk.dof2mat(tf,Transpose=TRUE)
 }
 
-#' Read CMTK registration with dof2mat and convert to homogeneous affine matrix
+#' Convert CMTK registration to homogeneous affine matrix with dof2mat
 #' 
 #' @details Transpose is true by default since this results in the orientation
 #'   of cmtk output files matching the orientation in R. Do not change this
