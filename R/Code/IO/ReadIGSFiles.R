@@ -456,12 +456,24 @@ HomogenousAffineFromCMTKParams<-function(params){
 #' Read CMTK registration with dof2mat and convert to homogeneous affine matrix
 #' 
 #' @details Transpose is true by default since this results in the orientation
-#'   of cmtk output files matching the orientation in R.
-#' @param reg Path to input registration file
-#' @param Transpose ouput matrix so that form on disk matches R's convention
-cmtk.dof2mat<-function(reg,Transpose=TRUE){
+#'   of cmtk output files matching the orientation in R. Do not change this
+#'   unless you're sure you know what you're doing!
+#' @param reg Path to input registration file or 5x3 matrix of CMTK parameters.
+#' @param Transpose ouput matrix so that form on disk matches R's convention.
+#' @param version Whether to return CMTK version string
+#' @return 4x4 transformation matrix
+cmtk.dof2mat<-function(reg, Transpose=TRUE, version=FALSE){
   cmd="dof2mat"
+  if(version) return(system2(cmd,'--version',stdout=TRUE))
   if(Transpose) cmd=paste(cmd,'--transpose')
+  
+  if(is.numeric(reg)){
+    params<-reg
+    reg<-tempfile(fileext='.list')
+    on.exit(unlink(reg,recursive=TRUE))
+    write.cmtkreg(params,foldername=reg)
+  }
+  
   cmd=paste(cmd,shQuote(reg))
   rval=system(cmd,intern=TRUE)
   numbers=as.numeric(unlist(strsplit(rval,"\t")))
