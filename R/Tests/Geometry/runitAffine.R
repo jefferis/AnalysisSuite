@@ -110,7 +110,7 @@ test.ReCompositionAffineShear123NoCentre<-function(x){
 
 #' Compare result of ComposeAffineFromIGSParams vs CMTK dof2mat
 test.ComposeAffineFromIGSParamsvsCMTK<-function(){ 
-  params=matrix(c(100,50,50,3,3,3,1.1,0.9,1,0.05,0.1,0.02,0,0,0),
+  params=matrix(c(100,50,20,3,4,5,1.1,0.9,1,0.05,0.1,0.02,10,20,30),
                 ncol=3,byrow=TRUE)
   m=ComposeAffineFromIGSParams(params)
   # nb this calls dof2mat

@@ -189,6 +189,7 @@ ComposeAffineFromIGSParams.named<-function(tx=0,ty=0,tz=0,rx=0,ry=0,rz=0,sx=1,sy
 	cos0xsin1 = cos0 * sin1
 
 	rval=matrix(0,4,4)
+	diag(rval)<-1
 	# nb in R matrices are indexed m[row,col]
 	# whereas in C looks like T indexed them
 	# m[col-1][row-1]
@@ -196,46 +197,25 @@ ComposeAffineFromIGSParams.named<-function(tx=0,ty=0,tz=0,rx=0,ry=0,rz=0,sx=1,sy
 	# \[\d\]\[\d\]
 	# (\2+1,\1+1)
 	# 
-	rval[0+1,0+1] =  cos1*cos2 * sx
-	rval[1+1,0+1] = -cos1*sin2 * sx
-	rval[2+1,0+1] = -sin1 * sx
-	rval[3+1,0+1] = 0
-	rval[0+1,1+1] =  (sin0xsin1*cos2 + cos0*sin2) * sy
-	rval[1+1,1+1] = (-sin0xsin1*sin2 + cos0*cos2) * sy
-	rval[2+1,1+1] =  sin0*cos1 * sy
-	rval[3+1,1+1] = 0
-	rval[0+1,2+1] =  (cos0xsin1*cos2 - sin0*sin2) * sz
-	rval[1+1,2+1] = (-cos0xsin1*sin2 - sin0*cos2) * sz
-	rval[2+1,2+1] =  cos0*cos1 * sz
-	rval[3+1,2+1] = 0
-	rval[3+1,3+1] = 1
+	rval[0+1,0+1] =  cos1*cos2
+	rval[1+1,0+1] = -cos1*sin2
+	rval[2+1,0+1] = -sin1
+	rval[0+1,1+1] =  (sin0xsin1*cos2 + cos0*sin2)
+	rval[1+1,1+1] = (-sin0xsin1*sin2 + cos0*cos2)
+	rval[2+1,1+1] =  sin0*cos1
+	rval[0+1,2+1] =  (cos0xsin1*cos2 - sin0*sin2)
+	rval[1+1,2+1] = (-cos0xsin1*sin2 - sin0*cos2)
+	rval[2+1,2+1] =  cos0*cos1
 
-	# generate shears
-	# make a copy
-	#rval2=rval
-	shears=c(shx,shy,shz)
-	for (i in 3:1 ) {
-		for (j in 1:3) {
-			rval[j,i] =rval[j,i] +shears[i] * rval[j,i%%3+1]
-#			rval[j,i] =rval[j,i] +shears[i] * rval[j,i+1]
-		}
-	}
-	#rval=rval2
-	  
-  
-	# This loop is a bit odd in the C original:
-	#     // generate shears
-	# 	  for ( int i=2; i>=0; --i ) {
-	# 		for ( int j=0; j<3; ++j ) {
-	# 		  Matrix[i][j] += params[9+i] * Matrix[(i+1)%3][j];
-	# 		}
-	# 	  }
-
-	# in c: i 2,1,0
-	# (i+1)%3 => 0,2,1
-	# which should be 1,3,2 in R
-	# BUT in my R goes 4,3,2
-	# So fix by changing rval[j,i+1] to rval[j,i%%3+1]
+	# generate scales and shears
+	scaleShear=matrix(0,4,4)
+	diag(scaleShear)=c(sx,sy,sz,1)
+	scaleShear[0+1,1+1]=shx
+	scaleShear[0+1,2+1]=shy
+	scaleShear[1+1,2+1]=shz
+	
+	# NB matrix multiplication must be in opposite order from C original
+	rval = rval%*%scaleShear
 	
 	# transform rotation center
 	cM = c(  cx*rval[0+1,0+1] + cy*rval[0+1,1+1] + cz*rval[0+1,2+1],
