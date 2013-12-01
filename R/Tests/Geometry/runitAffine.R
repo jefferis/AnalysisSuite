@@ -42,8 +42,6 @@ test.ComposeAffineWithShear<-function(){
 	checkEqualsNumeric(ComposeAffineFromIGSParams(params),affmat,tol=1e-6)
 }
 
-
-test.ReCompositionAffineNoShear<-function(x){
 test.DecomposeAffineWithShear<-function(){
   params=matrix(c(100,50,10,3,3,3,1.1,0.9,1,0.03,0.1,0.05,0,0,0),
                 ncol=3,byrow=TRUE)
@@ -53,6 +51,8 @@ test.DecomposeAffineWithShear<-function(){
                   0,0,0,1),ncol=4,byrow=TRUE)
   checkEqualsNumeric(DecomposeAffineToIGSParams(affmat),params,tol=1e-6)
 }
+
+test.ReCompositionAffineNoShear<-function(x){
 	m=c(100,50,10,3,3,3,1.1,0.9,1,0,0,0,10,50,50)
 	checkM(m)
 }
@@ -84,14 +84,12 @@ test.ReCompositionAffineShear12DiffShears<-function(x){
 
 test.ReCompositionAffineShear13<-function(x){
 	m=c(100,50,10,3,3,3,1.1,0.9,1,0.05,0,0.05,10,50,50)
-	m=matrix(m,ncol=3,byrow=TRUE)
-	mm=DecomposeAffineToIGSParams(ComposeAffineFromIGSParams(m),cent=m[5,])
-	checkEquals(m,mm,
-	msg=paste(m,'not equal',mm) )
+	checkM(m)
 }
 test.ReCompositionAffineShear13DiffShears<-function(x){
 	m=c(100,50,10,3,3,3,1.1,0.9,1,0.05,0,0.13,10,50,50)
-checkM(m)}
+  checkM(m)
+}
 
 test.ReCompositionAffineShear23<-function(x){
 	m=c(100,50,10,3,3,3,1.1,0.9,1,0,0.05,0.05,10,50,50)
@@ -100,47 +98,35 @@ test.ReCompositionAffineShear23<-function(x){
 
 test.ReCompositionAffineShear123<-function(x){
 	m=c(100,50,10,3,3,3,1.1,0.9,1,0.05,0.05,0.05,10,50,50)
-	m=matrix(m,ncol=3,byrow=TRUE)
-	mm=DecomposeAffineToIGSParams(ComposeAffineFromIGSParams(m),cent=m[5,])
-	checkEquals(m,mm,paste(m,'not equal',mm) )
+  checkM(m)
 }
 
 test.ReCompositionAffineShear123NoCentre<-function(x){
-	m=c(100,50,10,3,3,3,1.1,0.9,1,0.05,0.05,0.05,0,0,0)
+	m=c(100,50,10,3,4,5,1.1,0.9,1,0.05,0.02,0.03,0,0,0)
 	checkM(m)
-}
-
-test.HomogenousAffineFromCMTKParams<-function(){
-  params=matrix(c(100,50,10, 3,3,3, 1.1,0.9,1, 0,0,0, 0,0,0), ncol=3, byrow=TRUE)
-  m=structure(c(1.09699, -0.0574907, -0.0575696, 0, 0.0494996, 0.897406, 
-              0.0470378, 0, 0.0494536, -0.0549995, 0.997261, 0, 100, 50, 10, 
-              1), .Dim = c(4L, 4L))
-  m2=HomogenousAffineFromCMTKParams(params)
-  checkEqualsNumeric(m,m2)
 }
 
 #' Compare result of ComposeAffineFromIGSParams vs CMTK dof2mat
 test.ComposeAffineFromIGSParamsvsCMTK<-function(){ 
-  params=matrix(c(100,50,50,3,3,3,1.1,0.9,1,0,0,0,0,0,0),
+  params=matrix(c(100,50,50,3,3,3,1.1,0.9,1,0.05,0.1,0.02,0,0,0),
                 ncol=3,byrow=TRUE)
   m=ComposeAffineFromIGSParams(params)
   # nb this calls dof2mat
-  m2=HomogenousAffineFromCMTKParams(params)
+  m2=cmtk.dof2mat(params)
   checkEqualsNumeric(m,m2,'cmtk and ComposeAffineFromIGSParams disagree',
                      tolerance=1e-5)
 }
 
 #' Check DecomposeAffineToIGSParams vs CMTK mat2dof
 test.DecomposeAffineFromIGSParamsvsCMTK<-function(){
-  m=matrix(c(1.1,0,0,50,
-             0,1.2,0,60,
-             0,0,1.1,20,
+  m=matrix(c(1.1,0.1,0.2,50,
+             0.1,1.2,.25,60,
+             0.3,0.4,1.1,20,
              0,0,0,1),ncol=4,byrow=TRUE)
   
   params=DecomposeAffineToIGSParams(m,centre=c(0,0,0))
   params2=cmtk.mat2dof(m)
-  checkEqualsNumeric(params,params2,paste(params,'not equal',params2),
-                     tolerance=1e-5)
+  checkEqualsNumeric(params,params2,tolerance=1e-5)
 }
 
 #' round trip test of mat2dof/dof2mat
@@ -154,7 +140,7 @@ test.cmtk.mat2dof.dof2mat.simple<-function(){
   on.exit(unlink(tf,recursive=TRUE))
   cmtk.mat2dof(m,f=tf)
   m2=cmtk.dof2mat(tf)
-  checkEquals(m,m2,"Failed CMTK mat2dof/dof2mat roundtrip test for simple matrix (no shears)")
+  checkEqualsNumeric(m,m2,"Failed CMTK mat2dof/dof2mat roundtrip test for simple matrix (no shears)")
 }
 
 test.cmtk.mat2dof.dof2mat.wshears<-function(){
