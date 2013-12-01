@@ -180,12 +180,12 @@ ReadIGSTypedStream<-function(con, CheckLabel=TRUE){
 	return(l)
 }
 
-WriteIGSTypedStream<-function(l,filename,gzip=FALSE){
+WriteIGSTypedStream<-function(l,filename,gzip=FALSE,version="1.1"){
 	# Will take a list in the form returned by ReadIGSTypedStream and
 	# write it out to a text file
 #	con=if(gzip) file(filename,'w') else gzfile(filename,'w')
 	con=file(filename,'w')
-	cat("! TYPEDSTREAM 1.1\n\n",file=con)
+	cat("! TYPEDSTREAM ", version, "\n\n", file=con, sep="")
 	.WriteIGSTypedStream.list(l,con)
 	# iterate over list 
 	close(con)
@@ -282,42 +282,40 @@ AffineToIGSRegistration<-function(x,centre,reference,model){
 	IGSParamsToIGSRegistration(d,reference=reference,model=model)
 }
 
-#' Write out CMTK registration to folder
-#' 
-#' @details Note that transformation in the forward direction (i.e. sample->ref)
-#' e.g. as calculated from a set of landmarks where set 1 is the sample
-#' is considered an inverse transformation by the IGS software.
-#' So in order to use such a transformation as an initial affine with
-#' the registration command the switch --initial-inverse must be used
-#' specifying the folder name created by this function.
-#' @param reglist List specifying CMTK registration parameters
-#' @param foldername Path to registration folder (usually ending in .list)
-#' @return
-write.cmtkreg<-function(reglist,foldername){
-  # Makes a registration folder that could be used as the input to the
-  # registration command or warp
-  # A transformation in the forward direction (i.e. sample->ref)
-  # e.g. as calculated from a set of landmarks where set 1 is the sample
-  # is considered an inverse transformation by the IGS software.
-  # So in order to use such a transformation as an initial affine with
-  # the registration command the switch --initial-inverse must be used
-  # specifying the folder name created by this function.
-  dir.create(foldername,showWarnings=FALSE,recursive=TRUE)
+#'Write out CMTK registration to folder
+#'
+#'@details Note that transformation in the forward direction (i.e. sample->ref) 
+#'  e.g. as calculated from a set of landmarks where set 1 is the sample is 
+#'  considered an inverse transformation by the IGS software. So in order to use
+#'  such a transformation as an initial affine with the registration command the
+#'  switch --initial-inverse must be used specifying the folder name created by 
+#'  this function.
+#'@details CMTK v2.4 fixed a long-standing bug in affine (de)composition to CMTK
+#'  params. This resulted in a non-backwards compatible change marked by writing
+#'  the TYPEDSTREAM as version 2.4. The R code in this package implements both
+#'  the new and old compose/decompose functions, using the new by default.
+#'@param reglist List specifying CMTK registration parameters
+#'@param foldername Path to registration folder (usually ending in .list)
+#'@param version CMTK version for registration (default 2.4)
+write.cmtkreg<-function(reglist, foldername, version="2.4"){
+  dir.create(foldername, showWarnings=FALSE, recursive=TRUE)
   if(!is.list(reglist)) reglist=CMTKParamsToCMTKRegistration(reglist)
-  WriteIGSTypedStream(reglist,file.path(foldername,"registration"))
+  WriteIGSTypedStream(reglist,file.path(foldername, "registration"),
+                      version=version)
   
-  studysublist= list(studyname=reglist$registration$reference_study)
-  attr(studysublist$studyname,"quoted")=TRUE
-  studysublist2= studysublist
+  studysublist=list(studyname=reglist$registration$reference_study)
+  attr(studysublist$studyname, "quoted")=TRUE
+  studysublist2=studysublist
   if ('model_study' %in% names(reglist$registration)) {
     studysublist2$studyname=reglist$registration$model_study
   } else {
     studysublist2$studyname=reglist$registration$floating_study
   }
   studylist=list(studylist=list(num_sources=2),
-                 source= studysublist,source=studysublist2)
+                 source=studysublist, source=studysublist2)
   
-  WriteIGSTypedStream(studylist, file.path(foldername,"studylist"))		
+  WriteIGSTypedStream(studylist, file.path(foldername,"studylist"),
+                      version=version)
 }
 
 WriteIGSRegistrationFolder<-function(reglist,foldername){
