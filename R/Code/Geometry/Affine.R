@@ -375,12 +375,14 @@ FindTorstenFromAffine<-function(affmat,centre=c(84.39,84.39,43.5)){
 	TorstenGuess=optim()
 }
 
-DecomposeAffineToIGSParams<-function(matrix,centre=c(84.39,84.39,43.5)){
-	# This works so long as matrix does not have a shear component
-	# Turns out that it is identical to Torsten's version, so if I have
-	# understood the properties of Decomposition/Composition, the library
-	# has a bug
-	
+#' Decompose homogeneous affine matrix to CMTK registration parameters
+#'
+#' @param matrix 4x4 homogeneous affine matrix
+#' @param centre Rotation centre
+#' @return 5x3 matrix of CMTK registration parameters
+#' @export
+#' @seealso \code{\link{ComposeAffineFromIGSParams}}
+DecomposeAffineToIGSParams<-function(matrix,centre=c(0,0,0)){
 # C matrices indexed [C][R] (vs [R,C] in R)
 # so it seems easiest to transpose for use in R
 	matrix=t(matrix)
@@ -398,39 +400,99 @@ DecomposeAffineToIGSParams<-function(matrix,centre=c(84.39,84.39,43.5)){
 	params[1:3] = params[1:3] + cM[1:3] - centre[1:3]
 	params[13:15]=centre
 
-	#matrix2=matrix # make a copy of matrix
- 	for ( shear in 1:3 ) {
- 		# compute coefficient
- 		idx=1+(shear%%3) # 1, 2, 3 => 2, 3, 1 # params[11] ie shear 2 is correctly calculated
- 		params[9+shear] = 
- 		sum( matrix[idx,1:3]*matrix[shear,1:3] ) / sum( matrix[idx,1:3]^2 )
-		# remove contribution from transformation matrix
-		matrix[shear,1:3] =matrix[shear,1:3]- (params[9+shear] * matrix[idx,1:3] )
- 	}
- 	#matrix=matrix2 # overwrite 
+	# QR decomposition
+	matrix2d=t(matrix[1:3,1:3])
+	qr.res=qr(matrix2d)
+	Q=qr.Q(qr.res)
+	R=qr.R(qr.res)
+	R[lower.tri(R)]=0
 	
-	VTK.AXIS.EPSILON=0.001
-
-	for ( i in 1:3 ) {
-		# scale
-		params[6 + i] = sqrt( sum( matrix[i,1:3]^2 ) )
-		# report error on singular matrices.
-		if ( abs(params[6+i]) < VTK.AXIS.EPSILON ) {
-			cat("DecomposeAffineToIGSParams encountered singular matrix")
-			return (null)
+	for (k in 1:3)
+	{
+		# if scale is negative, make positive and correct Q and R accordingly (we will figure out later if the overall transformation is a true rotation or has a negative determinant)
+		if ( R[k,k] < 0 )
+		{
+			for (i in 1:3)
+			{
+				R[k,i] = -R[k,i]
+				Q[i,k] = -Q[i,k]
+			}
 		}
+		
+		# scale
+		params[6 + k] = R[k,k]
+		
+		# report error on singular matrices.
+		if ( params[6+k]	< .Machine$double.eps ) stop("singular matrix")
+		
+		# shear: i,j index the upper triangle of aMat, which is R from QR
+		i = (c(0, 0, 1)+1)[k]  # i.e. i := { 0, 0, 1 }
+		j = (c(1, 2, 2)+1)[k]  # i.e. j := { 1, 2, 2 }
+		params[9+k] = R[i,j];
 	}
+	
+	# =========================================================================
+	# 
+	# THE FOLLOWING CODE WAS ADOPTED AND MODIFIED FROM VTK, The Visualization
+	# Toolkit.
+	# 
+	#		Program:	 Visualization Toolkit
+	#		Language:	 C++
+	#		Thanks:		 Thanks to David G. Gobbi who developed this class.
+	# 
+	# Copyright (c) 1993-2001 Ken Martin, Will Schroeder, Bill Lorensen 
+	# All rights reserved.
+	# 
+	# Redistribution and use in source and binary forms, with or without
+	# modification, are permitted provided that the following conditions are met:
+	# 
+	#	 * Redistributions of source code must retain the above copyright notice,
+	#		 this list of conditions and the following disclaimer.
+	# 
+	#	 * Redistributions in binary form must reproduce the above copyright notice,
+	#		 this list of conditions and the following disclaimer in the documentation
+	#		 and/or other materials provided with the distribution.
+	# 
+	#	 * Neither name of Ken Martin, Will Schroeder, or Bill Lorensen nor the names
+	#		 of any contributors may be used to endorse or promote products derived
+	#		 from this software without specific prior written permission.
+	# 
+	#	 * Modified source versions must be plainly marked as such, and must not be
+	#		 misrepresented as being the original software.
+	# 
+	# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
+	# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+	# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+	# ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE FOR
+	# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+	# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+	# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+	# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+	# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+	# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	# 
+	# =========================================================================
+	
+	if (det(matrix[1:3,1:3])<0){
+		# negative determinant, not a true rotation
+		# negate x scale
+		params[6+1] = -params[6+1];
+		# also negative shears related to x
+		params[9:10+1] = -params[9:10+1];
+	}
+	
+	VTK.AXIS.EPSILON=1E-8
 
 	# FIXED FROM HERE
 	# rotation
 	# first rotate about y axis
-	x2 = matrix[1,2] / params[7]
-	y2 = matrix[1,3] / params[7]
-	z2 = matrix[1,1] / params[7]
+	x2 = Q[2,1] / params[7]
+	y2 = Q[3,1] / params[7]
+	z2 = Q[1,1] / params[7]
 		
-	x3 = matrix[3,2] / params[9]
-	y3 = matrix[3,3] / params[9]
-	z3 = matrix[3,1] / params[9]
+	x3 = Q[2,3] / params[9]
+	y3 = Q[3,3] / params[9]
+	z3 = Q[1,3] / params[9]
 		
 	dot = x2 * x2 + z2 * z2
 	d1 = sqrt (dot)
@@ -479,52 +541,6 @@ DecomposeAffineToIGSParams<-function(matrix,centre=c(84.39,84.39,43.5)){
 		
 	params[4] = rad2deg(-atan2 (sinAlpha, cosAlpha)) # alpha
 
-  # /** END OF ADOPTED VTK CODE **/
+	# /** END OF ADOPTED VTK CODE **/
 	return (matrix(params,ncol=3,byrow=TRUE))
 }
-
-
-	# =========================================================================
-	# 
-	# THE FOLLOWING CODE WAS ADOPTED AND MODIFIED FROM VTK, The Visualization
-	# Toolkit.
-	# 
-	#   Program:   Visualization Toolkit
-	#   Language:  C++
-	#   Thanks:    Thanks to David G. Gobbi who developed this class.
-	# 
-	# Copyright (c) 1993-2001 Ken Martin, Will Schroeder, Bill Lorensen 
-	# All rights reserved.
-	# 
-	# Redistribution and use in source and binary forms, with or without
-	# modification, are permitted provided that the following conditions are met:
-	# 
-	#  * Redistributions of source code must retain the above copyright notice,
-	#    this list of conditions and the following disclaimer.
-	# 
-	#  * Redistributions in binary form must reproduce the above copyright notice,
-	#    this list of conditions and the following disclaimer in the documentation
-	#    and/or other materials provided with the distribution.
-	# 
-	#  * Neither name of Ken Martin, Will Schroeder, or Bill Lorensen nor the names
-	#    of any contributors may be used to endorse or promote products derived
-	#    from this software without specific prior written permission.
-	# 
-	#  * Modified source versions must be plainly marked as such, and must not be
-	#    misrepresented as being the original software.
-	# 
-	# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
-	# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-	# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-	# ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE FOR
-	# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-	# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-	# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-	# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-	# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-	# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-	# 
-	# =========================================================================
-
-	
-	
