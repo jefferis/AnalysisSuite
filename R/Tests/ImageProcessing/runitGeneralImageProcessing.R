@@ -1,3 +1,7 @@
+# runTestFile(file.path(TestDir,'ImageProcessing','runitGeneralImageProcessing.R'))
+
+require(RUnit)
+
 test.ReadWriteIdentityRegistration<-function(){
 	ireg=structure(c(0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0), 
 		.Dim = c(5L, 3L), .Dimnames = list(c("xlate", "rotate", "scale", "shear", "center"),
