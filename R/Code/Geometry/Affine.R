@@ -407,16 +407,11 @@ DecomposeAffineToIGSParams<-function(matrix,centre=c(0,0,0)){
 	R=qr.R(qr.res)
 	R[lower.tri(R)]=0
 	
-	for (k in 1:3)
-	{
+	for (k in 1:3) {
 		# if scale is negative, make positive and correct Q and R accordingly (we will figure out later if the overall transformation is a true rotation or has a negative determinant)
-		if ( R[k,k] < 0 )
-		{
-			for (i in 1:3)
-			{
-				R[k,i] = -R[k,i]
-				Q[i,k] = -Q[i,k]
-			}
+		if ( R[k,k] < 0 ) {
+			R[k,1:3] = -R[k,1:3]
+			Q[1:3,k] = -Q[1:3,k]
 		}
 		
 		# scale
@@ -428,7 +423,7 @@ DecomposeAffineToIGSParams<-function(matrix,centre=c(0,0,0)){
 		# shear: i,j index the upper triangle of aMat, which is R from QR
 		i = (c(0, 0, 1)+1)[k]  # i.e. i := { 0, 0, 1 }
 		j = (c(1, 2, 2)+1)[k]  # i.e. j := { 1, 2, 2 }
-		params[9+k] = R[i,j];
+		params[9+k] = R[i,j]
 	}
 	
 	# =========================================================================
