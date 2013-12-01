@@ -44,6 +44,15 @@ test.ComposeAffineWithShear<-function(){
 
 
 test.ReCompositionAffineNoShear<-function(x){
+test.DecomposeAffineWithShear<-function(){
+  params=matrix(c(100,50,10,3,3,3,1.1,0.9,1,0.03,0.1,0.05,0,0,0),
+                ncol=3,byrow=TRUE)
+  affmat=matrix(c(1.09878,0.0599299,0.104303,90.8005,
+                  -0.0307421,0.891618,-0.0578741,58.6202,
+                  -0.0531753,0.146476,0.994382,3.48883,
+                  0,0,0,1),ncol=4,byrow=TRUE)
+  checkEqualsNumeric(DecomposeAffineToIGSParams(affmat),params,tol=1e-6)
+}
 	m=c(100,50,10,3,3,3,1.1,0.9,1,0,0,0,10,50,50)
 	checkM(m)
 }
