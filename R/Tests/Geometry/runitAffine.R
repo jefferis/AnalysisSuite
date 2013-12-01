@@ -159,3 +159,25 @@ test.cmtk.mat2dof.dof2mat.wshears<-function(){
   m2=cmtk.dof2mat(tf)
   checkEqualsNumeric(m,m2,"Failed CMTK mat2dof/dof2mat roundtrip test for matrix with shears")
 }
+
+test.cmtk.mat2dof<-function(x){
+  m=structure(c(0.993768, -0.0869434, -0.0697565, 0, 0.199117, 1.08527, 
+                0.0504537, 0, 0.303757, 0.211115, 1.19715, 0, 100, 50, 50, 1),
+              .Dim = c(4L, 4L))
+  params=cmtk.mat2dof(m)
+  params_base=matrix(c(100,50,50, 3,4,5, 1,1.1,1.2, 0.1,0.2,0.3, 0,0,0), ncol=3,
+                     byrow=T)
+  checkEqualsNumeric(params,params_base,tolerance=1e-4)
+}
+
+test.cmtk.dof2mat<-function(x){
+  
+  reg=file.path(TestDir,'Data','dofv2.4wshears.list')
+  params=matrix(c(100,50,50, 3,4,5, 1,1.1,1.2, 0.1,0.2,0.3, 0,0,0), ncol=3,
+                byrow=T)
+  m_base=structure(c(0.993768, -0.0869434, -0.0697565, 0, 0.199117, 1.08527, 
+                0.0504537, 0, 0.303757, 0.211115, 1.19715, 0, 100, 50, 50, 1),
+              .Dim = c(4L, 4L))
+  checkEqualsNumeric(cmtk.dof2mat(reg),m_base,tolerance=1e-4)
+  checkEqualsNumeric(cmtk.dof2mat(params),m_base,tolerance=1e-4)
+}
