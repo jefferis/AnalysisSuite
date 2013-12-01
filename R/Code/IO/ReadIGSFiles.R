@@ -477,17 +477,24 @@ cmtk.dof2mat<-function(reg,Transpose=TRUE){
 #'   the transpose in the fourth column being correctly interpreted by cmtk.
 #' @param m Homogenous affine matrix (4x4) last row 0 0 0 1 etc
 #' @param f Output file (optional)
+#' @param centre Centre for rotation (optional 3-vector)
 #' @param Transpose the input matrix so that it is read in as it appears on disk
 #' @return 5x3 matrix of CMTK registration parameters or logical
-cmtk.mat2dof<-function(m, f=NULL, Transpose=TRUE){
+cmtk.mat2dof<-function(m, f=NULL, centre=NULL, Transpose=TRUE, version=FALSE){
+  cmd="mat2dof"
+  if(version) return(system2(cmd,'--version',stdout=TRUE))
   if(!is.matrix(m) || nrow(m)!=4 || ncol(m)!=4) stop("Please give me a homogeneous affine matrix (4x4)")
   inf=tempfile()
   on.exit(unlink(inf),add=TRUE)
   
   write.table(m, file=inf, sep='\t', row.names=F, col.names=F)
   # always transpose because mat2dof appears to read the matrix with last column being 0 0 0 1
-  cmd="mat2dof"
+
   if(Transpose) cmd=paste(cmd,'--transpose')
+  if(!is.null(centre)) {
+    if(length(centre)!=3) stop("Must supply 3-vector for centre")
+    cmd=paste(cmd,'--center',paste(centre, collapse=","))
+  }
   if(is.null(f)){
     cmd=paste(cmd,sep="<",shQuote(inf))
     params=read.table(text=system(cmd,intern=T),sep='\t',comment.char="")[,2]
