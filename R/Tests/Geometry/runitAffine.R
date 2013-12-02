@@ -251,4 +251,19 @@ test.cmtk.dof2mat<-function(x){
   checkEqualsNumeric(cmtk.dof2mat(reg),m_base,tolerance=1e-4)
   checkEqualsNumeric(cmtk.dof2mat(params),m_base,tolerance=1e-4)
 }
+
+#' Check that we can read CMTK v1.1 registration parameters and compose the
+#' appropriate homogeneous affine representation.
+test.cmtk.dof2mat.legacy<-function(x){
+  reg=file.path(TestDir,'Data','dofv1.1wshears.list')
+  params=matrix(c(100,50,50, 3,4,5, 1,1.1,1.2, 0.1,0.2,0.3, 0,0,0), ncol=3,
+                byrow=T)
+  m_base=matrix(c(0.993768017875764, 0.0124333660488193, 0.1029140991094, 
+                     0, 0.0997404961300905, 1.10393643798483, 0.40556613106989, 0, 
+                     0.0778012981466213, -0.0620696470929289, 1.19004163463567, 0, 
+                     100, 50, 50, 1), ncol=4)
+  checkEqualsNumeric(cmtk.dof2mat(reg),m_base,tolerance=1e-4)
+  checkEqualsNumeric(ComposeAffineFromIGSParams(params,legacy=TRUE),
+                     m_base,tolerance=1e-4)
+}
 }
