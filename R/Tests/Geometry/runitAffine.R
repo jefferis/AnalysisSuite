@@ -9,17 +9,28 @@ checkM=function(m){
 	checkEqualsNumeric(m,DecomposeAffineToIGSParams(ComposeAffineFromIGSParams(m),cent=m[5,]),tolerance=1e-5)
 }
 
-checkRoundTripFromMat=function(mat){
+cmtk_version=cmtk.dof2mat(version=TRUE)
+cmtk_numeric_version=numeric_version(sub("([0-9.]+).*",'\\1',cmtk_version))
+
+test.cmtk.version<-function(){
+  checkTrue(cmtk_numeric_version>=numeric_version("2.4.0"),
+            msg='AnalysisSuite now depends on CMTK>=2.4.0')
+}
+
+checkRoundTripFromMat=function(mat,
+  test.cmtk=cmtk_numeric_version>=numeric_version("2.4.0")){
   params=DecomposeAffineToIGSParams(mat)
   m2=ComposeAffineFromIGSParams(params)
   checkEqualsNumeric(mat,m2,tolerance=1e-5)
-  # repeat with cmtk tools
-  params2=cmtk.mat2dof(mat)
-  m3=cmtk.dof2mat(params2)
-  # can't absolutely rely on getting same params back in certain degenerate 
-  # cases e.g. axis flip.
-  # checkEqualsNumeric(params,params2,tolerance=1e-5)
-  checkEqualsNumeric(mat,m3,tolerance=1e-5)
+  if(test.cmtk){
+    # repeat with cmtk tools
+    params2=cmtk.mat2dof(mat)
+    m3=cmtk.dof2mat(params2)
+    # can't absolutely rely on getting same params back in certain degenerate 
+    # cases e.g. axis flip.
+    # checkEqualsNumeric(params,params2,tolerance=1e-5)
+    checkEqualsNumeric(mat,m3,tolerance=1e-5)
+  }
 }
 
 #' Round trip using cmtk command line tools
@@ -169,7 +180,7 @@ test.ReCompositionSimpleMirrorZ<-function(x){
   diag(m)=c(1,1,-1,1)
   checkRoundTripFromMat(m)
 }
-
+if(cmtk_numeric_version>=numeric_version("2.4.0")){
 #' Compare result of ComposeAffineFromIGSParams vs CMTK dof2mat
 test.ComposeAffineFromIGSParamsvsCMTK<-function(){ 
   params=matrix(c(100,50,20,3,4,5,1.1,0.9,1,0.05,0.1,0.02,10,20,30),
@@ -239,4 +250,5 @@ test.cmtk.dof2mat<-function(x){
               .Dim = c(4L, 4L))
   checkEqualsNumeric(cmtk.dof2mat(reg),m_base,tolerance=1e-4)
   checkEqualsNumeric(cmtk.dof2mat(params),m_base,tolerance=1e-4)
+}
 }
