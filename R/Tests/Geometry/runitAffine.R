@@ -4,12 +4,26 @@
 # runTestFile(file.path(TestDir,"Geometry","runitAffine.R"))
 require(RUnit)
 
-checkM.orig=function(m){
+checkM=function(m){
 	m=matrix(m,ncol=3,byrow=TRUE)
-	checkEqualsNumeric(m,DecomposeAffineToIGSParams(ComposeAffineFromIGSParams(m),cent=m[5,]))
+	checkEqualsNumeric(m,DecomposeAffineToIGSParams(ComposeAffineFromIGSParams(m),cent=m[5,]),tolerance=1e-5)
 }
 
-checkM=function(params){
+checkRoundTripFromMat=function(mat){
+  params=DecomposeAffineToIGSParams(mat)
+  m2=ComposeAffineFromIGSParams(params)
+  checkEqualsNumeric(mat,m2,tolerance=1e-5)
+  # repeat with cmtk tools
+  params2=cmtk.mat2dof(mat)
+  m3=cmtk.dof2mat(params2)
+  # can't absolutely rely on getting same params back in certain degenerate 
+  # cases e.g. axis flip.
+  # checkEqualsNumeric(params,params2,tolerance=1e-5)
+  checkEqualsNumeric(mat,m3,tolerance=1e-5)
+}
+
+#' Round trip using cmtk command line tools
+checkM.cmtk=function(params){
   params=matrix(params,ncol=3,byrow=TRUE)
   affmat=cmtk.dof2mat(params)
   params2=cmtk.mat2dof(affmat,cent=params[5,])
