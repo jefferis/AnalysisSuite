@@ -16,41 +16,41 @@ checkM=function(params){
   checkEqualsNumeric(params,params2,tolerance=1e-4)
 }
 
-
 printM=function(m){
 	if(!is.matrix(m)) m=matrix(m,ncol=3,byrow=TRUE)
 	print(m)
 	print(DecomposeAffineToIGSParams(ComposeAffineFromIGSParams(m),cent=m[5,]))
 }
 
-
 test.ComposeAffineNoShear<-function(){
 	params=matrix(c(100,50,10,3,3,3,1.1,0.9,1,0,0,0,10,50,50),
 		ncol=3,byrow=TRUE)
-	affmat=matrix(c(1.09699,0.0494996,0.0494536,94.0825,
-		-0.0574907,0.897406,-0.0549995,58.4546,
-		-0.0575696,0.0470378,0.997261,8.36076,
-		0,0,0,1),ncol=4,byrow=TRUE)
+	affmat=matrix(c(1.09698704245255, -0.0574906547972094, -0.0575695518672382, 
+	                0, 0.0494995771563172, 0.897405837085788, 0.0470378084704441, 
+	                0, 0.0494535530049303, -0.0549995301736858, 0.997260947684137, 
+	                0, 94.0824730674121, 58.454591202367, 8.36075771094335, 1),
+                ncol=4)
 	checkEqualsNumeric(ComposeAffineFromIGSParams(params),affmat,tol=1e-6)
 }
 
 test.ComposeAffineWithShear<-function(){
 	params=matrix(c(100,50,10,3,3,3,1.1,0.9,1,0.03,0.1,0.05,10,50,50),
 		ncol=3,byrow=TRUE)
-	affmat=matrix(c(1.09878,0.0599299,0.104303,90.8005,
-		-0.0307421,0.891618,-0.0578741,58.6202,
-		-0.0531753,0.146476,0.994382,3.48883,
-		0,0,0,1),ncol=4,byrow=TRUE)
+	affmat=matrix(c(1.09698704245255, -0.0574906547972094, -0.0575695518672382, 
+	                0, 0.0794174055868413, 0.895837910136773, 0.0454677297831557, 
+	                0, 0.151929624282028, -0.0103700734989691, 0.994640563641534, 
+	                0, 87.462778082031, 56.3015147160819, 8.57028084743792, 1),
+                ncol=4)
 	checkEqualsNumeric(ComposeAffineFromIGSParams(params),affmat,tol=1e-6)
 }
 
 test.DecomposeAffineWithShear<-function(){
   params=matrix(c(100,50,10,3,3,3,1.1,0.9,1,0.03,0.1,0.05,0,0,0),
                 ncol=3,byrow=TRUE)
-  affmat=matrix(c(1.09878,0.0599299,0.104303,90.8005,
-                  -0.0307421,0.891618,-0.0578741,58.6202,
-                  -0.0531753,0.146476,0.994382,3.48883,
-                  0,0,0,1),ncol=4,byrow=TRUE)
+  affmat=matrix(c(1.09698704245255, -0.0574906547972094, -0.0575695518672382, 
+                  0, 0.0794174055868413, 0.895837910136773, 0.0454677297831557, 
+                  0, 0.151929624282028, -0.0103700734989691, 0.994640563641534, 
+                  0, 100, 50, 10, 1),ncol=4)
   checkEqualsNumeric(DecomposeAffineToIGSParams(affmat),params,tol=1e-6)
 }
 
