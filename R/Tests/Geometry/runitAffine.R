@@ -122,6 +122,54 @@ test.ReCompositionAffineShear123NoCentre<-function(x){
 	checkM(m)
 }
 
+test.ReCompositionAffineShear123NoCentreMirrorX<-function(x){
+  params=c(100,50,10,3,4,5,-1.1,0.9,1,0.05,0.02,0.03,0,0,0)
+  mat=ComposeAffineFromIGSParams(params)
+  checkRoundTripFromMat(mat)
+}
+
+test.ReCompositionAffineShear123NoCentreMirrorXY<-function(x){
+  params=c(100,50,10,3,4,5,-1.1,-0.9,1,0.05,0.02,0.03,0,0,0)
+  mat=ComposeAffineFromIGSParams(params)
+  checkRoundTripFromMat(mat)
+}
+
+test.ReCompositionAffineShear123NoCentreMirrorXYZ<-function(x){
+  params=c(100,50,10,3,4,5,-1.1,-0.9,-1,0.05,0.02,0.03,0,0,0)
+  mat=ComposeAffineFromIGSParams(params)
+  checkRoundTripFromMat(mat)
+}
+
+test.ReCompositionAffineShear123NoCentreMirrorY<-function(x){
+  params=c(100,50,10,3,4,5,1.1,-0.9,1,0.05,0.02,0.03,0,0,0)
+  mat=ComposeAffineFromIGSParams(params)
+  checkRoundTripFromMat(mat)
+}
+
+test.ReCompositionAffineShear123NoCentreMirrorZ<-function(x){
+  params=c(100,50,10,3,4,5,1.1,0.9,-1,0.05,0.02,0.03,0,0,0)
+  mat=ComposeAffineFromIGSParams(params)
+  checkRoundTripFromMat(mat)
+}
+
+test.ReCompositionSimpleMirrorX<-function(x){
+  m=matrix(0,4,4)
+  diag(m)=c(-1,1,1,1)
+  checkRoundTripFromMat(m)
+}
+
+test.ReCompositionSimpleMirrorY<-function(x){
+  m=matrix(0,4,4)
+  diag(m)=c(1,-1,1,1)
+  checkRoundTripFromMat(m)
+}
+
+test.ReCompositionSimpleMirrorZ<-function(x){
+  m=matrix(0,4,4)
+  diag(m)=c(1,1,-1,1)
+  checkRoundTripFromMat(m)
+}
+
 #' Compare result of ComposeAffineFromIGSParams vs CMTK dof2mat
 test.ComposeAffineFromIGSParamsvsCMTK<-function(){ 
   params=matrix(c(100,50,20,3,4,5,1.1,0.9,1,0.05,0.1,0.02,10,20,30),
