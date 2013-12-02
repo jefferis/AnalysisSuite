@@ -57,10 +57,21 @@ ReadIGSRegistration <- function (filename,ReturnRegistrationOnly=TRUE){
 			stop(paste("Unable to read registration file in",dirname))
 	}
 	r=ReadIGSTypedStream(filename)
-	if(!is.null(r$registration) && ReturnRegistrationOnly) return(r$registration)
+	if(!is.null(r$registration) && ReturnRegistrationOnly) {
+    rval=r$registration
+    mostattributes(rval)<-attributes(r)
+    return(rval)
+	}
 	else return(r)
 }
 
+#' Read CMTK TypedStream file to a list in memory
+#' 
+#' @details This is the default format used by CMTK for registration, studylist 
+#'   and images files.
+#' @param con Path to (optionally gzipped) file or (open) connection.
+#' @param CheckLabel Check, fix and warn for invalid or duplicate labels (by
+#'   default)
 ReadIGSTypedStream<-function(con, CheckLabel=TRUE){
 #  Reads Torsten's IGS TypedStream format which is what he uses for:
 #  registration
@@ -69,18 +80,19 @@ ReadIGSTypedStream<-function(con, CheckLabel=TRUE){
 #  Note that there are special methods to handle the 
 #  coefficients and active members of a spline warp 
 
+  l=list()
+  
 	if(is.character(con)) {
 		filename=con
-		if(any(grep("\\.gz$",filename))){
-			con=gzfile(filename,'rb')
-		} else con=file(con,'rb')
+		con=file(filename,'rb')
 
 		t=readLines(con,1)
 		if( !any(grep("! TYPEDSTREAM",t[1],fixed=TRUE)) ) 
 			stop(paste("This doesn't appear to be an IGS TypedStream:",filename))
+		typedStreamVersion=numeric_version(sub("! TYPEDSTREAM ","",t[1],
+                                           fixed=TRUE,useBytes=TRUE))
+    attr(l,"version")<-typedStreamVersion
 	}
-	
-	l=list()
 	
 	checkLabel=function(label) 	{
 		if( any(names(l)==label)  ){
@@ -180,11 +192,23 @@ ReadIGSTypedStream<-function(con, CheckLabel=TRUE){
 	return(l)
 }
 
-WriteIGSTypedStream<-function(l,filename,gzip=FALSE,version="1.1"){
+#' Write a suitable list to a CMTK TypedStream file on disk
+#' 
+#' @details NB a version specified on the command line overrides one encoded as 
+#'   an attribute in the input list.
+#' @param version TYPEDSTREAM version number, defaults to \code{"1.1"} if not 
+#'   specified in the version attribute of \code{l}.
+#' @export
+WriteIGSTypedStream<-function(l, filename, gzip=FALSE, version=NA_character_){
 	# Will take a list in the form returned by ReadIGSTypedStream and
 	# write it out to a text file
 #	con=if(gzip) file(filename,'w') else gzfile(filename,'w')
 	con=file(filename,'w')
+  if(is.na(version)){
+    version=as.character(attr(l,'version'))
+    if(!length(version)) version='1.1'
+  }
+  
 	cat("! TYPEDSTREAM ", version, "\n\n", file=con, sep="")
 	.WriteIGSTypedStream.list(l,con)
 	# iterate over list 
@@ -282,7 +306,7 @@ AffineToIGSRegistration<-function(x,centre,reference,model){
 	IGSParamsToIGSRegistration(d,reference=reference,model=model)
 }
 
-#'Write out CMTK registration to folder
+#'Write out CMTK registration list to folder
 #'
 #'@details Note that transformation in the forward direction (i.e. sample->ref) 
 #'  e.g. as calculated from a set of landmarks where set 1 is the sample is 
@@ -292,7 +316,7 @@ AffineToIGSRegistration<-function(x,centre,reference,model){
 #'  this function.
 #'@details CMTK v2.4 fixed a long-standing bug in affine (de)composition to CMTK
 #'  params. This resulted in a non-backwards compatible change marked by writing
-#'  the TYPEDSTREAM as version 2.4. The R code in this package implements both
+#'  the TYPEDSTREAM as version 2.4. The R code in this package implements both 
 #'  the new and old compose/decompose functions, using the new by default.
 #'@param reglist List specifying CMTK registration parameters
 #'@param foldername Path to registration folder (usually ending in .list)
