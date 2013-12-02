@@ -145,7 +145,7 @@ AffineTranslateRotateScale<-function(tx=0,ty=0,tz=0,rx=0,ry=0,rz=0,
 	AffineScale(sx,sy,sz)%*%AffineRotation(rx,ry,rz,Degrees=Degrees)%*%AffineTranslate(tx,ty,tz,...)
 }
 
-ComposeAffineFromIGSParams<-function(params){
+ComposeAffineFromIGSParams<-function(params, legacy=FALSE){
 	# Expects a 5 x 3 matrix of paramaters
 	# in the same order as the affine transformation parameters
 	# in the affine registration files
@@ -160,11 +160,11 @@ ComposeAffineFromIGSParams<-function(params){
 	rx=params[2,1],ry=params[2,2],rz=params[2,3],
 	sx=params[3,1],sy=params[3,2],sz=params[3,3],
 	shx=params[4,1],shy=params[4,2],shz=params[4,3],
-	cx=params[5,1],cy=params[5,2],cz=params[5,3] ))
+	cx=params[5,1],cy=params[5,2],cz=params[5,3], legacy=legacy))
 }
 
 ComposeAffineFromIGSParams.named<-function(tx=0,ty=0,tz=0,rx=0,ry=0,rz=0,sx=1,sy=1,
-  sz=1,shx=0,shy=0,shz=0,cx=0,cy=0,cz=0){
+  sz=1,shx=0,shy=0,shz=0,cx=0,cy=0,cz=0, legacy=FALSE){
 	# Compose an affine transformation matrix in an identical fashion to 
 	# IGS's affine matrix
 	#- params[0..2] tx,ty,tz
@@ -207,15 +207,41 @@ ComposeAffineFromIGSParams.named<-function(tx=0,ty=0,tz=0,rx=0,ry=0,rz=0,sx=1,sy
 	rval[1+1,2+1] = (-cos0xsin1*sin2 - sin0*cos2)
 	rval[2+1,2+1] =  cos0*cos1
 
-	# generate scales and shears
-	scaleShear=matrix(0,4,4)
-	diag(scaleShear)=c(sx,sy,sz,1)
-	scaleShear[0+1,1+1]=shx
-	scaleShear[0+1,2+1]=shy
-	scaleShear[1+1,2+1]=shz
-	
-	# NB matrix multiplication must be in opposite order from C original
-	rval = rval%*%scaleShear
+  if(legacy){
+    rval[1:3,1]=rval[1:3,1]*sx
+    rval[1:3,2]=rval[1:3,2]*sy
+    rval[1:3,3]=rval[1:3,3]*sz
+    shears=c(shx,shy,shz)
+    if(TRUE){
+      # generate shears in broken CMTK <2.4.0 style
+      for (i in 3:1 ) {
+        shear=matrix(0,4,4)
+        diag(shear)<-1
+        # i/2 {0,0,1} for i={0,1,2}
+        # (i/2)+(i%2)+1 {1,2,2} for i={0,1,2}
+        # shear[i/2][(i/2)+(i%2)+1] = dofs[9+i];
+        shear[c(2,3,3)[i],c(1,1,2)[i]]=shears[i]
+        rval = shear%*%rval
+      }
+    } else {
+      # Generate shears in broken early IGS form
+      for (i in 3:1 ) {
+        for (j in 1:3) {
+          rval[j,i] =rval[j,i] +shears[i] * rval[j,i%%3+1]
+        }
+      }
+    }
+  } else {
+    # generate scales and shears according to CMTK >=v.2.4.0 / svn r5050
+    scaleShear=matrix(0,4,4)
+    diag(scaleShear)=c(sx,sy,sz,1)
+    scaleShear[0+1,1+1]=shx
+    scaleShear[0+1,2+1]=shy
+    scaleShear[1+1,2+1]=shz
+    
+    # NB matrix multiplication must be in opposite order from C original
+    rval = rval%*%scaleShear
+  }
 	
 	# transform rotation center
 	cM = c(  cx*rval[0+1,0+1] + cy*rval[0+1,1+1] + cz*rval[0+1,2+1],
