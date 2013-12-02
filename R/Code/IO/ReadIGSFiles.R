@@ -59,7 +59,10 @@ ReadIGSRegistration <- function (filename,ReturnRegistrationOnly=TRUE){
 	r=ReadIGSTypedStream(filename)
 	if(!is.null(r$registration) && ReturnRegistrationOnly) {
     rval=r$registration
-    mostattributes(rval)<-attributes(r)
+    attr.r=attributes(r)
+    attr.rval=attributes(rval)
+    extra_attributes=setdiff(names(attr.r),names(attr.rval))
+    attributes(rval)[extra_attributes]<-attributes(r)[extra_attributes]
     return(rval)
 	}
 	else return(r)
