@@ -41,28 +41,12 @@
 # Copyright Addendum:
 # DecomposeAffineToIGSParams and ComposeAffineFromIGSParams
 # are translations to R of code originally copyright Torsten Rohlfing 
-
 # 
-# source(file.path(CodeDir,"Affine.R"))
-# 
-# Identity matrix:
-# [1, 0, 0, 0]
-# [0, 1, 0, 0]
-# [0, 0, 1, 0]
-# [0, 0, 0, 1]
 
-matI=as.matrix( rbind(
-		c(1,0,0,0),
-		c(0,1,0,0),
-		c(0,0,1,0),
-		c(0,0,0,1)  ) )
-
-
-# Z rotation:
-# [cos t, 0, -sin t, 0]
-# [sin t, 0, cos t, 0]
-# [0, 0, 1, 0]
-# [0, 0, 0, 1]
+matI=matrix(c(1,0,0,0,
+              0,1,0,0,
+              0,0,1,0,
+              0,0,0,1), ncol=4, byrow=TRUE)
 
 AffineRotation<-function(rx=0,ry=0,rz=0,Degrees=F){
 	# expects rotations around the x, y and z axes
@@ -135,9 +119,6 @@ AffineTranslate<-function(tx=0,ty=0,tz=0,WidthPixel=1,HeightPixel=1,DepthPixel=1
 			c(0,1,0,ty/HeightPixel),
 			c(0,0,1,tz/DepthPixel),
 			c(0,0,0,1) ))
-}
-
-AffineShear<-function(hxy,hxz,hyz){
 }
 
 AffineTranslateRotateScale<-function(tx=0,ty=0,tz=0,rx=0,ry=0,rz=0,
@@ -302,13 +283,6 @@ TransformPoints<-function(Points,AffMat,dim=3){
 
 	return(rval)
 }
-
-	
-AffineTranslateRotateScale(
--6.400000095, 4.300000064, 12.00000005,
--3.800542432, 1.256377663, -0.9860968818,
-1.054021854, 0.9631939015, 1.039477509 ,
-Degrees=T,Width=.33,Height=.33,Depth=1)
 
 CalculateAffineFromLandmarkPairs<-function(landmarks,StartMat,
 	SwapTransform=FALSE,Verbose=FALSE,costfn=function(x) sum(abs(x)),method="BFGS",...){
