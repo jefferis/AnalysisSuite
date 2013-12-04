@@ -39,7 +39,7 @@
 #################
 #ENDMAINCOPYRIGHT
 # Copyright Addendum:
-# DecomposeAffineToIGSParams and ComposeAffineFromIGSParams.named
+# DecomposeAffineToIGSParams and ComposeAffineFromIGSParams
 # are translations to R of code originally copyright Torsten Rohlfing 
 
 # 
@@ -145,34 +145,42 @@ AffineTranslateRotateScale<-function(tx=0,ty=0,tz=0,rx=0,ry=0,rz=0,
 	AffineScale(sx,sy,sz)%*%AffineRotation(rx,ry,rz,Degrees=Degrees)%*%AffineTranslate(tx,ty,tz,...)
 }
 
-ComposeAffineFromIGSParams<-function(params, legacy=FALSE){
-	# Expects a 5 x 3 matrix of paramaters
-	# in the same order as the affine transformation parameters
-	# in the affine registration files
-	
-	if(is.list(params)) params=unlist(params)
-	if(is.vector(params)) params=matrix(params,ncol=3,byrow=T)
-	if(identical(dim(params), as.integer(c(3,5)))) params = t(params) else {
-		if(!identical(dim(params),as.integer(c(5,3)))) stop("unable to parse params")
-	}
-	
-	return(ComposeAffineFromIGSParams.named( tx=params[1,1],ty=params[1,2],tz=params[1,3],
-	rx=params[2,1],ry=params[2,2],rz=params[2,3],
-	sx=params[3,1],sy=params[3,2],sz=params[3,3],
-	shx=params[4,1],shy=params[4,2],shz=params[4,3],
-	cx=params[5,1],cy=params[5,2],cz=params[5,3], legacy=legacy))
-}
+#' Compose homogeneous affine matrix from CMTK registration parameters
+#' 
+#' @details If the \code{legacy} parameter is not set explicitly, then it will 
+#'   be set to \code{TRUE} if params has a version attribute <2.4 or FALSE 
+#'   otherwise.
+#' @param params 5x3 matrix of CMTK registration parameters or list of length 5.
+#' @param legacy Whether to assume that parameters are in the format uses by 
+#'   CMTK <=2.4.0 (default FALSE, see details).
+#' @param tx,ty,tz Translation along x, y and z axes (default 0)
+#' @param rx,ry,rz Rotation about x, y and z axes (in degrees, default 0)
+#' @param sx,sy,sz Scale for x, y and z axes (default 1)
+#' @param shx, shy, shz Shear for x,y,z axes (default 0)
+#' @param cx,cy,cz Centre for rotation
+#' @return 4x4 homogeneous affine transformation matrix
+#' @details translation and centre components are assumed to be in physical 
+#'   coordinates.
+#' @export
+ComposeAffineFromIGSParams<-function(params=NULL, tx=0, ty=0, tz=0, rx=0, ry=0, 
+  rz=0, sx=1, sy=1, sz=1, shx=0, shy=0, shz=0, cx=0, cy=0, cz=0, legacy=NA){
 
-ComposeAffineFromIGSParams.named<-function(tx=0,ty=0,tz=0,rx=0,ry=0,rz=0,sx=1,sy=1,
-  sz=1,shx=0,shy=0,shz=0,cx=0,cy=0,cz=0, legacy=FALSE){
-	# Compose an affine transformation matrix in an identical fashion to 
-	# IGS's affine matrix
-	#- params[0..2] tx,ty,tz
-	# params[3..5] rx,ry,rz (in degrees)
-	# params[6..8] sx,sy,sz
-	# params[9..11] shx,shy,shz
-	# params[12..14] cx,cy,cz
-	DegToRad=function(theta) theta/360*2*pi
+  if(is.na(legacy)) legacy=isTRUE(attr(params,'version')<numeric_version('2.4'))
+
+  if(!is.null(params)){
+    if(is.list(params)) params=unlist(params)
+    if(is.vector(params)) params=matrix(params,ncol=3,byrow=T)
+    if(identical(dim(params), as.integer(c(3,5)))) params = t(params) else {
+      if(!identical(dim(params),as.integer(c(5,3)))) stop("unable to parse params")
+    }
+    tx=params[1,1];ty=params[1,2];tz=params[1,3]
+    rx=params[2,1];ry=params[2,2];rz=params[2,3]
+    sx=params[3,1];sy=params[3,2];sz=params[3,3]
+    shx=params[4,1];shy=params[4,2];shz=params[4,3]
+    cx=params[5,1];cy=params[5,2];cz=params[5,3]
+  }
+  
+  DegToRad=function(theta) theta/360*2*pi
 	
 	alpha = DegToRad(rx)
 	theta = DegToRad(ry)

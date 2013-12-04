@@ -40,8 +40,8 @@ test.ExactAffineLandmarksRegistration<-function(){
 	# this has been checked for 0 shear
 	# require(AnalyzeFMRI)
 	# mat34.to.TRSZ(xform) 
-	xform=ComposeAffineFromIGSParams.named(rx=5,ry=10,rz=20,tx=20,ty=30,tz=40)
-	xform=ComposeAffineFromIGSParams.named(rx=5,ry=10,rz=20,sx=1.1,sz=1.3,tx=20,ty=30,tz=40)
+	xform=ComposeAffineFromIGSParams(rx=5,ry=10,rz=20,tx=20,ty=30,tz=40)
+	xform=ComposeAffineFromIGSParams(rx=5,ry=10,rz=20,sx=1.1,sz=1.3,tx=20,ty=30,tz=40)
 	
 	# and apply to get a new point set exactly related by an affine xform
 	testLandmarks=list(target=TransformPoints(points,xform),src=points)
