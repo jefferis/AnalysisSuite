@@ -281,24 +281,32 @@ CMTKParamsToCMTKRegistration<-function(x,reference="dummy",floating="dummy"){
                            affine_xform=affine_xform))
   attr(l$registration$reference_study,"quoted")=TRUE
   attr(l$registration$floating_study,"quoted")=TRUE
+  version=attr(x,'version')
+  if(is.null(version)) version=numeric_version('2.4')
+  attr(l,'version')=version
   l
 }
 
 #' Convert homogeneous affine registration to CMTK registration list
 #' 
 #' @details Note that this uses the modern CMTK notation of a "floating" image 
-#'   rather than model.
+#'   rather than model. It will also mark the resultant registration as version 
+#'   "2.4", i.e. using the new correct Compose/Decompose functions of CMTK 
+#'   >=2.4.0.
 #' @param x 4x4 homogeneous affine matrix
 #' @param centre Optional centre of rotation
 #' @param reference, floating Optional paths to reference and floating images
 #' @return list of CMTK registration parameters
-#' @seealso
-#'   \code{\link{CMTKParamsToCMTKRegistration},\link{WriteIGSRegistrationFolder}}
+#' @seealso 
+#' \code{\link{CMTKParamsToCMTKRegistration},\link{WriteIGSRegistrationFolder}}
 #' @export
 AffineToCMTKRegistration<-function(x,centre,reference,floating){
   if(!missing(centre)) d=DecomposeAffineToIGSParams(x,centre=centre)
   else d=DecomposeAffineToIGSParams(x)
-  IGSParamsToIGSRegistration(d,reference=reference,floating=floating)
+  arglist<-list(x=d)
+  if(!missing(reference)) arglist$reference=reference
+  if(!missing(floating)) arglist$floating=floating
+  do.call(CMTKParamsToCMTKRegistration, arglist)
 }
 
 AffineToIGSRegistration<-function(x,centre,reference,model){

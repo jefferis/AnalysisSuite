@@ -555,5 +555,7 @@ DecomposeAffineToIGSParams<-function(matrix,centre=c(0,0,0)){
 	params[4] = rad2deg(-atan2 (sinAlpha, cosAlpha)) # alpha
 
 	# /** END OF ADOPTED VTK CODE **/
-	return (matrix(params,ncol=3,byrow=TRUE))
+  param_matrix=matrix(params,ncol=3,byrow=TRUE)
+  attr(param_matrix,'version')=numeric_version('2.4')
+	return (param_matrix)
 }
