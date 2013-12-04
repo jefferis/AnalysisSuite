@@ -393,14 +393,6 @@ CalculateIGSParamsFromLandmarkPairs<-function(landmarks,dofs=c(3,6,9,12),
 	m
 }
 
-
-FindTorstenFromAffine<-function(affmat,centre=c(84.39,84.39,43.5)){
-# INCOMPLETE
-	TorstenGuess=rbind(affmat[1:3,4],rep(0,3),rep(1,3),rep(0,3),centre)
-	TorstenGuessComps=t(TorstenGuess)[1:12]
-	TorstenGuess=optim()
-}
-
 #' Decompose homogeneous affine matrix to CMTK registration parameters
 #'
 #' @param matrix 4x4 homogeneous affine matrix
