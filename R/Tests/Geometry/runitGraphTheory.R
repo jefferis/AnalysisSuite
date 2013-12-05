@@ -100,7 +100,7 @@ test.rootpoints<-function(){
                    Parent=c(-1,1:4,-1))
   testn.floating=SWC2Neuron(testd,'test')
   checkEquals(rootpoints(testn.floating),1)
-  testd2=rbind(testd,c(7,2,1,1,0,NA,6))
+  testd2=rbind(testd,c(7,2,7,7,0,NA,6))
   testn.2trees=SWC2Neuron(testd2,'test')
   # check that we get two roots when there are indeed 2 roots
   rps=rootpoints(as.igraph(testn.2trees))
