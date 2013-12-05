@@ -1520,9 +1520,7 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 #' @return raw vector of decompressed data
 #' @export
 read.zlib<-function(compressed, offset=NA, compressedLength=NA, ...){
-  if(is.raw(compressed)){
-    zlib_data=readBin(compressed,what=raw(),n=length(compressed))
-  } else {
+  if(!is.raw(compressed)){
     if(inherits(compressed,'connection')){
       if(is.na(compressedLength)) stop("Must supply compressedLength when reading from a connection")
       con=compressed
@@ -1533,9 +1531,9 @@ read.zlib<-function(compressed, offset=NA, compressedLength=NA, ...){
       else offset = 0
       if(is.na(compressedLength)) compressedLength=file.info(compressed)$size-offset
     }
-    zlib_data=readBin(con, what=raw(), n=compressedLength)
+    compressed=readBin(con, what=raw(), n=compressedLength)
   }
-  memDecompress(zlib_data,type='gzip')
+  memDecompress(compressed,type='gzip')
 }
 
 #' Compress raw data, returning raw vector or writing to file
