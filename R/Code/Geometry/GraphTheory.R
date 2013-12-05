@@ -136,7 +136,7 @@ as.igraph.neuron<-function(x,directed=TRUE,method=c("swc",'seglist'),
   prune=TRUE, keep.ids=prune, ...){
   method=match.arg(method,several.ok=TRUE)
   if('swc'%in%method && !is.null(x$d$Parent) && !is.null(x$d$PointNo)){
-    as.igraph.swc(x$d, directed=directed, prune=prune, keep.ids=keep.ids)
+    neurongraph.swc(x$d, directed=directed)
   } else {
     as.igraph.seglist(x$SegList, directed=directed, prune=prune, keep.ids=keep.ids)
   }
@@ -171,8 +171,44 @@ as.igraph.swc<-function(x, directed=TRUE, prune=TRUE, keep.ids=prune, ...){
 #' @rdname CoreNeuron
 #' @seealso \code{\link{CoreNeuronFromGraph}}
 CoreNeuronFromSWC<-function(swc,origin=NULL){
-  g=as.igraph.swc(swc,directed=TRUE)
+  g=neurongraph.swc(swc, directed=TRUE)
   CoreNeuronFromGraph(g)
+}
+
+#' Contruct a graph to encode a neuron's connectivity
+#' 
+#' @details We make the following assumptions about neurons coming in
+#' \itemize{ 
+#'   \item They have an integer vertex label that need not start from 1 and that
+#'   may have gaps 
+#'   \item The edge list which defines connectivity specifies edges using pairs
+#'   of vertex labels, _not_ raw vertex ids.
+#' }
+#' @details We make no attempt to determine the root points at this stage.
+#' @details The raw vertex ids will be in the order of vertexlabels and can
+#' therefore be used to index a block of vertex coordinates.
+#' @param el A two columm matrix (start, end) defining edges
+#' @param vertexlabels Integer labels for graph - the edge list is specified
+#'   using these labels.
+#' @return an \code{igraph} object with a vertex for each entry in vertexlabels,
+#'   each vertex having a \code{label} attribute. All vertices are included
+#'   whether connected or not.
+neurongraph<-function(el, vertexlabels, directed=TRUE){
+  if(any(duplicated(vertexlabels))) stop("Vertex labels must be unique!")
+  # now translate edges into raw vertex_ids
+  rawel=match(t(el), vertexlabels)
+  g=graph(rawel, n=length(vertexlabels), directed=directed)
+  V(g)$label=vertexlabels
+  g
+}
+
+#' Construct neurongraph from a block of SWC format data
+#' 
+#' @param x Dataframe containingb block of SWC data
+#' @param directed Logical indicating whether to make a directed graph
+neurongraph.swc<-function(x, directed=TRUE){
+  el=data.matrix(EdgeListFromSWC(x))
+  neurongraph(el, x$PointNo, directed=directed)
 }
 
 #' Construct SegList (+ other core fields) from graph of all nodes and origin
