@@ -286,8 +286,8 @@ graph2seglist<-function(g, origin=NULL, Verbose=FALSE){
   
   # Handle Origin
   if(is.null(origin)){
-    # no explicit origin specified
-    origin=rootpoints(g)
+    # no explicit origin specified, use raw vertex id of graph root
+    origin=rootpoints(g, original.ids=FALSE)
   } else {
     # we've been given an origin but it may not be a raw vertex id for this
     # graph so translate it
