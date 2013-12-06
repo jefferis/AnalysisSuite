@@ -154,4 +154,8 @@ test.graph2seglist<-function(){
   # single floating point with different vid
   igraph::V(g)$vid=4
   checkEquals(graph2seglist(g),list(4))
+  
+  # trifurcation
+  g=graph(c(1,2, 2,3, 2,4, 2,5, 5,6, 6,7))
+  checkEquals(graph2seglist(g),list(c(1,2),c(2,3),c(2,4),c(2,5,6,7)))
 }
