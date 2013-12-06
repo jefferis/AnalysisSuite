@@ -106,3 +106,33 @@ test.rootpoints<-function(){
   rps=rootpoints(as.igraph(testn.2trees))
   checkEquals(rps,c(1,6))
 }
+
+test.graph2seglist<-function(){
+  # simple linear graph
+  g=graph(c(1, 2, 2, 3))
+  sl=list(c(1, 2, 3))
+  checkEquals(graph2seglist(g), sl)
+  
+  # simple linear graph with different vids
+  g=graph(c(1, 2, 2, 3))
+  igraph::V(g)$vid=3:5
+  sl=list(3:5)
+  checkEquals(graph2seglist(g), sl)
+  
+  # simple linear graph with different vids and different origin
+  g=graph(c(1, 2, 2, 3))
+  igraph::V(g)$vid=3:5
+  sl=list(5:3)
+  checkEquals(graph2seglist(g, origin=5), sl)
+  
+  # simple linear graph with different vids and origin at centre, resulting
+  # in a branched seglist
+  g=graph(c(1, 2, 2, 3))
+  igraph::V(g)$vid=3:5
+  sl=list(4:3,4:5)
+  checkEquals(graph2seglist(g, origin=4), sl)
+  
+  # cyclic graph -> exception since seglist is undefined
+  g=graph(c(1, 2, 2, 3, 3, 1))
+  checkException(graph2seglist(g),silent=TRUE)
+}
