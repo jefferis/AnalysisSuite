@@ -202,7 +202,10 @@ test.graph2seglist<-function(){
   
   # trifurcation
   g=graph(c(1,2, 2,3, 2,4, 2,5, 5,6, 6,7))
-  checkEquals(graph2seglist(g),list(c(1,2),c(2,3),c(2,4),c(2,5,6,7)))
+  sl=list(c(1,2),c(2,3),c(2,4),c(2,5,6,7))
+  checkEquals(graph2seglist(g),sl)
+  # undirected equivalent - nb origin must be specified
+  checkEquals(graph2seglist(as.undirected(g),origin=1),sl)
   
   # rapid branching
   g=graph(c(1,2, 2,3, 2,4, 4,5, 4,6))

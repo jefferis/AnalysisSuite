@@ -316,7 +316,7 @@ graph2seglist<-function(g, origin=NULL, Verbose=FALSE){
     if(Verbose) warning("Empty graph! Seglist not defined")
     return(NULL)
   }
-  if(!igraph::is.dag(g)){
+  if(igraph::is.directed(g) && !igraph::is.dag(g)){
     stop("Graph has cycles!")
   }
   
@@ -338,7 +338,8 @@ graph2seglist<-function(g, origin=NULL, Verbose=FALSE){
   # Handle Origin
   if(is.null(origin)){
     # no explicit origin specified, use raw vertex id of graph root
-    origin=rootpoints(g, original.ids=FALSE)
+    if(is.directed(g))
+      origin=rootpoints(g, original.ids=FALSE)
   } else {
     # we've been given an origin but it may not be a raw vertex id for this
     # graph so translate it
