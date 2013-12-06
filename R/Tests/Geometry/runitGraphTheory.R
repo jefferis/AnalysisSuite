@@ -135,4 +135,11 @@ test.graph2seglist<-function(){
   # cyclic graph -> exception since seglist is undefined
   g=graph(c(1, 2, 2, 3, 3, 1))
   checkException(graph2seglist(g),silent=TRUE)
+  
+  # single floating point
+  g=graph(NULL,n=1)
+  checkEquals(graph2seglist(g),list(1))
+  # single floating point with different vid
+  igraph::V(g)$vid=4
+  checkEquals(graph2seglist(g),list(4))
 }

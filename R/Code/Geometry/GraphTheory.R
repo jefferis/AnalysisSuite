@@ -261,10 +261,6 @@ CoreNeuronFromGraph<-function(g, origin=NULL, Verbose=TRUE){
 graph2seglist<-function(g, origin=NULL, Verbose=FALSE){
   # Handle degenerate cases
   if(!is.connected(g)) stop("Graph is not fully connected!")
-  if(igraph::vcount(g)==1) {
-    if(Verbose) warning("Singleton graph! Seglist not defined")
-    return(NULL)
-  }
   if(igraph::vcount(g)==0) {
     if(Verbose) warning("Empty graph! Seglist not defined")
     return(NULL)
@@ -281,6 +277,11 @@ graph2seglist<-function(g, origin=NULL, Verbose=FALSE){
   vids=igraph::V(g)$vid
   if(is.null(vids)){
     vids=seq.int(igraph::vcount(g))
+  }
+  
+  # Floating point
+  if(igraph::vcount(g)==1) {
+    return(list(vids))
   }
   
   # Handle Origin
