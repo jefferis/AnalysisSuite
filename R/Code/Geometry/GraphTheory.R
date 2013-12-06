@@ -90,10 +90,14 @@ ReducedAdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
 #' @seealso \code{\link{graph.dfs},\link{as.igraph.neuron}}
 RerootNeuron<-function(ANeuron,origin=1,graph.method=c("swc",'seglist')){
   gam=as.igraph(ANeuron,method=graph.method)
-  # will use a depth first search to reorder tree starting from origin
-  dfs=graph.dfs(gam,root=origin,father=TRUE,neimode='all')
-  coreneuron=CoreNeuronFromGraph(gam,dfs=dfs)
+  coreneuron=CoreNeuronFromGraph(gam, origin=origin)
   ANeuron[names(coreneuron)]<-coreneuron
+  
+  # also use depth first search to reorder SWC data starting from origin
+  # note that this order will be well-defined when the tree is fully connected
+  # but when there are subgraphs that are not connected to the origin the
+  # numbering will be valid but have no meaning with respect to the new origin.
+  dfs=graph.dfs(gam,root=origin,father=TRUE,neimode='all')
   # Now fix the SWC data chunk as well
   ANeuron$d$Parent=dfs$father
   # SWC says that the root will have parent -1
@@ -223,56 +227,18 @@ neurongraph.swc<-function(x, directed=TRUE){
 #' @export
 #' @rdname CoreNeuron
 #' @seealso \code{\link{graph.dfs},\link{RerootNeuron}}
-CoreNeuronFromGraph<-function(g,origin=NULL,dfs=NULL){
-  if(is.null(dfs)){
-    if(is.null(origin)) {
-      # if we haven't specified an origin, then we can infer this for a
-      # directed graph.
-      if(is.directed(g)){
-        origin=rootpoints(g)
-        if(length(origin)>1){
-          warning("Graph has multiple origins. Using first")
-          origin=origin[1]
-        }
-      }
-      else stop("Must specify at least one of dfs or origin")
-    }
-    if(origin<1 || origin>vcount(g)) stop("invalid origin:",origin)
-    dfs=graph.dfs(g,root=origin,father=TRUE,neimode='all')
+CoreNeuronFromGraph<-function(g, origin=NULL, Verbose=TRUE){
+  if(no.clusters(g)>1){
+    stop("Cannot yet handle subgraphs in neuron!")
+    gg=igraph::decompose.graph(g)
+    subtrees=lapply(gg,graph2seglist)
+    # need to figure out
   } else {
-    # dfs seems to have origin 0-indexed (but everything else 1-indexed)
-    if(is.null(origin)) origin=dfs$root+1
-    else {
-      # check that the origin we were given matches dfs
-      stop("origin specified in dfs: ",dfs$root+1,
-        ' does not match that on command line: ',origin)
-    }
+    sl=graph2seglist(g, origin=origin, Verbose=Verbose)
+    if(length(sl) && length(sl[[1]][1])) origin=sl[[1]][1]
+    else origin=NA_integer_
   }
-  # FIXME: teach this to cope with multiple clusters in input graph
-  # FIXME: Drop isolated vertices
   ncount=igraph::degree(g)
-  # put the first vertex into the first segment
-  curseg=dfs$order[1]
-  if(length(ncount)==1) sl=list(curseg)
-  else {
-    sl=list()
-    # we have more than 1 point in graph and some work to do!
-    for(i in seq.int(from=2,to=length(dfs$order))){
-      curpoint=dfs$order[i]
-      if(length(curseg)==0){
-        # segment start, so initialise with parent
-        curseg=dfs$father[curpoint]
-      }
-      # always add current point
-      curseg=c(curseg,curpoint)
-      # now check if we need to close the segment
-      if(ncount[curpoint]!=2){
-        # branch or end point
-        sl[[length(sl)+1]]=curseg
-        curseg=integer(0)
-      }
-    }
-  }
   list(NumPoints=length(ncount),
   StartPoint=origin,
   BranchPoints=seq.int(length.out=length(ncount))[ncount>2],
