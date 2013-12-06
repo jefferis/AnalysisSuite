@@ -264,9 +264,9 @@ CoreNeuronFromGraph<-function(g, origin=NULL, Verbose=TRUE){
       cg=igraph::clusters(g)
       master_tree_num=cg$membership[origin]
       # make a master graph with the vertices from subgraph including origin
-      masterg=igraph::induced.subgraph(g ,which(cg$membership==master_tree_num))
+      masterg=igraph::induced.subgraph(g, which(cg$membership==master_tree_num))
       # ... and then corresponding seglist
-      sl=graph2seglist(g, origin=origin)
+      sl=graph2seglist(masterg, origin=origin)
       # now deal with remaining vertices
       remainderg=igraph::induced.subgraph(g, which(cg$membership!=master_tree_num))
       gg=igraph::decompose.graph(remainderg)
