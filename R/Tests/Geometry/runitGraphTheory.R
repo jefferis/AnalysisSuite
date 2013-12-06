@@ -144,6 +144,10 @@ test.graph2seglist<-function(){
   sl=list(4:3,4:5)
   checkEquals(graph2seglist(g, origin=4), sl)
   
+  # multiple subtrees -> exception since seglist only defined for 1 subtree
+  g=graph(c(1,2,2,3,3,4,5,6))
+  checkException(graph2seglist(g),silent=TRUE)
+  
   # cyclic graph -> exception since seglist is undefined
   g=graph(c(1, 2, 2, 3, 3, 1))
   checkException(graph2seglist(g),silent=TRUE)
@@ -151,6 +155,7 @@ test.graph2seglist<-function(){
   # single floating point
   g=graph(NULL,n=1)
   checkEquals(graph2seglist(g),list(1))
+  
   # single floating point with different vid
   igraph::V(g)$vid=4
   checkEquals(graph2seglist(g),list(4))
@@ -158,4 +163,31 @@ test.graph2seglist<-function(){
   # trifurcation
   g=graph(c(1,2, 2,3, 2,4, 2,5, 5,6, 6,7))
   checkEquals(graph2seglist(g),list(c(1,2),c(2,3),c(2,4),c(2,5,6,7)))
+  
+  # rapid branching
+  g=graph(c(1,2, 2,3, 2,4, 4,5, 4,6))
+  sl=list( c(1,2),c(2,3),c(2,4),c(4,5),c(4,6) )
+  checkEquals(graph2seglist(g),sl)
+  
+  # different root
+  g=graph(c(1,2, 2,3, 2,4, 4,5, 4,6))
+  sl=list( c(6,4),c(4,2),c(2,1),c(2,3),c(4,5) )
+  checkEquals(graph2seglist(g,origin=6),sl)
+  
+  # non-sequential numbering
+  g=graph(c(1,2, 2,6, 2,4, 4,5, 4,3))
+  sl<-list( c(1,2),c(2,4),c(4,3),c(4,5),c(2,6) )
+  checkEquals(graph2seglist(g,origin=1),sl)
+  
+  # non-sequential numbering with vertex labels
+  # in this case we imagine that there are a set of vertices with PointNo
+  # 2,3,4,6,7,9
+  g=neurongraph(c(2,4,4,3,3,6,6,9,6,7),vertexlabels=c(2:4,6,7,9))
+  sl=list(c(1,3,2,4),c(4,5),c(4,6))
+  checkEquals(graph2seglist(g,origin=1),sl)
+  # same but with a different origin
+  # NB origin is defined in terms of sequential raw vertex id so 
+  # origin=3 means that the origin is the vertex with label=4
+  sl2=list(c(3,1),c(3,2,4),c(4,5),c(4,6))
+  checkEquals(graph2seglist(g,origin=3),sl2)
 }
