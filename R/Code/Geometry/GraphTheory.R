@@ -270,6 +270,8 @@ CoreNeuronFromGraph<-function(g, origin=NULL, Verbose=TRUE){
       # now deal with remaining vertices
       remainderg=igraph::induced.subgraph(g, which(cg$membership!=master_tree_num))
       gg=igraph::decompose.graph(remainderg)
+      # reorder by descending number of vertices
+      gg=gg[order(sapply(gg,igraph::vcount), decreasing=TRUE)]
       subtrees=c(list(sl),lapply(gg, graph2seglist, Verbose=Verbose))
     }
     nTrees=length(subtrees)
