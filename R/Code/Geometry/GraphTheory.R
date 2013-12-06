@@ -238,8 +238,17 @@ neurongraph.swc<-function(x, directed=TRUE){
 #' @rdname CoreNeuron
 #' @seealso \code{\link{graph.dfs},\link{RerootNeuron},\link{graph2seglist}}
 CoreNeuronFromGraph<-function(g, origin=NULL, Verbose=TRUE){
+  # translate origin into raw vertex id if necessary 
+  if(!is.null(origin)){
+    vertex_labels=igraph::V(g)$label
+    if(!is.null(vertex_labels)){
+      origin=match(origin,vertex_labels)
+      if(is.na(origin)) stop("Invalid origin")
+    }
+  }
   # save original vertex ids
   igraph::V(g)$vid=seq.int(igraph::vcount(g))
+  # check if we have multiple subgraphs
   if(no.clusters(g)>1){
     if(is.null(origin)){
       # no origin specified, will pick the biggest subtree
