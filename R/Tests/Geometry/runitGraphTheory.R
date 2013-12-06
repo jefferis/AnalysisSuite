@@ -93,13 +93,25 @@ test.CoreNeuronFromGraph<-function(){
   checkEquals(testn$SegList,cn$SegList)
 }
 
-test.rootpoints<-function(){
+test.nodes<-function(){
   checkEquals(rootpoints(testn),1)
+  checkEquals(endpoints(testn),c(1,5,6))
+  checkEquals(branchpoints(testn),3)
+  checkException(rootpoints(testn,subtrees=2),silent=T)
+  # now check that we can cope if nTrees is not set
+  # (as is sometimes true for old neurons)
+  testn$nTrees=NULL
+  checkEquals(rootpoints(testn),1)
+  checkException(rootpoints(testn,subtrees=2),silent=T)
+  
+  # now more complicated neurons - isloated point 
   testd=data.frame(PointNo=1:6,Label=2,
                    X=c(1:5,3),Y=c(rep(1,5),2),Z=0,W=NA,
                    Parent=c(-1,1:4,-1))
   testn.floating=SWC2Neuron(testd,'test')
   checkEquals(rootpoints(testn.floating),1)
+  checkEquals(rootpoints(testn.floating, subtrees=1:2, exclude.isolated=FALSE),c(1,6))
+  
   testd2=rbind(testd,c(7,2,7,7,0,NA,6))
   testn.2trees=SWC2Neuron(testd2,'test')
   # check that we get two roots when there are indeed 2 roots
