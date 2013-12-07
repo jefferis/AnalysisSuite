@@ -610,7 +610,9 @@ CoreNeuronFromPointAndEdgeData<-function(PointData,Neighbours,Origin=NULL,Proces
 	as.neuron(CoreNeuron)
 }
 
-ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Verbose=FALSE){
+ParseAM3DToNeuron=function(datalist,filename,
+  method=c("original","igraph"),Force=FALSE,
+  ProcessAllTrees=TRUE,Verbose=FALSE){
 	# function to parse an amira mesh 3D
 	# format skeleton tree produced by the Amira Skeletonize plugin
 	# 050505 - This function has been rewritten extensively over the
@@ -630,11 +632,16 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 	
 	# Bail out if we couldn't read any data
 	if(is.null(datalist)) return(NULL)
+  method=match.arg(method)
 	Neighbours=datalist$EdgeList
 	PointData=datalist$PointList
-	CoreNeuron=CoreNeuronFromPointAndEdgeData(
-			datalist$PointList,datalist$EdgeList,datalist$Origin,
-			ProcessAllTrees = ProcessAllTrees,Verbose = Verbose)
+  if(method=='original'){
+    CoreNeuron=CoreNeuronFromPointAndEdgeData(
+      datalist$PointList,datalist$EdgeList,datalist$Origin,
+      ProcessAllTrees = ProcessAllTrees, Verbose = Verbose)
+  } else {
+    CoreNeuron=CoreNeuronFromAmiraSkel(datalist, Verbose=Verbose)
+  }
 	
 	ParsedNeuron<-c(list(NeuronName=NeuronNameFromFileName(filename),
 			InputFileName=filename,
