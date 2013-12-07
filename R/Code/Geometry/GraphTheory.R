@@ -723,3 +723,35 @@ GetSubNeuron<-function(x,seglist=NULL,from,to){
 	if(!(xx$StartPoint%in%seglist)) xx$StartPoint=seglist[[1]][1]
 	xx
 }
+
+#' Construct CoreNeuron (inc SWC block) from Amira skeletonize format data
+#' 
+#' @param x list containing amira data with elements PointList,EdgeList,Origin
+#' @return A neuron object containing both SegList and associated fields and the
+#'   SWC format data block with coordinate data.
+CoreNeuronFromAmiraSkel<-function(x, Verbose=FALSE){
+  el=data.matrix(x$EdgeList)
+  # make a doubly linked graph from this double edge list
+  doubleg=neurongraph(el, x$PointList$PointNo, directed=TRUE)
+  # make it undirected
+  # TODO see if we can make appropriate directed graph rather than converting
+  # to undirected.
+  ug=as.undirected(doubleg,mode='collapse')
+  # make seglist associated fields from that
+  cn=CoreNeuronFromGraph(ug, origin=x$Origin, Verbose=Verbose)
+  
+  # now construct matching swc data block
+  swc=cbind(PointNo=x$PointList$PointNo,Label=2,x$PointList[,c("X",'Y','Z','W')])
+  
+  # now a depth first search to recalculate parents of point data
+  # this will be consistent for the main subtree but not for any others
+  dfs=graph.dfs(ug, root=cn$StartPoint, father=TRUE, neimode='all')
+  
+  # note some juggling required to deal with case where dfs$father = 0 
+  # which is how dfs denotes root points
+  parent_id=dfs$father
+  parent_id[parent_id==0]=NA_integer_
+  swc$Parent=swc$PointNo[parent_id]
+  swc$Parent[is.na(swc$Parent)]=-1
+  as.neuron(c(cn,list(d=swc)))
+}
