@@ -957,3 +957,18 @@ test.ParseMaterials<-function(){
 					"LAL_L", "AME_L", "GA_L", "PAN_L", "PAN_R"), class = "data.frame")
 	checkEquals(h$Materials,materials_baseline)
 }
+
+test.is.amiramesh<-function(){
+  amfile=file.path(TestDir,"Data","labels","ComplexLabelFieldHeader.am")
+  checkTrue(is.amiramesh(amfile))
+  # not enough to have a file ending
+  tf=tempfile(fileext='.am')
+  on.exit(unlink(tf))
+  checkTrue(!is.amiramesh(tf))
+}
+
+test.amiratype<-function(){
+  amfile=file.path(TestDir,"Data","labels","ComplexLabelFieldHeader.am")
+  h=ReadAmiramesh.Header(amfile,Verbose = FALSE)
+  checkEquals(amiratype(amfile),'uniform.field')
+}
