@@ -84,35 +84,52 @@ seglength=function(ThisSeg){
 #' If Label column is missing (or ReplaceLabel=TRUE) then it is set to the
 #' value of DefaultLabel (2=Axon by default).
 #' Note that the order of point indices in SegList must match those in SWC.
-#' @param Neuron Must contain both the SegList and d fields
+#' @param x Neuron containing both the SegList and d fields or a plain seglist
+#' @param d SWC data block (only expected if x is a SegList)
 #' @param RecalculateParents Whether to recalculate parent points (default T)
 #' @param DefaultLabel Integer label to use for SWC data chunk
 #' @param ReplaceLabel Whether to replace Label column if it already exists
-#' @return return value
+#' @return A neuron if x was a neuron otherwise dataframe of swc data
 #' @export
 #' @seealso \code{\link{ParseSWC}}
 #' @examples
-RecalculateSWCData<-function(Neuron,RecalculateParents=TRUE,DefaultLabel=2L,ReplaceLabel=FALSE){
-  sl=Neuron$SegList
-  d=Neuron$d
-  if(is.null(d$PointNo))
-    d$PointNo=seq(nrow(d))
-  else {
-    # check that points are consecutive
-    if(any(d$PointNo!=seq(nrow(d))))
-      stop("Points must be numbered consecutively from 1:npoints")
+RecalculateSWCData<-function(x, d, RecalculateParents=TRUE,
+  DefaultLabel=2L,ReplaceLabel=FALSE){
+  if(missing(d)){
+    if(!is.neuron(x)) stop("Must supply x=neuron or x=SegList and d=SWC data")
+    d=x$d
+    if(isTRUE(x$nTrees>1))
+      sl=unlist(x$SubTrees, recursive=FALSE)
+    else sl=x$SegList
+  } else {
+    sl=x
+    # is this a plain SegList or a list of seglists
+    if(!is.null(sl[[1]][[1]]))
+      sl=unlist(sl, recursive=FALSE)
   }
-  # NB this assumes that points are in order
+  if(is.null(d$PointNo)){
+    if(nrow(d)==0) stop("Must supply either supply some coords or PointNos")
+    d$PointNo=seq(nrow(d))
+  }
   if(is.null(d$Parent) || RecalculateParents){
     d$Parent=-1L
     for(s in sl){
-      d$Parent[s[-1]]=s[-length(s)]
+      # first handle length 1 segments i.e. floating points
+      if(length(s)==1) {
+        d$Parent[s]=-1
+      } else if (length(s)>1){
+        # NB points in s are raw vertex ids corresponding to rows in the data
+        # block, but SWC Parent is expressed in PointNos
+        d$Parent[s[-1]]=d$PointNo[s[-length(s)]]
+      }
     }
   }
   if(is.null(d$Label) || ReplaceLabel)
     d$Label=DefaultLabel
-  Neuron$d=d
-  Neuron
+  if(is.neuron(x)){
+    x$d=d
+    x
+  } else d
 }
 
 MergeUnconnectedPathsToSingleNeuron<-function(NeuronList){
