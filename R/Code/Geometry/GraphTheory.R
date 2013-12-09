@@ -90,10 +90,14 @@ ReducedAdjacencyMatrixFromSegList<-function(SegList,Undirected=FALSE){
 #' @seealso \code{\link{graph.dfs},\link{as.igraph.neuron}}
 RerootNeuron<-function(ANeuron,origin=1,graph.method=c("swc",'seglist')){
   gam=as.igraph(ANeuron,method=graph.method)
-  # will use a depth first search to reorder tree starting from origin
-  dfs=graph.dfs(gam,root=origin,father=TRUE,neimode='all')
-  coreneuron=CoreNeuronFromGraph(gam,dfs=dfs)
+  coreneuron=CoreNeuronFromGraph(gam, origin=origin)
   ANeuron[names(coreneuron)]<-coreneuron
+  
+  # also use depth first search to reorder SWC data starting from origin
+  # note that this order will be well-defined when the tree is fully connected
+  # but when there are subgraphs that are not connected to the origin the
+  # numbering will be valid but have no meaning with respect to the new origin.
+  dfs=graph.dfs(gam,root=origin,father=TRUE,neimode='all')
   # Now fix the SWC data chunk as well
   ANeuron$d$Parent=dfs$father
   # SWC says that the root will have parent -1
@@ -136,7 +140,7 @@ as.igraph.neuron<-function(x,directed=TRUE,method=c("swc",'seglist'),
   prune=TRUE, keep.ids=prune, ...){
   method=match.arg(method,several.ok=TRUE)
   if('swc'%in%method && !is.null(x$d$Parent) && !is.null(x$d$PointNo)){
-    as.igraph.swc(x$d, directed=directed, prune=prune, keep.ids=keep.ids)
+    neurongraph.swc(x$d, directed=directed)
   } else {
     as.igraph.seglist(x$SegList, directed=directed, prune=prune, keep.ids=keep.ids)
   }
@@ -171,76 +175,243 @@ as.igraph.swc<-function(x, directed=TRUE, prune=TRUE, keep.ids=prune, ...){
 #' @rdname CoreNeuron
 #' @seealso \code{\link{CoreNeuronFromGraph}}
 CoreNeuronFromSWC<-function(swc,origin=NULL){
-  g=as.igraph.swc(swc,directed=TRUE)
+  g=neurongraph.swc(swc, directed=TRUE)
   CoreNeuronFromGraph(g)
 }
 
-#' Construct SegList (+ other core fields) from graph of all nodes and origin
-#'
-#' Uses a depth first search on the tree to reorder using the given origin.
-#' @details Either one of origin and dfs must be specified.
+#' Contruct a graph to encode a neuron's connectivity
+#' 
+#' @details We make the following assumptions about neurons coming in
+#' \itemize{ 
+#'   \item They have an integer vertex label that need not start from 1 and that
+#'   may have gaps 
+#'   \item The edge list which defines connectivity specifies edges using pairs
+#'   of vertex labels, _not_ raw vertex ids.
+#' }
+#' @details We make no attempt to determine the root points at this stage.
+#' @details The raw vertex ids will be in the order of vertexlabels and can
+#' therefore be used to index a block of vertex coordinates.
+#' @param el A two columm matrix (start, end) defining edges
+#' @param vertexlabels Integer labels for graph - the edge list is specified
+#'   using these labels.
+#' @return an \code{igraph} object with a vertex for each entry in vertexlabels,
+#'   each vertex having a \code{label} attribute. All vertices are included
+#'   whether connected or not.
+neurongraph<-function(el, vertexlabels, directed=TRUE){
+  if(any(duplicated(vertexlabels))) stop("Vertex labels must be unique!")
+  # now translate edges into raw vertex_ids
+  rawel=match(t(el), vertexlabels)
+  g=graph(rawel, n=length(vertexlabels), directed=directed)
+  V(g)$label=vertexlabels
+  g
+}
+
+#' Construct neurongraph from a block of SWC format data
+#' 
+#' @param x Dataframe containingb block of SWC data
+#' @param directed Logical indicating whether to make a directed graph
+neurongraph.swc<-function(x, directed=TRUE){
+  el=data.matrix(EdgeListFromSWC(x))
+  neurongraph(el, x$PointNo, directed=directed)
+}
+
+#' Make SegList (and other core fields) from full graph of all nodes and origin
+#' 
+#' @details Uses a depth first search on the tree to reorder using the given 
+#'   origin.
+#' @details When the graph contains multiple subgraphs, only one will be chosen 
+#'   as the master tree and used to construct the SegList of the resultant 
+#'   neuron. However all subgraphs will be listed in the SubTrees element of the
+#'   neuron and nTrees will be set appropriately.
+#' @details When the graph vertices have a label attribute derived from PointNo,
+#'   the origin is assumed to be specified with respect to the vertex labels
+#'   rather than the raw vertex ids.
 #' @param g An igraph
-#' @param origin the 1-indexed root vertex id
+#' @param origin Root vertex, matched against labels (aka PointNo) when 
+#'   available (see details)
 #' @param dfs result of graph.dfs
-#' @return A list with elements:
-#'  (NumPoints,StartPoint,BranchPoints,EndPoints,NumSegs,SegList)
+#' @return A list with elements: 
+#'   (NumPoints,StartPoint,BranchPoints,EndPoints,nTrees,NumSegs,SegList,
+#'   [SubTrees])
+#'   NB SubTrees will only be present when nTrees>1.
 #' @export
 #' @rdname CoreNeuron
-#' @seealso \code{\link{graph.dfs},\link{RerootNeuron}}
-CoreNeuronFromGraph<-function(g,origin=NULL,dfs=NULL){
-  if(is.null(dfs)){
-    if(is.null(origin)) {
-      # if we haven't specified an origin, then we can infer this for a
-      # directed graph.
-      if(is.directed(g)){
-        origin=rootpoints(g)
-        if(length(origin)>1){
-          warning("Graph has multiple origins. Using first")
-          origin=origin[1]
-        }
-      }
-      else stop("Must specify at least one of dfs or origin")
-    }
-    if(origin<1 || origin>vcount(g)) stop("invalid origin:",origin)
-    dfs=graph.dfs(g,root=origin,father=TRUE,neimode='all')
-  } else {
-    # dfs seems to have origin 0-indexed (but everything else 1-indexed)
-    if(is.null(origin)) origin=dfs$root+1
-    else {
-      # check that the origin we were given matches dfs
-      stop("origin specified in dfs: ",dfs$root+1,
-        ' does not match that on command line: ',origin)
+#' @seealso \code{\link{graph.dfs},\link{RerootNeuron},\link{graph2seglist}}
+CoreNeuronFromGraph<-function(g, origin=NULL, Verbose=TRUE){
+  # translate origin into raw vertex id if necessary 
+  if(!is.null(origin)){
+    vertex_labels=igraph::V(g)$label
+    if(!is.null(vertex_labels)){
+      origin=match(origin,vertex_labels)
+      if(is.na(origin)) stop("Invalid origin")
     }
   }
+  # save original vertex ids
+  igraph::V(g)$vid=seq.int(igraph::vcount(g))
+  # check if we have multiple subgraphs
+  if(no.clusters(g)>1){
+    if(is.null(origin)){
+      # no origin specified, will pick the biggest subtree
+      # decompose into list of subgraphs
+      gg=igraph::decompose.graph(g)
+      # reorder by descending number of vertices
+      gg=gg[order(sapply(gg,igraph::vcount), decreasing=TRUE)]
+      subtrees=lapply(gg, graph2seglist, Verbose=Verbose)
+      sl=subtrees[[1]]
+      masterg=gg[[1]]
+    } else {
+      # origin specified, subtree containing origin will be the master
+      cg=igraph::clusters(g)
+      master_tree_num=cg$membership[origin]
+      # make a master graph with the vertices from subgraph including origin
+      masterg=igraph::induced.subgraph(g, which(cg$membership==master_tree_num))
+      # ... and then corresponding seglist
+      sl=graph2seglist(masterg, origin=origin)
+      # now deal with remaining vertices
+      remainderg=igraph::induced.subgraph(g, which(cg$membership!=master_tree_num))
+      gg=igraph::decompose.graph(remainderg)
+      # reorder by descending number of vertices
+      gg=gg[order(sapply(gg,igraph::vcount), decreasing=TRUE)]
+      subtrees=c(list(sl),lapply(gg, graph2seglist, Verbose=Verbose))
+    }
+    nTrees=length(subtrees)
+  } else {
+    # this is a well-behaved graph that is immediately ready to be master graph
+    # of neuron
+    sl=graph2seglist(masterg<-g, origin=origin, Verbose=Verbose)
+    nTrees=1
+  }
+  if(length(sl)==0 || length(sl[[1]])<2)
+    stop("Invalid neuron! Must contain at least one segment with 2 points")
+  # Finalise StartPoint - should always be head point of first segment
+  StartPoint=sl[[1]][1]
+  
+  ncount=igraph::degree(masterg)
+  n=list(NumPoints=length(ncount),
+         StartPoint=StartPoint,
+         BranchPoints=branchpoints(masterg, original.ids='vid'),
+         EndPoints=endpoints(masterg, original.ids='vid'),
+         nTrees=nTrees,
+         NumSegs=length(sl),
+         SegList=sl)
+  if(nTrees>1) n=c(n,list(SubTrees=subtrees))
+  n
+}
+
+#' Convert a fully connected graph into a seglist
+#' 
+#' @details If the graph vertices have \code{vid} attributes, typically defining
+#'   the original vertex ids of a graph that was then decomposed into subgraphs,
+#'   then the origin is assumed to refer to one of these vids not a raw vertex 
+#'   id of the current graph. The returned seglist will also contain these 
+#'   original vertex ids.
+#' @details The head of the first segment in the seglist will be the origin.
+#' @param g A fully connected \code{igraph}
+#' @param origin The origin of the tree (see details)
+#' @return a \code{list} with one entry for each unbranched segment.
+graph2seglist<-function(g, origin=NULL, Verbose=FALSE){
+  # Handle degenerate cases
+  if(!is.connected(g)) stop("Graph is not fully connected!")
+  if(igraph::vcount(g)==0) {
+    if(Verbose) warning("Empty graph! Seglist not defined")
+    return(NULL)
+  }
+  if(igraph::is.directed(g) && !igraph::is.dag(g)){
+    stop("Graph has cycles!")
+  }
+  
+  # Handle Vertex ids
+  # If this is a subgraph we need to keep track of original vertex ids. The 
+  # simplest thing to do is to make a fake set of original vertex ids if they
+  # are not present and _always_ translate (since this is fast) rather than
+  # having separate program logic
+  vids=igraph::V(g)$vid
+  if(is.null(vids)){
+    vids=seq.int(igraph::vcount(g))
+  }
+  
+  # Floating point
+  if(igraph::vcount(g)==1) {
+    return(list(vids))
+  }
+  
+  # Handle Origin
+  if(is.null(origin)){
+    # no explicit origin specified, use raw vertex id of graph root
+    if(is.directed(g))
+      origin=rootpoints(g, original.ids=FALSE)
+  } else {
+    # we've been given an origin but it may not be a raw vertex id for this
+    # graph so translate it
+    origin=match(origin,vids)
+  }
+  if(length(origin)==0){
+    warning("No valid origin found! Using first point as origin")
+    origin=igraph::V(g)[1]
+  } else if(length(origin)>1){
+    warning("Multiple origins found! Using first origin.")
+    origin=origin[1]
+  }
+  
+  # Now do a depth first search to ensure that ordering is correct
+  dfs=igraph::graph.dfs(g, root=origin, father=TRUE, neimode='all')
   ncount=igraph::degree(g)
   # put the first vertex into the first segment
-  curseg=dfs$order[1]
-  if(length(ncount)==1) sl=list(curseg)
-  else {
-    sl=list()
-    # we have more than 1 point in graph and some work to do!
-    for(i in seq.int(from=2,to=length(dfs$order))){
-      curpoint=dfs$order[i]
-      if(length(curseg)==0){
-        # segment start, so initialise with parent
-        curseg=dfs$father[curpoint]
-      }
-      # always add current point
-      curseg=c(curseg,curpoint)
-      # now check if we need to close the segment
-      if(ncount[curpoint]!=2){
-        # branch or end point
-        sl[[length(sl)+1]]=curseg
-        curseg=integer(0)
-      }
+  # note that here and elsewhere the points stored in curseg will be the
+  # _original_ vertex ids specified by "vid" attribute of input graph
+  curseg=vids[dfs$order[1]]
+  if(length(ncount)==1) stop("Unexpected singleton point found!")
+  sl=list()
+  # we have more than 1 point in graph and some work to do!
+  for(i in seq.int(from=2,to=length(dfs$order))){
+    curpoint=dfs$order[i]
+    if(length(curseg)==0){
+      # segment start, so initialise with parent
+      curseg=vids[dfs$father[curpoint]]
+    }
+    # always add current point
+    curseg=c(curseg,vids[curpoint])
+    # now check if we need to close the segment
+    if(ncount[curpoint]!=2){
+      # branch or end point
+      sl[[length(sl)+1]]=curseg
+      curseg=integer(0)
     }
   }
-  list(NumPoints=length(ncount),
-  StartPoint=origin,
-  BranchPoints=seq.int(length.out=length(ncount))[ncount>2],
-  EndPoints=seq.int(length.out=length(ncount))[ncount==1],
-  NumSegs=length(sl),
-  SegList=sl)
+  sl
+}
+
+#' Return root, end, or branchpoints of an igraph object
+#' 
+#' @details Note that the graph must be directed in order to return a root point
+#' @param g An igraph object
+#' @param type one of root, end (which includes root) or branch
+#' @param original.ids Use named attribute to return original vertex ids (when 
+#'   available). Set to FALSE when this is not desired.
+#' @param exclude.isolated Do not count isolated vertices as root points 
+#'   (default)
+graph.nodes<-function(x, type=c('root','end','branch'), original.ids='label',
+                      exclude.isolated=TRUE){
+  type=match.arg(type)
+  if(type=='root' && !is.directed(x))
+    stop("Cannot establish root points for undirected graph")
+  
+  # root points are those without incoming edges
+  vertex_ids = if(type=='root') igraph::V(x)[igraph::degree(x,mode='in')==0]
+  else if(type=='end') igraph::V(x)[igraph::degree(x)==1]
+  else if(type=='branch') igraph::V(x)[igraph::degree(x)>2]
+  
+  if(type=='root' && exclude.isolated) {
+    # only include vertex_ids with connections
+    vertex_ids=vertex_ids[igraph::degree(x,vertex_ids)>0]
+  }
+  
+  if(is.character(original.ids))
+    vertex_names=get.vertex.attribute(x,original.ids,index=vertex_ids)
+  if(!is.character(original.ids) || is.null(vertex_names))
+    as.integer(vertex_ids)
+  else
+    vertex_names
 }
 
 #' Return the root or branch points of a neuron or graph
@@ -258,32 +429,17 @@ rootpoints.default<-function(x, ...) rootpoints(as.igraph(x), ...)
 
 #' @rdname rootpoints
 #' @export
-rootpoints.neuron<-function(x, ...){
-  if(isTRUE(x$nTrees>1)) sapply(x$SubTrees, function(y) y[[1]][1])
-  else x$StartPoint
+rootpoints.neuron<-function(x, subtrees=1, ...){
+  if(isTRUE(subtrees==1)) return(x$StartPoint)
+  nTrees=ifelse(is.null(x$nTrees),1,x$nTrees)
+  if(any(subtrees>nTrees)) stop("neuron only has ",nTrees," subtrees")
+  else sapply(x$SubTrees[subtrees], function(y) y[[1]][1])
 }
 
 #' @rdname rootpoints
-#' @param original.ids Keep original numeric ids
-#' @param exclude.isolated Do not count isolated vertices as root points
+#' @method rootpoints igraph
 #' @export
-rootpoints.igraph<-function(x, original.ids=TRUE, exclude.isolated=TRUE, ...){
-  if(!is.directed(x))
-    stop("Cannot establish root points for undirected graph")
-
-  # root points are those without incoming edges
-  vertex_ids=igraph::V(x)[igraph::degree(x,mode='in')==0]
-  if(exclude.isolated) {
-    # only include vertex_ids
-    vertex_ids=vertex_ids[igraph::degree(x,vertex_ids)>0]
-  }
-  if(original.ids)
-    vertex_names=get.vertex.attribute(x,'label',index=vertex_ids)
-  if(original.ids || is.null(vertex_names))
-    as.integer(vertex_ids)
-  else
-    vertex_names
-}
+rootpoints.igraph<-function(x, ...) graph.nodes(x, type='root', ...)
 
 #' Return the branchpoints of a neuron or graph
 #' @param x neuron or graph
@@ -300,22 +456,34 @@ branchpoints.default<-function(x, ...) branchpoints(as.igraph(x), ...)
 #' @rdname rootpoints
 #' @detail returns a list if more than one subtree is specified
 branchpoints.neuron<-function(x, subtrees=1, ...){
-  if(isTRUE(subtrees==1)) x$BranchPoints
-  else if(any(subtrees>x$nTrees)) stop("neuron only has ",x$nTrees," subtrees")
+  if(isTRUE(subtrees==1)) return(x$BranchPoints)
+  nTrees=ifelse(is.null(x$nTrees),1,x$nTrees)
+  if(any(subtrees>x$nTrees)) stop("neuron only has ",nTrees," subtrees")
   else lapply(x$SubTrees[subtrees],
     function(x) branchpoints(as.igraph.seglist(x)))
 }
 
 #' @rdname rootpoints
-#' @param original.ids Whether to return original point ids when available
-branchpoints.igraph<-function(x, original.ids=TRUE, ...){
-  vertex_ids=igraph::V(x)[igraph::degree(x)>2]
-  if(original.ids)
-    vertex_names=get.vertex.attribute(x,'label',index=vertex_ids)
-  if(original.ids || is.null(vertex_names))
-    as.integer(vertex_ids)
-  else vertex_names
+#' @method branchpoints igraph
+branchpoints.igraph<-function(x, ...) graph.nodes(x, type='branch', ...)
+
+#' @rdname rootpoints
+#' @alias endpoints
+endpoints<-function (x, ...) UseMethod("endpoints")
+
+#' @rdname rootpoints
+#' @method endpoints neuron
+endpoints.neuron<-function(x, subtrees=1, ...){
+  if(isTRUE(subtrees==1)) return(endpoints=x$EndPoints)
+  nTrees=ifelse(is.null(x$nTrees),1,x$nTrees)
+  if(any(subtrees>x$nTrees)) stop("neuron only has ",nTrees," subtrees")
+  else lapply(x$SubTrees[subtrees],
+              function(x) endpoints(as.igraph.seglist(x)))
 }
+
+#' @rdname rootpoints
+#' @method endpoints igraph
+endpoints.igraph<-function(x, ...) graph.nodes(x, type='end', ...)
 
 AdjacencyMatrixFromEdgeList<-function(EdgeList,Undirected=FALSE){
 	# this makes an adjacency matrix from an edge list
