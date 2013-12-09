@@ -1757,14 +1757,12 @@ ReadNeuronFromAM<-function(amfile,defaultDiameter=NA){
 
 #' Check if file is amiramesh format
 #' 
-#' @details If ContentTypes is not not null then if the file has an appropriate magic
-#' the header is parsed (slow) and the Parameters filed ContentType is checked. Possible values
-#' include 
 #' @details Tries to be as fast as possible by reading only first 11 bytes and
 #'   checking if they equal "# AmiraMesh"
 #' @param f Path to a file to be tested
-is.amiramesh<-function(f, ContentTypes=NULL) {
-  if(length(f)>1) return(sapply(f,is.amiramesh,ContentType=ContentType))
+#' @return logical
+is.amiramesh<-function(f) {
+  if(length(f)>1) return(sapply(f,is.amiramesh))
   # AmiraMesh
   magic=as.raw(c(0x23, 0x20, 0x41, 0x6d, 0x69, 0x72, 0x61, 0x4d, 0x65, 
                  0x73, 0x68))
@@ -1774,16 +1772,19 @@ is.amiramesh<-function(f, ContentTypes=NULL) {
 }
 
 #' Return the type of an amiramesh file on disk or a parsed header
-#'
+#' 
+#' @details Note that when checking a file we first test if it is an amiramesh
+#'   file (fast) before reading the header and determining content type (slow).
 #' @param x Path to files on disk or a single pre-parsed parameter list
-#' @return character vector
+#' @return character vector (NA_character_ when file invalid)
 amiratype<-function(x){
   if(is.list(x)) h<-x
   else {
     # we have a file
     if(length(x)>1) return(sapply(x,amiratype))
     if(!isTRUE(is.amiramesh(x))) return(NA_character_)
-    h=ReadAmiramesh.Header(x)
+    h=try(ReadAmiramesh.Header(x),silent=TRUE)
+    if(inherits(h,'try-error')) return(NA_character_)
   }
   if(!is.null(ct<-h$Parameters$ContentType)){
     ct

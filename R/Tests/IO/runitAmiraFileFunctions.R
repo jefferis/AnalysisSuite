@@ -963,6 +963,7 @@ test.is.amiramesh<-function(){
   checkTrue(is.amiramesh(amfile))
   # not enough to have a file ending
   tf=tempfile(fileext='.am')
+  writeLines("#somethingelse",tf)
   on.exit(unlink(tf))
   checkTrue(!is.amiramesh(tf))
 }
