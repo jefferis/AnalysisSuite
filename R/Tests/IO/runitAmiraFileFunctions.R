@@ -999,7 +999,7 @@ find.am3d<-function(){
   if(grepl('apple',R.version$platform)){
     ff=system('mdfind "AmiraMesh 3D"|grep "\\.am$"',intern=TRUE)
     # now check first lines to be sure that they are actually amiramesh
-    Filter(is.amiraskel,ff)
+    Filter(function(f) isTRUE(amiratype(f)=='SkeletonGraph'),ff)
   } else character(0)
 }
 
@@ -1007,9 +1007,11 @@ test.igraphvsoriginal<-function(){
   ff=file.path(TestDir,'Data','neurons',
                c("Neurites.am", "NeuritesWithIsolatedPoints.am", 
                  "NeuritesWithIsolatedSegment_veryshort.am",
-#                  "NeuritesWithNA.am",
+                 "NeuritesWithNA.am",
                  "neuron_with_materials.am",
                  "testneuron_am3d_ascii.am","testneuron_am3d.am",
                  "UnbranchedNeurite.am"))
-  igraphvsoriginal.amiraneurons(ff)
+  ff=find.am3d()
+  exceptions=c("NeuritesWithNA.am")
+  igraphvsoriginal.amiraneurons(ff[!basename(ff)%in%exceptions])
 }
