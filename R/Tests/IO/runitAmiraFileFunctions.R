@@ -972,3 +972,43 @@ test.amiratype<-function(){
   h=ReadAmiramesh.Header(amfile,Verbose = FALSE)
   checkEquals(amiratype(amfile),'uniform.field')
 }
+  
+neuron.isomorphic <- function(a, b) {
+  ga=try(as.igraph(a),silent=T)
+  gb=try(as.igraph(b),silent=T)
+  isTRUE(try(graph.isomorphic(ga,gb),silent=T))
+}
+
+igraphvsoriginal.amiraneurons<-function(ff,checkFn=checkTrue){
+  for(f in ff){
+    ig=try(read.neuron.amiraskel(f,method='igraph'))
+    checkTrue(inherits(ig,'neuron'),
+              msg='Failed to read neuron ",f," using igraph method')
+    orig=try(read.neuron.amiraskel(f,method='original'), silent=TRUE)
+    if(inherits(orig,'try-error')) {
+      message("Failled to read neuron ",f," using original method")
+    } else {
+      checkFn(neuron.isomorphic(ig, orig),
+                msg=paste("hxskel neurons ",f,"are not equivalent by igraph and old methods"))
+    }
+  }
+}
+
+find.am3d<-function(){  
+  if(grepl('apple',R.version$platform)){
+    ff=system('mdfind "AmiraMesh 3D"|grep "\\.am$"',intern=TRUE)
+    # now check first lines to be sure that they are actually amiramesh
+    Filter(is.amiraskel,ff)
+  } else character(0)
+}
+
+test.igraphvsoriginal<-function(){
+  ff=file.path(TestDir,'Data','neurons',
+               c("Neurites.am", "NeuritesWithIsolatedPoints.am", 
+                 "NeuritesWithIsolatedSegment_veryshort.am",
+#                  "NeuritesWithNA.am",
+                 "neuron_with_materials.am",
+                 "testneuron_am3d_ascii.am","testneuron_am3d.am",
+                 "UnbranchedNeurite.am"))
+  igraphvsoriginal.amiraneurons(ff)
+}
