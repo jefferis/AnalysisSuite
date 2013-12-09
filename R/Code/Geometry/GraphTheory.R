@@ -346,8 +346,9 @@ graph2seglist<-function(g, origin=NULL, Verbose=FALSE){
     origin=match(origin,vids)
   }
   if(length(origin)==0){
-    warning("No valid origin found! Using first point as origin")
-    origin=igraph::V(g)[1]
+    warning("No valid origin found! Using first endpoint as origin")
+    # nb we just want the raw vertex id for this graph, so original.ids = FALSE
+    origin=endpoints(g, original.ids=FALSE)[1]
   } else if(length(origin)>1){
     warning("Multiple origins found! Using first origin.")
     origin=origin[1]
