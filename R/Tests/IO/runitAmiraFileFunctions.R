@@ -980,19 +980,17 @@ neuron.isomorphic <- function(a, b) {
   isTRUE(try(graph.isomorphic(ga,gb),silent=T))
 }
 
-igraphvsoriginal.amiraneurons<-function(ff,checkFn=checkTrue){
-  for(f in ff){
-    ig=try(read.neuron.amiraskel(f,method='igraph'))
+igraphvsoriginal.amiraneuron<-function(f,checkFn=checkTrue){
+  ig=try(read.neuron.amiraskel(f,method='igraph',Verbose=FALSE))
     checkTrue(inherits(ig,'neuron'),
               msg='Failed to read neuron ",f," using igraph method')
-    orig=try(read.neuron.amiraskel(f,method='original'), silent=TRUE)
+    orig=try(read.neuron.amiraskel(f,method='original',Verbose=FALSE), silent=TRUE)
     if(inherits(orig,'try-error')) {
       message("Failled to read neuron ",f," using original method")
     } else {
       checkFn(neuron.isomorphic(ig, orig),
                 msg=paste("hxskel neurons ",f,"are not equivalent by igraph and old methods"))
     }
-  }
 }
 
 find.am3d<-function(){  
@@ -1012,6 +1010,9 @@ test.igraphvsoriginal<-function(){
                  "testneuron_am3d_ascii.am","testneuron_am3d.am",
                  "UnbranchedNeurite.am"))
   ff=find.am3d()
-  exceptions=c("NeuritesWithNA.am")
-  igraphvsoriginal.amiraneurons(ff[!basename(ff)%in%exceptions])
+  exceptions=c("NeuritesWithNA.am",'120818-JK56fill_skel.am')
+  
+  require(plyr)
+  l_ply(ff[!basename(ff)%in%exceptions], igraphvsoriginal.amiraneuron,
+        .progress='text')
 }
