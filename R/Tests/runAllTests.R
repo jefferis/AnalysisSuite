@@ -1,7 +1,11 @@
+#!/usr/bin/env Rscript
+
 # runAllTests.R
 # run tests for all the directories of scripts/sources files
 
 # source(file.path(RootDir,"R","Tests","runAllTests.R"))
+
+if(!exists('TestDir')) source("~/projects/AnalysisSuite/R/Code/Startup.R")
 
 require(RUnit)
 TestDirs=rownames(subset(file.info(dir(TestDir,full=TRUE)),isdir==TRUE))

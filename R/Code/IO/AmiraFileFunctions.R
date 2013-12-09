@@ -107,7 +107,7 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
 				x=as.integer(d)
 			} else {
 				if(df$RType[i]=="integer") whatval=integer(0) else whatval=numeric(0)
-				x=readBin(con,df$SimpleDataLength[i],size=df$Size[i],what=whatval,signed=df$Signed[i],endian=endian)				
+				x=readBin(con,df$SimpleDataLength[i],size=df$Size[i],what=whatval,signed=df$Signed[i],endian=endian)
 			}
 			# note that first dim is moving fastest
 			dims=unlist(df$Dims[i])
@@ -1329,11 +1329,9 @@ Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text","hx
 	cat("}\n\n",file=fc)
 	
 	if(ftype=="hxzip"){
-		tmp=tempfile()
-		writeBin(as.vector(d,mode=dmode),tmp,size=dtypesize,endian=endian)
-		zipdata=EncodeHxZip(tmp)
-		unlink(tmp)
-		cat("Lattice { ",dtype," ScalarField } = @1(HxZip,",length(zipdata),")\n\n",sep="",file=fc)
+		raw_data=writeBin(as.vector(d,mode=dmode),raw(),size=dtypesize,endian=endian)
+		zlibdata=write.zlib(raw_data)
+		cat("Lattice { ",dtype," ScalarField } = @1(HxZip,",length(zlibdata),")\n\n",sep="",file=fc)
 	} else cat("Lattice {",dtype,"ScalarField } = @1\n\n",file=fc)
 
 	cat("@1\n",file=fc)
@@ -1374,7 +1372,7 @@ Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text","hx
 	} else {
 		fc=file(filename,open="ab") # ie append, bin mode
 		if(ftype=="hxzip")
-			writeBin(zipdata,fc,size=1,endian=endian)
+			writeBin(zlibdata,fc,size=1,endian=endian)
 		else
 			writeBin(as.vector(d,mode=dmode),fc,size=dtypesize,endian=endian)
 		close(fc)
@@ -1475,10 +1473,10 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 			d=DecodeRLEBytes(d,dataLength)
 			d=as.integer(d)
 		} else if(dataEncoding == "HXZIP"){
-			d=DecodeHxZip(filename,seek(fc),
-				uncompressedLength=dataLength,
-				what=dataTypes$what[i],size=dataTypes$size[i],
-				signed=dataTypes$signed[i],endian=endian)
+		  uncompressed=read.zlib(fc, compressedLength=compressedLength)
+		  d=readBin(uncompressed, n=dataLength, what=dataTypes$what[i],
+		            size=dataTypes$size[i], signed=dataTypes$signed[i],
+                endian=endian)
 		} else if(dataEncoding==""){
 			d=readBin(fc,what=dataTypes$what[i],n=dataLength,size=dataTypes$size[i],
 				signed=dataTypes$signed[i],endian=endian)
@@ -1507,28 +1505,56 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	return(d)
 }
 
-DecodeHxZip<-function(file,offset,uncompressedLength,...){
-	JavaDir<-file.path(RootDir,"java")
-	if(!file.exists(file.path(JavaDir,"ReadHxZipdata.class"))) stop("Can't find ReadHxZipdata program")
-	tmp=tempfile()
-	system(paste("cd",shQuote(JavaDir),";",
-		"java ReadHxZipdata",shQuote(file),offset,uncompressedLength,shQuote(tmp)))
-	
-	d=readBin(tmp,n=uncompressedLength,...)
-	unlink(tmp)
-	d
+#' Uncompress zlib compressed data (from file or memory) to memory
+#' 
+#' @details zlib compressed data uses the same algorithm but a smaller header 
+#'   than gzip data.
+#' @details For connections, compressedLength must be supplied, but offset is 
+#'   ignored (i.e. you must seek beforehand)
+#' @details For files, if compressedLength is not supplied then \code{read.zlib}
+#'   will attempt to read until the end of the file.
+#' @param compressed Path to compressed file, connection or raw vector.
+#' @param offset Byte offset in file on disk
+#' @param compressedLength Bytes of compressed data to read
+#' @param ... Additional parameters passed to \code{\link{readBin}}
+#' @return raw vector of decompressed data
+#' @export
+read.zlib<-function(compressed, offset=NA, compressedLength=NA, ...){
+  if(is.raw(compressed)){
+    zlib_data=readBin(compressed,what=raw(),n=length(compressed))
+  } else {
+    if(inherits(compressed,'connection')){
+      if(is.na(compressedLength)) stop("Must supply compressedLength when reading from a connection")
+      con=compressed
+    } else {
+      con<-file(compressed,open='rb')
+      on.exit(close(con))
+      if(!is.na(offset)) seek(con,offset)
+      else offset = 0
+      if(is.na(compressedLength)) compressedLength=file.info(compressed)$size-offset
+    }
+    zlib_data=readBin(con, what=raw(), n=compressedLength)
+  }
+  memDecompress(zlib_data,type='gzip')
 }
 
-EncodeHxZip<-function(datafile){
-	JavaDir<-file.path(RootDir,"java")
-	if(!file.exists(file.path(JavaDir,"WriteHxZipdata.class"))) stop("Can't find WriteHxZipdata program")
-	tmpzip=tempfile()
-	system(paste("cd",shQuote(JavaDir),";",
-		"java WriteHxZipdata",shQuote(datafile),shQuote(tmpzip)))
-	
-	d=readBin(tmpzip,n=file.info(tmpzip)$size,what='raw')
-	unlink(tmpzip)
-	d
+#' Compress raw data, returning raw vector or writing to file
+#' 
+#' @details The default value of \code{con=raw()} means that this function will 
+#'   return a raw vector of compressed data if con is not specified.
+#' @param uncompressed \code{raw} vector of data
+#' @param con Raw vector or path to output file
+#' @return A raw vector (if \code{con} is a raw vector) or invisibly NULL.
+#' @seealso Depends on \code{\link{memCompress}}
+#' @export
+write.zlib<-function(uncompressed, con=raw()){
+  if(!inherits(con, "connection") && !is.raw(con)){
+    con=open(con, open='wb')
+    on.exit(close(con))
+  }
+  d=memCompress(uncompressed, type='gzip')
+  if(is.raw(con)) return(d)
+  writeBin(object=d,con=con)
 }
 
 DecodeRLEBytes<-function(d,uncompressedLength){

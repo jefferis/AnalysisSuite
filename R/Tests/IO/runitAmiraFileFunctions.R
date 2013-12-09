@@ -780,6 +780,11 @@ test.ReadWrite3DDensityAmiraBinary<-function(){
 	checkEquals(testData,testData.new,msg="Failed round trip read/write Amira binary data")
 	unlink(tmpfile)
 
+	Write3DDensityToAmiraLattice(tmpfile,testData,ftype="hxzip",dtype='double')
+	testData.new=Read3DDensityFromAmiraLattice(tmpfile)
+	checkEquals(testData,testData.new,msg="Failed round trip read/write Amira hxzip data")
+	unlink(tmpfile)
+	
 	Write3DDensityToAmiraLattice(tmpfile,testData,ftype="binary",dtype='double',endian='big')
 	testData.new=Read3DDensityFromAmiraLattice(tmpfile)
 	checkEquals(testData,testData.new,msg="Failed round trip read/write Amira big endian data")
@@ -792,50 +797,29 @@ test.ReadWrite3DDensityAmiraBinary<-function(){
 }
 
 test.ReadHxZipData<-function(){
-	amfile=file.path(TestDir,"IO","AL-a_M.am")
-	x=Read3DDensityFromAmiraLattice(amfile)
-	t=structure(c(2038104L, 6623L, 3304L, 2046L, 1529L, 1257L, 1054L, 
-	907L, 706L, 657L, 557L, 458L, 444L, 399L, 325L, 307L, 247L, 269L, 
-	224L, 185L, 196L, 186L, 147L, 150L, 146L, 120L, 138L, 122L, 105L, 
-	94L, 95L, 90L, 86L, 88L, 81L, 88L, 66L, 63L, 78L, 53L, 76L, 53L, 
-	43L, 47L, 49L, 54L, 46L, 42L, 43L, 33L, 38L, 37L, 28L, 26L, 19L, 
-	29L, 33L, 21L, 30L, 21L, 25L, 12L, 19L, 20L, 19L, 8L, 14L, 14L, 
-	15L, 10L, 16L, 14L, 15L, 9L, 9L, 13L, 10L, 8L, 9L, 12L, 6L, 6L, 
-	8L, 7L, 9L, 9L, 7L, 7L, 3L, 6L, 9L, 9L, 5L, 7L, 6L, 6L, 3L, 6L, 
-	5L, 7L, 10L, 8L, 4L, 5L, 2L, 3L, 4L, 4L, 6L, 1L, 6L, 4L, 1L, 
-	6L, 6L, 10L, 6L, 2L, 4L, 3L, 4L, 4L, 4L, 3L, 6L, 1L, 3L, 2L, 
-	3L, 9L, 2L, 1L, 3L, 3L, 1L, 2L, 4L, 2L, 3L, 6L, 2L, 4L, 2L, 2L, 
-	4L, 1L, 4L, 3L, 1L, 3L, 2L, 1L, 5L, 2L, 3L, 1L, 4L, 3L, 1L, 3L, 
-	1L, 2L, 1L, 2L, 3L, 2L, 3L, 2L, 1L, 2L, 4L, 1L, 2L, 1L, 5L, 2L, 
-	7L, 1L, 2L, 5L, 3L, 2L, 1L, 1L, 1L, 1L, 3L, 1L, 1L, 1L, 1L, 2L, 
-	3L, 2L, 2L, 3L, 1L, 1L, 2L, 1L, 2L, 2L, 2L, 1L, 1L, 1L, 2L, 2L, 
-	3L, 2L, 3L, 1L, 2L, 2L, 2L, 2L, 1L, 2L, 1L), .Dim = 219L, .Dimnames = structure(list(
-	    x = c("0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", 
-	    "11", "12", "13", "14", "15", "16", "17", "18", "19", "20", 
-	    "21", "22", "23", "24", "25", "26", "27", "28", "29", "30", 
-	    "31", "32", "33", "34", "35", "36", "37", "38", "39", "40", 
-	    "41", "42", "43", "44", "45", "46", "47", "48", "49", "50", 
-	    "51", "52", "53", "54", "55", "56", "57", "58", "59", "60", 
-	    "61", "62", "63", "64", "65", "66", "67", "68", "69", "70", 
-	    "71", "72", "73", "74", "75", "76", "77", "78", "79", "80", 
-	    "81", "82", "83", "84", "85", "86", "87", "88", "89", "90", 
-	    "91", "92", "93", "94", "95", "96", "97", "98", "99", "100", 
-	    "101", "102", "103", "104", "105", "106", "107", "108", "109", 
-	    "110", "111", "112", "113", "115", "116", "118", "119", "120", 
-	    "121", "122", "123", "124", "125", "126", "127", "128", "129", 
-	    "130", "131", "132", "133", "134", "135", "136", "137", "138", 
-	    "139", "140", "141", "142", "143", "144", "145", "146", "148", 
-	    "149", "150", "151", "152", "153", "154", "155", "156", "157", 
-	    "158", "159", "160", "161", "162", "165", "167", "168", "169", 
-	    "170", "171", "172", "173", "174", "175", "176", "177", "180", 
-	    "181", "182", "183", "184", "185", "186", "187", "188", "189", 
-	    "192", "193", "194", "195", "196", "198", "200", "201", "203", 
-	    "204", "206", "207", "208", "210", "211", "212", "213", "214", 
-	    "215", "217", "218", "219", "221", "223", "226", "229", "230", 
-	    "235", "237", "239", "241", "244", "245", "246", "247", "248", 
-	    "255")), .Names = "x"), class = "table")
-	
-	checkEquals(t,table(x))
+  amfile=file.path(TestDir,"IO","AL-a_M.am")
+  x=Read3DDensityFromAmiraLattice(amfile)
+  # count non-zero elements
+  counts=c(6623L, 3304L, 2046L, 1529L, 1257L, 1054L, 907L, 706L, 657L, 
+           557L, 458L, 444L, 399L, 325L, 307L, 247L, 269L, 224L, 185L, 196L, 
+           186L, 147L, 150L, 146L, 120L, 138L, 122L, 105L, 94L, 95L, 90L, 
+           86L, 88L, 81L, 88L, 66L, 63L, 78L, 53L, 76L, 53L, 43L, 47L, 49L, 
+           54L, 46L, 42L, 43L, 33L, 38L, 37L, 28L, 26L, 19L, 29L, 33L, 21L, 
+           30L, 21L, 25L, 12L, 19L, 20L, 19L, 8L, 14L, 14L, 15L, 10L, 16L, 
+           14L, 15L, 9L, 9L, 13L, 10L, 8L, 9L, 12L, 6L, 6L, 8L, 7L, 9L, 
+           9L, 7L, 7L, 3L, 6L, 9L, 9L, 5L, 7L, 6L, 6L, 3L, 6L, 5L, 7L, 10L, 
+           8L, 4L, 5L, 2L, 3L, 4L, 4L, 6L, 1L, 6L, 4L, 1L, 6L, 0L, 6L, 10L, 
+           0L, 6L, 2L, 4L, 3L, 4L, 4L, 4L, 3L, 6L, 1L, 3L, 2L, 3L, 9L, 2L, 
+           1L, 3L, 3L, 1L, 2L, 4L, 2L, 3L, 6L, 2L, 4L, 2L, 2L, 4L, 0L, 1L, 
+           4L, 3L, 1L, 3L, 2L, 1L, 5L, 2L, 3L, 1L, 4L, 3L, 1L, 3L, 0L, 0L, 
+           1L, 0L, 2L, 1L, 2L, 3L, 2L, 3L, 2L, 1L, 2L, 4L, 1L, 0L, 0L, 2L, 
+           1L, 5L, 2L, 7L, 1L, 2L, 5L, 3L, 2L, 0L, 0L, 1L, 1L, 1L, 1L, 3L, 
+           0L, 1L, 0L, 1L, 1L, 0L, 1L, 2L, 0L, 3L, 2L, 2L, 0L, 3L, 1L, 1L, 
+           2L, 1L, 2L, 0L, 2L, 2L, 1L, 0L, 1L, 0L, 1L, 0L, 0L, 2L, 0L, 0L, 
+           2L, 3L, 0L, 0L, 0L, 0L, 2L, 0L, 3L, 0L, 1L, 0L, 2L, 0L, 0L, 2L, 
+           2L, 2L, 1L, 2L, 0L, 0L, 0L, 0L, 0L, 0L, 1L)
+  # nb 255 bins because 0 is ignored
+  checkEquals(counts,tabulate(x,nbins=255))
 }
 
 test.ReadWrite3DDensityAmiraText<-function(){
