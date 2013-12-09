@@ -1783,7 +1783,7 @@ amiratype<-function(x){
     # we have a file
     if(length(x)>1) return(sapply(x,amiratype))
     if(!isTRUE(is.amiramesh(x))) return(NA_character_)
-    h=try(ReadAmiramesh.Header(x),silent=TRUE)
+    h=try(ReadAmiramesh.Header(x, Verbose=FALSE), silent=TRUE)
     if(inherits(h,'try-error')) return(NA_character_)
   }
   if(!is.null(ct<-h$Parameters$ContentType)){
