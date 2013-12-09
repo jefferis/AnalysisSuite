@@ -57,10 +57,24 @@ ReadIGSRegistration <- function (filename,ReturnRegistrationOnly=TRUE){
 			stop(paste("Unable to read registration file in",dirname))
 	}
 	r=ReadIGSTypedStream(filename)
-	if(!is.null(r$registration) && ReturnRegistrationOnly) return(r$registration)
+	if(!is.null(r$registration) && ReturnRegistrationOnly) {
+    rval=r$registration
+    attr.r=attributes(r)
+    attr.rval=attributes(rval)
+    extra_attributes=setdiff(names(attr.r),names(attr.rval))
+    attributes(rval)[extra_attributes]<-attributes(r)[extra_attributes]
+    return(rval)
+	}
 	else return(r)
 }
 
+#' Read CMTK TypedStream file to a list in memory
+#' 
+#' @details This is the default format used by CMTK for registration, studylist 
+#'   and images files.
+#' @param con Path to (optionally gzipped) file or (open) connection.
+#' @param CheckLabel Check, fix and warn for invalid or duplicate labels (by
+#'   default)
 ReadIGSTypedStream<-function(con, CheckLabel=TRUE){
 #  Reads Torsten's IGS TypedStream format which is what he uses for:
 #  registration
@@ -69,18 +83,19 @@ ReadIGSTypedStream<-function(con, CheckLabel=TRUE){
 #  Note that there are special methods to handle the 
 #  coefficients and active members of a spline warp 
 
+  l=list()
+  
 	if(is.character(con)) {
 		filename=con
-		if(any(grep("\\.gz$",filename))){
-			con=gzfile(filename,'rb')
-		} else con=file(con,'rb')
+		con=file(filename,'rb')
 
 		t=readLines(con,1)
 		if( !any(grep("! TYPEDSTREAM",t[1],fixed=TRUE)) ) 
 			stop(paste("This doesn't appear to be an IGS TypedStream:",filename))
+		typedStreamVersion=numeric_version(sub("! TYPEDSTREAM ","",t[1],
+                                           fixed=TRUE,useBytes=TRUE))
+    attr(l,"version")<-typedStreamVersion
 	}
-	
-	l=list()
 	
 	checkLabel=function(label) 	{
 		if( any(names(l)==label)  ){
@@ -180,12 +195,24 @@ ReadIGSTypedStream<-function(con, CheckLabel=TRUE){
 	return(l)
 }
 
-WriteIGSTypedStream<-function(l,filename,gzip=FALSE){
+#' Write a suitable list to a CMTK TypedStream file on disk
+#' 
+#' @details NB a version specified on the command line overrides one encoded as 
+#'   an attribute in the input list.
+#' @param version TYPEDSTREAM version number, defaults to \code{"1.1"} if not 
+#'   specified in the version attribute of \code{l}.
+#' @export
+WriteIGSTypedStream<-function(l, filename, gzip=FALSE, version=NA_character_){
 	# Will take a list in the form returned by ReadIGSTypedStream and
 	# write it out to a text file
 #	con=if(gzip) file(filename,'w') else gzfile(filename,'w')
 	con=file(filename,'w')
-	cat("! TYPEDSTREAM 1.1\n\n",file=con)
+  if(is.na(version)){
+    version=as.character(attr(l,'version'))
+    if(!length(version)) version='1.1'
+  }
+  
+	cat("! TYPEDSTREAM ", version, "\n\n", file=con, sep="")
 	.WriteIGSTypedStream.list(l,con)
 	# iterate over list 
 	close(con)
@@ -222,8 +249,8 @@ IGSParamsToIGSRegistration<-function(x,reference="dummy",model="dummy"){
 	# This could now be written out wiith WriteIGSTypedStream
 	affine_xform=unlist(apply(x,1,list),rec=F)
 	names(affine_xform)=c("xlate","rotate","scale","shear","center")
-	
-	
+	warning("Use of model_study entry in CMTK registrations is deprecated.",
+	        " See CMTKParamsToCMTKRegistration")
 	l=list(registration=list(reference_study=reference,
 						model_study=model,
 						affine_xform=affine_xform))
@@ -232,10 +259,98 @@ IGSParamsToIGSRegistration<-function(x,reference="dummy",model="dummy"){
 	l
 }
 
+#' Produce in-memory list representation from CMTK affine parameters
+#' 
+#' @details Note that this uses the modern CMTK notation of floating_study 
+#'   rather than model_study as used by IGSParamsToIGSRegistration (which 
+#'   results in an implicit inversion by CMTK tools).
+#' @details Note that the reference and floating fields have no impact on the 
+#'   transformation encoded in the resultant .list folder and can be overridden 
+#'   on the command line of CMTK tools.
+#' @param x 5x3 matrix of CMTK registration parameters
+#' @param reference,floating Path to refererence and floating images.
+#' @return list of registration parameters suitable for 
+#'   \code{\link{WriteIGSRegistration}}
+#' @export
+CMTKParamsToCMTKRegistration<-function(x,reference="dummy",floating="dummy"){
+  affine_xform=unlist(apply(x,1,list),rec=F)
+  names(affine_xform)=c("xlate","rotate","scale","shear","center")
+  
+  l=list(registration=list(reference_study=reference,
+                           floating_study=floating,
+                           affine_xform=affine_xform))
+  attr(l$registration$reference_study,"quoted")=TRUE
+  attr(l$registration$floating_study,"quoted")=TRUE
+  version=attr(x,'version')
+  if(is.null(version)) version=numeric_version('2.4')
+  attr(l,'version')=version
+  l
+}
+
+#' Convert homogeneous affine registration to CMTK registration list
+#' 
+#' @details Note that this uses the modern CMTK notation of a "floating" image 
+#'   rather than model. It will also mark the resultant registration as version 
+#'   "2.4", i.e. using the new correct Compose/Decompose functions of CMTK 
+#'   >=2.4.0.
+#' @param x 4x4 homogeneous affine matrix
+#' @param centre Optional centre of rotation
+#' @param reference, floating Optional paths to reference and floating images
+#' @return list of CMTK registration parameters
+#' @seealso 
+#' \code{\link{CMTKParamsToCMTKRegistration},\link{WriteIGSRegistrationFolder}}
+#' @export
+AffineToCMTKRegistration<-function(x,centre,reference,floating){
+  if(!missing(centre)) d=DecomposeAffineToIGSParams(x,centre=centre)
+  else d=DecomposeAffineToIGSParams(x)
+  arglist<-list(x=d)
+  if(!missing(reference)) arglist$reference=reference
+  if(!missing(floating)) arglist$floating=floating
+  do.call(CMTKParamsToCMTKRegistration, arglist)
+}
+
 AffineToIGSRegistration<-function(x,centre,reference,model){
+  warning("Use of model_study entry in CMTK registrations is deprecated.",
+          " See AffineToCMTKRegistration")
 	if(!missing(centre)) d=DecomposeAffineToIGSParams(x,centre=centre)
 	else d=DecomposeAffineToIGSParams(x)
 	IGSParamsToIGSRegistration(d,reference=reference,model=model)
+}
+
+#'Write out CMTK registration list to folder
+#'
+#'@details Note that transformation in the forward direction (i.e. sample->ref) 
+#'  e.g. as calculated from a set of landmarks where set 1 is the sample is 
+#'  considered an inverse transformation by the IGS software. So in order to use
+#'  such a transformation as an initial affine with the registration command the
+#'  switch --initial-inverse must be used specifying the folder name created by 
+#'  this function.
+#'@details CMTK v2.4 fixed a long-standing bug in affine (de)composition to CMTK
+#'  params. This resulted in a non-backwards compatible change marked by writing
+#'  the TYPEDSTREAM as version 2.4. The R code in this package implements both 
+#'  the new and old compose/decompose functions, using the new by default.
+#'@param reglist List specifying CMTK registration parameters
+#'@param foldername Path to registration folder (usually ending in .list)
+#'@param version CMTK version for registration (default 2.4)
+write.cmtkreg<-function(reglist, foldername, version="2.4"){
+  dir.create(foldername, showWarnings=FALSE, recursive=TRUE)
+  if(!is.list(reglist)) reglist=CMTKParamsToCMTKRegistration(reglist)
+  WriteIGSTypedStream(reglist,file.path(foldername, "registration"),
+                      version=version)
+  
+  studysublist=list(studyname=reglist$registration$reference_study)
+  attr(studysublist$studyname, "quoted")=TRUE
+  studysublist2=studysublist
+  if ('model_study' %in% names(reglist$registration)) {
+    studysublist2$studyname=reglist$registration$model_study
+  } else {
+    studysublist2$studyname=reglist$registration$floating_study
+  }
+  studylist=list(studylist=list(num_sources=2),
+                 source=studysublist, source=studysublist2)
+  
+  WriteIGSTypedStream(studylist, file.path(foldername,"studylist"),
+                      version=version)
 }
 
 WriteIGSRegistrationFolder<-function(reglist,foldername){
@@ -247,6 +362,7 @@ WriteIGSRegistrationFolder<-function(reglist,foldername){
 	# So in order to use such a transformation as an initial affine with
 	# the registration command the switch --initial-inverse must be used
 	# specifying the folder name created by this function.
+  warning("WriteIGSRegistrationFolder is deprecated in favour of write.cmtkreg")
 	dir.create(foldername,showWarnings=FALSE,recursive=TRUE)
 	if(!is.list(reglist)) reglist=IGSParamsToIGSRegistration(reglist)
 	WriteIGSTypedStream(reglist,file.path(foldername,"registration"))
@@ -311,7 +427,7 @@ ReadIGSLandmarks<-function(...){
 #' @seealso \code{\link{ComposeAffineFromIGSParams}}
 AmiraRegFromCMTK<-function(cmtkreg,Transpose=TRUE,Invert=FALSE,Overwrite=TRUE,
 	amiraregfile='hxtransform'){
-	aff=HomogenousAffineFromCMTK(cmtkreg)
+	aff=cmtk.dof2mat(cmtkreg)
 	if(Invert) aff=solve(aff)
 	if(Transpose) aff=t(aff)
 	
@@ -359,14 +475,67 @@ CMTKRegFromAmira<-function(amirareg,cmtkregfolder=NULL,Transpose=TRUE,Invert=FAL
 	cmtkregpath
 }
 
-#' Read a CMTK registration and convert it to homogeneous affine matrix
+#' Convert CMTK registration to homogeneous affine matrix with dof2mat
 #' 
-#' Note that this matrix will have the 4th row 0 0 0 1
-HomogenousAffineFromCMTK<-function(cmtkregfolder){
-	cmd="dof2mat"
-	cmd=paste(cmd,shQuote(cmtkregfolder))
-	rval=system(cmd,intern=TRUE)
-	numbers=as.numeric(unlist(strsplit(rval,"\t")))
-	mat=matrix(numbers,ncol=4)
-	mat
+#' @details Transpose is true by default since this results in the orientation
+#'   of cmtk output files matching the orientation in R. Do not change this
+#'   unless you're sure you know what you're doing!
+#' @param reg Path to input registration file or 5x3 matrix of CMTK parameters.
+#' @param Transpose ouput matrix so that form on disk matches R's convention.
+#' @param version Whether to return CMTK version string
+#' @return 4x4 transformation matrix
+cmtk.dof2mat<-function(reg, Transpose=TRUE, version=FALSE){
+  cmd="dof2mat"
+  if(version) return(system2(cmd,'--version',stdout=TRUE))
+  if(Transpose) cmd=paste(cmd,'--transpose')
+  
+  if(is.numeric(reg)){
+    params<-reg
+    reg<-tempfile(fileext='.list')
+    on.exit(unlink(reg,recursive=TRUE))
+    write.cmtkreg(params,foldername=reg)
+  }
+  
+  cmd=paste(cmd,shQuote(reg))
+  rval=system(cmd,intern=TRUE)
+  numbers=as.numeric(unlist(strsplit(rval,"\t")))
+  matrix(numbers,ncol=4,byrow=TRUE)
+}
+
+#' Use CMTK mat2dof to convert homogeneous affine matrix into CMTK registration
+#' 
+#' @details If no output file is supplied, 5x3 params matrix will be returned 
+#'   directly. Otherwise a logical will be returned indicating success or 
+#'   failure at writing to disk.
+#' @details Transpose is true by default since this results in an R matrix with 
+#'   the transpose in the fourth column being correctly interpreted by cmtk.
+#' @param m Homogenous affine matrix (4x4) last row 0 0 0 1 etc
+#' @param f Output file (optional)
+#' @param centre Centre for rotation (optional 3-vector)
+#' @param Transpose the input matrix so that it is read in as it appears on disk
+#' @return 5x3 matrix of CMTK registration parameters or logical
+cmtk.mat2dof<-function(m, f=NULL, centre=NULL, Transpose=TRUE, version=FALSE){
+  cmd="mat2dof"
+  if(version) return(system2(cmd,'--version',stdout=TRUE))
+  if(!is.matrix(m) || nrow(m)!=4 || ncol(m)!=4) stop("Please give me a homogeneous affine matrix (4x4)")
+  inf=tempfile()
+  on.exit(unlink(inf),add=TRUE)
+  
+  write.table(m, file=inf, sep='\t', row.names=F, col.names=F)
+  # always transpose because mat2dof appears to read the matrix with last column being 0 0 0 1
+
+  if(Transpose) cmd=paste(cmd,'--transpose')
+  if(!is.null(centre)) {
+    if(length(centre)!=3) stop("Must supply 3-vector for centre")
+    cmd=paste(cmd,'--center',paste(centre, collapse=","))
+  }
+  if(is.null(f)){
+    cmd=paste(cmd,sep="<",shQuote(inf))
+    params=read.table(text=system(cmd,intern=T),sep='\t',comment.char="")[,2]
+    if(length(params)!=15) stop("Trouble reading mat2dof response")
+    return(matrix(params,ncol=3,byrow=TRUE))
+  } else {
+    cmd=paste(cmd,'--list',shQuote(f),"<",shQuote(inf))
+    return(system(cmd)==0)
+  }
 }

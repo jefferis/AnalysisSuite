@@ -39,30 +39,14 @@
 #################
 #ENDMAINCOPYRIGHT
 # Copyright Addendum:
-# DecomposeAffineToIGSParams and ComposeAffineFromIGSParams.named
+# DecomposeAffineToIGSParams and ComposeAffineFromIGSParams
 # are translations to R of code originally copyright Torsten Rohlfing 
-
 # 
-# source(file.path(CodeDir,"Affine.R"))
-# 
-# Identity matrix:
-# [1, 0, 0, 0]
-# [0, 1, 0, 0]
-# [0, 0, 1, 0]
-# [0, 0, 0, 1]
 
-matI=as.matrix( rbind(
-		c(1,0,0,0),
-		c(0,1,0,0),
-		c(0,0,1,0),
-		c(0,0,0,1)  ) )
-
-
-# Z rotation:
-# [cos t, 0, -sin t, 0]
-# [sin t, 0, cos t, 0]
-# [0, 0, 1, 0]
-# [0, 0, 0, 1]
+matI=matrix(c(1,0,0,0,
+              0,1,0,0,
+              0,0,1,0,
+              0,0,0,1), ncol=4, byrow=TRUE)
 
 AffineRotation<-function(rx=0,ry=0,rz=0,Degrees=F){
 	# expects rotations around the x, y and z axes
@@ -137,42 +121,47 @@ AffineTranslate<-function(tx=0,ty=0,tz=0,WidthPixel=1,HeightPixel=1,DepthPixel=1
 			c(0,0,0,1) ))
 }
 
-AffineShear<-function(hxy,hxz,hyz){
-}
-
 AffineTranslateRotateScale<-function(tx=0,ty=0,tz=0,rx=0,ry=0,rz=0,
   sx=1,sy=1,sz=1,Degrees=F,...){
 	AffineScale(sx,sy,sz)%*%AffineRotation(rx,ry,rz,Degrees=Degrees)%*%AffineTranslate(tx,ty,tz,...)
 }
 
-ComposeAffineFromIGSParams<-function(params){
-	# Expects a 5 x 3 matrix of paramaters
-	# in the same order as the affine transformation parameters
-	# in the affine registration files
-	
-	if(is.list(params)) params=unlist(params)
-	if(is.vector(params)) params=matrix(params,ncol=3,byrow=T)
-	if(identical(dim(params), as.integer(c(3,5)))) params = t(params) else {
-		if(!identical(dim(params),as.integer(c(5,3)))) stop("unable to parse params")
-	}
-	
-	return(ComposeAffineFromIGSParams.named( tx=params[1,1],ty=params[1,2],tz=params[1,3],
-	rx=params[2,1],ry=params[2,2],rz=params[2,3],
-	sx=params[3,1],sy=params[3,2],sz=params[3,3],
-	shx=params[4,1],shy=params[4,2],shz=params[4,3],
-	cx=params[5,1],cy=params[5,2],cz=params[5,3] ))
-}
+#' Compose homogeneous affine matrix from CMTK registration parameters
+#' 
+#' @details If the \code{legacy} parameter is not set explicitly, then it will 
+#'   be set to \code{TRUE} if params has a version attribute <2.4 or FALSE 
+#'   otherwise.
+#' @param params 5x3 matrix of CMTK registration parameters or list of length 5.
+#' @param legacy Whether to assume that parameters are in the format uses by 
+#'   CMTK <=2.4.0 (default FALSE, see details).
+#' @param tx,ty,tz Translation along x, y and z axes (default 0)
+#' @param rx,ry,rz Rotation about x, y and z axes (in degrees, default 0)
+#' @param sx,sy,sz Scale for x, y and z axes (default 1)
+#' @param shx, shy, shz Shear for x,y,z axes (default 0)
+#' @param cx,cy,cz Centre for rotation
+#' @return 4x4 homogeneous affine transformation matrix
+#' @details translation and centre components are assumed to be in physical 
+#'   coordinates.
+#' @export
+ComposeAffineFromIGSParams<-function(params=NULL, tx=0, ty=0, tz=0, rx=0, ry=0, 
+  rz=0, sx=1, sy=1, sz=1, shx=0, shy=0, shz=0, cx=0, cy=0, cz=0, legacy=NA){
 
-ComposeAffineFromIGSParams.named<-function(tx=0,ty=0,tz=0,rx=0,ry=0,rz=0,sx=1,sy=1,
-  sz=1,shx=0,shy=0,shz=0,cx=0,cy=0,cz=0){
-	# Compose an affine transformation matrix in an identical fashion to 
-	# IGS's affine matrix
-	#- params[0..2] tx,ty,tz
-	# params[3..5] rx,ry,rz (in degrees)
-	# params[6..8] sx,sy,sz
-	# params[9..11] shx,shy,shz
-	# params[12..14] cx,cy,cz
-	DegToRad=function(theta) theta/360*2*pi
+  if(is.na(legacy)) legacy=isTRUE(attr(params,'version')<numeric_version('2.4'))
+
+  if(!is.null(params)){
+    if(is.list(params)) params=unlist(params)
+    if(is.vector(params)) params=matrix(params,ncol=3,byrow=T)
+    if(identical(dim(params), as.integer(c(3,5)))) params = t(params) else {
+      if(!identical(dim(params),as.integer(c(5,3)))) stop("unable to parse params")
+    }
+    tx=params[1,1];ty=params[1,2];tz=params[1,3]
+    rx=params[2,1];ry=params[2,2];rz=params[2,3]
+    sx=params[3,1];sy=params[3,2];sz=params[3,3]
+    shx=params[4,1];shy=params[4,2];shz=params[4,3]
+    cx=params[5,1];cy=params[5,2];cz=params[5,3]
+  }
+  
+  DegToRad=function(theta) theta/360*2*pi
 	
 	alpha = DegToRad(rx)
 	theta = DegToRad(ry)
@@ -189,6 +178,7 @@ ComposeAffineFromIGSParams.named<-function(tx=0,ty=0,tz=0,rx=0,ry=0,rz=0,sx=1,sy
 	cos0xsin1 = cos0 * sin1
 
 	rval=matrix(0,4,4)
+	diag(rval)<-1
 	# nb in R matrices are indexed m[row,col]
 	# whereas in C looks like T indexed them
 	# m[col-1][row-1]
@@ -196,46 +186,51 @@ ComposeAffineFromIGSParams.named<-function(tx=0,ty=0,tz=0,rx=0,ry=0,rz=0,sx=1,sy
 	# \[\d\]\[\d\]
 	# (\2+1,\1+1)
 	# 
-	rval[0+1,0+1] =  cos1*cos2 * sx
-	rval[1+1,0+1] = -cos1*sin2 * sx
-	rval[2+1,0+1] = -sin1 * sx
-	rval[3+1,0+1] = 0
-	rval[0+1,1+1] =  (sin0xsin1*cos2 + cos0*sin2) * sy
-	rval[1+1,1+1] = (-sin0xsin1*sin2 + cos0*cos2) * sy
-	rval[2+1,1+1] =  sin0*cos1 * sy
-	rval[3+1,1+1] = 0
-	rval[0+1,2+1] =  (cos0xsin1*cos2 - sin0*sin2) * sz
-	rval[1+1,2+1] = (-cos0xsin1*sin2 - sin0*cos2) * sz
-	rval[2+1,2+1] =  cos0*cos1 * sz
-	rval[3+1,2+1] = 0
-	rval[3+1,3+1] = 1
+	rval[0+1,0+1] =  cos1*cos2
+	rval[1+1,0+1] = -cos1*sin2
+	rval[2+1,0+1] = -sin1
+	rval[0+1,1+1] =  (sin0xsin1*cos2 + cos0*sin2)
+	rval[1+1,1+1] = (-sin0xsin1*sin2 + cos0*cos2)
+	rval[2+1,1+1] =  sin0*cos1
+	rval[0+1,2+1] =  (cos0xsin1*cos2 - sin0*sin2)
+	rval[1+1,2+1] = (-cos0xsin1*sin2 - sin0*cos2)
+	rval[2+1,2+1] =  cos0*cos1
 
-	# generate shears
-	# make a copy
-	#rval2=rval
-	shears=c(shx,shy,shz)
-	for (i in 3:1 ) {
-		for (j in 1:3) {
-			rval[j,i] =rval[j,i] +shears[i] * rval[j,i%%3+1]
-#			rval[j,i] =rval[j,i] +shears[i] * rval[j,i+1]
-		}
-	}
-	#rval=rval2
-	  
-  
-	# This loop is a bit odd in the C original:
-	#     // generate shears
-	# 	  for ( int i=2; i>=0; --i ) {
-	# 		for ( int j=0; j<3; ++j ) {
-	# 		  Matrix[i][j] += params[9+i] * Matrix[(i+1)%3][j];
-	# 		}
-	# 	  }
-
-	# in c: i 2,1,0
-	# (i+1)%3 => 0,2,1
-	# which should be 1,3,2 in R
-	# BUT in my R goes 4,3,2
-	# So fix by changing rval[j,i+1] to rval[j,i%%3+1]
+  if(legacy){
+    rval[1:3,1]=rval[1:3,1]*sx
+    rval[1:3,2]=rval[1:3,2]*sy
+    rval[1:3,3]=rval[1:3,3]*sz
+    shears=c(shx,shy,shz)
+    if(TRUE){
+      # generate shears in broken CMTK <2.4.0 style
+      for (i in 3:1 ) {
+        shear=matrix(0,4,4)
+        diag(shear)<-1
+        # i/2 {0,0,1} for i={0,1,2}
+        # (i/2)+(i%2)+1 {1,2,2} for i={0,1,2}
+        # shear[i/2][(i/2)+(i%2)+1] = dofs[9+i];
+        shear[c(2,3,3)[i],c(1,1,2)[i]]=shears[i]
+        rval = shear%*%rval
+      }
+    } else {
+      # Generate shears in broken early IGS form
+      for (i in 3:1 ) {
+        for (j in 1:3) {
+          rval[j,i] =rval[j,i] +shears[i] * rval[j,i%%3+1]
+        }
+      }
+    }
+  } else {
+    # generate scales and shears according to CMTK >=v.2.4.0 / svn r5050
+    scaleShear=matrix(0,4,4)
+    diag(scaleShear)=c(sx,sy,sz,1)
+    scaleShear[0+1,1+1]=shx
+    scaleShear[0+1,2+1]=shy
+    scaleShear[1+1,2+1]=shz
+    
+    # NB matrix multiplication must be in opposite order from C original
+    rval = rval%*%scaleShear
+  }
 	
 	# transform rotation center
 	cM = c(  cx*rval[0+1,0+1] + cy*rval[0+1,1+1] + cz*rval[0+1,2+1],
@@ -288,13 +283,6 @@ TransformPoints<-function(Points,AffMat,dim=3){
 
 	return(rval)
 }
-
-	
-AffineTranslateRotateScale(
--6.400000095, 4.300000064, 12.00000005,
--3.800542432, 1.256377663, -0.9860968818,
-1.054021854, 0.9631939015, 1.039477509 ,
-Degrees=T,Width=.33,Height=.33,Depth=1)
 
 CalculateAffineFromLandmarkPairs<-function(landmarks,StartMat,
 	SwapTransform=FALSE,Verbose=FALSE,costfn=function(x) sum(abs(x)),method="BFGS",...){
@@ -387,20 +375,14 @@ CalculateIGSParamsFromLandmarkPairs<-function(landmarks,dofs=c(3,6,9,12),
 	m
 }
 
-
-FindTorstenFromAffine<-function(affmat,centre=c(84.39,84.39,43.5)){
-# INCOMPLETE
-	TorstenGuess=rbind(affmat[1:3,4],rep(0,3),rep(1,3),rep(0,3),centre)
-	TorstenGuessComps=t(TorstenGuess)[1:12]
-	TorstenGuess=optim()
-}
-
-DecomposeAffineToIGSParams<-function(matrix,centre=c(84.39,84.39,43.5)){
-	# This works so long as matrix does not have a shear component
-	# Turns out that it is identical to Torsten's version, so if I have
-	# understood the properties of Decomposition/Composition, the library
-	# has a bug
-	
+#' Decompose homogeneous affine matrix to CMTK registration parameters
+#'
+#' @param matrix 4x4 homogeneous affine matrix
+#' @param centre Rotation centre
+#' @return 5x3 matrix of CMTK registration parameters
+#' @export
+#' @seealso \code{\link{ComposeAffineFromIGSParams}}
+DecomposeAffineToIGSParams<-function(matrix,centre=c(0,0,0)){
 # C matrices indexed [C][R] (vs [R,C] in R)
 # so it seems easiest to transpose for use in R
 	matrix=t(matrix)
@@ -418,39 +400,94 @@ DecomposeAffineToIGSParams<-function(matrix,centre=c(84.39,84.39,43.5)){
 	params[1:3] = params[1:3] + cM[1:3] - centre[1:3]
 	params[13:15]=centre
 
-	#matrix2=matrix # make a copy of matrix
- 	for ( shear in 1:3 ) {
- 		# compute coefficient
- 		idx=1+(shear%%3) # 1, 2, 3 => 2, 3, 1 # params[11] ie shear 2 is correctly calculated
- 		params[9+shear] = 
- 		sum( matrix[idx,1:3]*matrix[shear,1:3] ) / sum( matrix[idx,1:3]^2 )
-		# remove contribution from transformation matrix
-		matrix[shear,1:3] =matrix[shear,1:3]- (params[9+shear] * matrix[idx,1:3] )
- 	}
- 	#matrix=matrix2 # overwrite 
+	# QR decomposition
+	matrix2d=t(matrix[1:3,1:3])
+	qr.res=qr(matrix2d)
+	Q=qr.Q(qr.res)
+	R=qr.R(qr.res)
+	R[lower.tri(R)]=0
 	
-	VTK.AXIS.EPSILON=0.001
-
-	for ( i in 1:3 ) {
-		# scale
-		params[6 + i] = sqrt( sum( matrix[i,1:3]^2 ) )
-		# report error on singular matrices.
-		if ( abs(params[6+i]) < VTK.AXIS.EPSILON ) {
-			cat("DecomposeAffineToIGSParams encountered singular matrix")
-			return (null)
+	for (k in 1:3) {
+		# if scale is negative, make positive and correct Q and R accordingly (we will figure out later if the overall transformation is a true rotation or has a negative determinant)
+		if ( R[k,k] < 0 ) {
+			R[k,1:3] = -R[k,1:3]
+			Q[1:3,k] = -Q[1:3,k]
 		}
+		
+		# scale
+		params[6 + k] = R[k,k]
+		
+		# report error on singular matrices.
+		if ( params[6+k]	< .Machine$double.eps ) stop("singular matrix")
+		
+		# shear: i,j index the upper triangle of aMat, which is R from QR
+		i = (c(0, 0, 1)+1)[k]  # i.e. i := { 0, 0, 1 }
+		j = (c(1, 2, 2)+1)[k]  # i.e. j := { 1, 2, 2 }
+		params[9+k] = R[i,j]
 	}
+	
+	# =========================================================================
+	# 
+	# THE FOLLOWING CODE WAS ADOPTED AND MODIFIED FROM VTK, The Visualization
+	# Toolkit.
+	# 
+	#		Program:	 Visualization Toolkit
+	#		Language:	 C++
+	#		Thanks:		 Thanks to David G. Gobbi who developed this class.
+	# 
+	# Copyright (c) 1993-2001 Ken Martin, Will Schroeder, Bill Lorensen 
+	# All rights reserved.
+	# 
+	# Redistribution and use in source and binary forms, with or without
+	# modification, are permitted provided that the following conditions are met:
+	# 
+	#	 * Redistributions of source code must retain the above copyright notice,
+	#		 this list of conditions and the following disclaimer.
+	# 
+	#	 * Redistributions in binary form must reproduce the above copyright notice,
+	#		 this list of conditions and the following disclaimer in the documentation
+	#		 and/or other materials provided with the distribution.
+	# 
+	#	 * Neither name of Ken Martin, Will Schroeder, or Bill Lorensen nor the names
+	#		 of any contributors may be used to endorse or promote products derived
+	#		 from this software without specific prior written permission.
+	# 
+	#	 * Modified source versions must be plainly marked as such, and must not be
+	#		 misrepresented as being the original software.
+	# 
+	# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
+	# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+	# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+	# ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE FOR
+	# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+	# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+	# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+	# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+	# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+	# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+	# 
+	# =========================================================================
+	
+	if (det(matrix[1:3,1:3])<0){
+		# negative determinant, not a true rotation
+		# negate x scale
+		params[6+1] = -params[6+1];
+		# also negative shears related to x
+		params[9:10+1] = -params[9:10+1];
+	}
+	
+	VTK.AXIS.EPSILON=1E-8
 
 	# FIXED FROM HERE
 	# rotation
 	# first rotate about y axis
-	x2 = matrix[1,2] / params[7]
-	y2 = matrix[1,3] / params[7]
-	z2 = matrix[1,1] / params[7]
+	x2 = Q[2,1] / params[7]
+	y2 = Q[3,1] / params[7]
+	z2 = Q[1,1] / params[7]
 		
-	x3 = matrix[3,2] / params[9]
-	y3 = matrix[3,3] / params[9]
-	z3 = matrix[3,1] / params[9]
+	x3 = Q[2,3] / params[9]
+	y3 = Q[3,3] / params[9]
+	z3 = Q[1,3] / params[9]
 		
 	dot = x2 * x2 + z2 * z2
 	d1 = sqrt (dot)
@@ -499,52 +536,8 @@ DecomposeAffineToIGSParams<-function(matrix,centre=c(84.39,84.39,43.5)){
 		
 	params[4] = rad2deg(-atan2 (sinAlpha, cosAlpha)) # alpha
 
-  # /** END OF ADOPTED VTK CODE **/
-	return (matrix(params,ncol=3,byrow=TRUE))
+	# /** END OF ADOPTED VTK CODE **/
+  param_matrix=matrix(params,ncol=3,byrow=TRUE)
+  attr(param_matrix,'version')=numeric_version('2.4')
+	return (param_matrix)
 }
-
-
-	# =========================================================================
-	# 
-	# THE FOLLOWING CODE WAS ADOPTED AND MODIFIED FROM VTK, The Visualization
-	# Toolkit.
-	# 
-	#   Program:   Visualization Toolkit
-	#   Language:  C++
-	#   Thanks:    Thanks to David G. Gobbi who developed this class.
-	# 
-	# Copyright (c) 1993-2001 Ken Martin, Will Schroeder, Bill Lorensen 
-	# All rights reserved.
-	# 
-	# Redistribution and use in source and binary forms, with or without
-	# modification, are permitted provided that the following conditions are met:
-	# 
-	#  * Redistributions of source code must retain the above copyright notice,
-	#    this list of conditions and the following disclaimer.
-	# 
-	#  * Redistributions in binary form must reproduce the above copyright notice,
-	#    this list of conditions and the following disclaimer in the documentation
-	#    and/or other materials provided with the distribution.
-	# 
-	#  * Neither name of Ken Martin, Will Schroeder, or Bill Lorensen nor the names
-	#    of any contributors may be used to endorse or promote products derived
-	#    from this software without specific prior written permission.
-	# 
-	#  * Modified source versions must be plainly marked as such, and must not be
-	#    misrepresented as being the original software.
-	# 
-	# THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS ``AS IS''
-	# AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
-	# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
-	# ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHORS OR CONTRIBUTORS BE LIABLE FOR
-	# ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
-	# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-	# SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
-	# CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
-	# OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
-	# OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-	# 
-	# =========================================================================
-
-	
-	
