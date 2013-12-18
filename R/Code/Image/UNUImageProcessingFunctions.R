@@ -332,12 +332,32 @@ NrrdCrc<-function(infile,UseGzip=FALSE,FastHeader=TRUE){
 	crc
 }
 
-# gamma: Just as in xv, the gamma value here is actually the reciprocal
-# of the exponent actually used to transform the values.
+
+#' Make projections along a nrrd axis
+#'
+#' @details gamma: Just as in xv, the gamma value here is actually the reciprocal
+#'   of the exponent actually used to transform the values.
+#' Note also that for \code{cropmin,cropmax} the special value M can be used
+#'   to indicate the maximum index for that axis (i.e. n-1 when there are n 
+#'   samples).
+#' @param infile Path to input file
+#' @param outfile Optional path to output file (constructed automatically when missing)
+#' @param axis Number indicating 0-indexed axis or character "x", "y" or "z"
+#' @param measure Character vector indicating summary function to apply to
+#'   values in each column. Choose from \code{c("max", "min", "mean", "median",
+#'   "mode", "variance", "skew", "intc", "slope", "error", "sd", "product", 
+#'   "sum", "L1", "L2", "Linf")}
+#' @return Logical indicating success
+#' @export
+#' @seealso \code{\link{NrrdSave},\link{NrrdMerge}}
+#' @examples
+#' \dontrun{
+#' NrrdProject(infile,axis='z',cropmin='0 0 50',cropmax='0 0 M-50')
+#' }
 NrrdProject<-function(infile,outfile,axis,
 	measure=c("max", "min", "mean", "median", "mode", "variance", "skew",
 	"intc", "slope", "error", "sd", "product", "sum", "L1", "L2", "Linf"),
-	scale="x0.3333 x0.333",kernel='cheap',gamma=NA,
+	scale="x0.3333 x0.333",kernel='cheap',gamma=NA,cropmin=NULL,cropmax=NULL,
 	suffix=NULL,
 	CreateDirs=TRUE,Verbose=TRUE,Force=FALSE,UseLock=FALSE){
 	measure=match.arg(measure)
@@ -346,6 +366,10 @@ NrrdProject<-function(infile,outfile,axis,
 		outfile=sub("\\.nrrd$",paste(suffix,".png",sep=""),infile)
 	}
 	if(!file.exists(infile)) stop("infile: ",infile," does not exist")
+	if(is.character(axis)) {
+		axis=match(tolower(axis),c("x",'y','z'))-1
+		if(is.na(axis)) stop("Unable to recognise nrrd axis")
+	}
 	# return TRUE to signal output exists (we just didn't make it now)
 	if(!Force && !RunCmdForNewerInput(NULL,infile,outfile)) return (TRUE)
 	if(CreateDirs && !file.exists(dirname(outfile))) dir.create(dirname(outfile),recursive = TRUE)
@@ -353,8 +377,16 @@ NrrdProject<-function(infile,outfile,axis,
 	# return FALSE to signal output doens't exist
 	if(UseLock && !makelock(lockfile)) return (FALSE)
 	if(is.numeric(scale)) scale=paste(scale,collapse=" ")
-	cmd=paste("unu resample -s",scale," = -k ",kernel," -i",shQuote(infile),
+	if(!is.null(cropmax)||!is.null(cropmin)){
+		cmd=paste("unu crop",
+			ifelse(is.null(cropmax),'',paste("-max",cropmax)),
+			ifelse(is.null(cropmin),'',paste("-min",cropmin)),
+			"-i",shQuote(infile),
+			"| unu resample -s",scale," = -k ",kernel,
+			"| unu project -a",axis,"-m ",measure," | unu quantize -b 8 ")
+	} else cmd=paste("unu resample -s",scale," = -k ",kernel," -i",shQuote(infile),
 		"| unu project -a",axis,"-m ",measure," | unu quantize -b 8 ")
+
 	if(!is.na(gamma)){
 		cmd=paste(cmd,"| unu gamma --gamma",gamma)
 	}

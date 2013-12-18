@@ -54,3 +54,23 @@ test.NrrdVoxDims<-function(){
   nvd=NrrdVoxDims(mask_file)
   checkEqualsNumeric(rep(1.4,3),nvd,tol=1e-6,msg="Check vox dims for 3d mask nrrd")
 }
+
+test.NrrdProject<-function(){
+	tmpdir=tempfile()
+	dir.create(tmpdir)
+	on.exit(unlink(tmpdir,recursive=TRUE))
+	origlhmaskfile=file.path(TestDir,"Data","LHMask.nrrd")
+	lhmaskfile=file.path(tmpdir,"LHMask.nrrd")
+	file.copy(origlhmaskfile,tmpdir)
+	checkTrue(NrrdProject(lhmaskfile,axis=2,Verbose=FALSE))
+	checkTrue(NrrdProject(lhmaskfile,axis="Z",Verbose=FALSE))
+	file1=file.path(tmpdir,'LHMask-2max.png')
+	file2=file.path(tmpdir,'LHMask-Zmax.png')
+	checkTrue(file.exists(file1))
+	checkTrue(file.exists(file2))
+	checkEquals(md5sum(file1),md5sum(file2),checkNames=FALSE)
+	print(md5sum(file1))
+	checkEquals(md5sum(file1),"0af6666b4dee716675718c79f72d171a",checkNames=FALSE)
+	checkTrue(NrrdProject(lhmaskfile,axis="Z",cropmin="0 0 0",Verbose=FALSE))
+	checkEquals(md5sum(file2),"0af6666b4dee716675718c79f72d171a",checkNames=FALSE)
+}
