@@ -120,7 +120,7 @@ sourcelist<-setdiff(sourcelist,"Startup.R")
 SourcePaths<-file.path(CodeDir,sourcelist)
 for (MyPath in SourcePaths) {
 	#cat(MyPath," ")
-	try(source(MyPath))
+	try(sys.source(MyPath,envir=topenv(),keep.source=TRUE))
 }
 
 setwd(owd)
