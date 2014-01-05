@@ -5,7 +5,8 @@
 
 # source(file.path(RootDir,"R","Tests","runAllTests.R"))
 
-if(!exists('TestDir')) source("~/projects/AnalysisSuite/R/Code/Startup.R")
+#if(!exists('TestDir')) source("~/projects/AnalysisSuite/R/Code/Startup.R")
+library(nat.as)
 
 require(RUnit)
 TestDirs=rownames(subset(file.info(dir(TestDir,full=TRUE)),isdir==TRUE))
