@@ -123,6 +123,12 @@ for (MyPath in SourcePaths) {
 	try(sys.source(MyPath,envir=topenv(),keep.source=TRUE))
 }
 
+if(!require("nat")){
+  if(interactive())
+    browseURL('https://github.com/jefferis/nat#installation')
+  stop("Please install nat R package\nSee https://github.com/jefferis/nat#installation")
+}
+
 setwd(owd)
 cat("Type: load(\"",file.path(ObjDir,'MyNeurons.rda'),"\")  to load in the main dataset\n",sep='')
 #cat("Use runScript() or runFig() to run additional code\n")
