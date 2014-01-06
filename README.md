@@ -37,17 +37,17 @@ You should only need do this if the Easy Install fails
   * Download this repository as [zip file](https://github.com/jefferis/AnalysisSuite/zipball/master)
   * Unzip the zip file in /path/to/some/sensible/directory
   * Start R
-  * source `/path/to/some/sensible/directory/AnalysisSuite/R/Install.R`
-    * either use the File ... Source File menu and choose the file in the GUI
+  * Source `/path/to/some/sensible/directory/AnalysisSuite/R/Install.R`
+    * Either use the File ... Source File menu and choose the file in the GUI
     * or `source('/path/to/some/sensible/directory/AnalysisSuite/R/Install.R')` at the command line
   * Now go to **Running AnalysisSuite in R**
   
-Developer install
+Developer Install
 -----------------
 This is strongly recommended if you plan to use this code on a regular basis
 
   * Make sure you have a recent version of R installed (R>=2.15.1 recommended)
-  * install [git](http://git-scm.com/) if you don't already have it
+  * Install [git](http://git-scm.com/) if you don't already have it
   * In a shell/terminal session
     * `cd /path/to/some/sensible/directory`
     * `git clone https://github.com/jefferis/AnalysisSuite.git`
@@ -61,7 +61,7 @@ Running AnalysisSuite in R
      `source(getOption('gjanalysissuite.startup'))`
   * See [our wiki](http://flybrain.mrc-lmb.cam.ac.uk/dokuwiki/doku.php?id=warping_manual:start) for further details.
 
-Moving the location of AnalysiSuite
+Moving the location of AnalysisSuite
 -----------------------------------
 If you move the AnalysisSuite directory on your filesystem just source `AnalysisSuite/R/Install.R` again to update
 the path to AnalysisSuite.
@@ -70,5 +70,5 @@ the path to AnalysisSuite.
 Amira Installation
 ==================
 There are a few useful Amira scripts located in the amira subdirectory.
-  * see instructions in the readme in amira subdirectory
+  * See instructions in the readme in amira subdirectory
   * Essentially run Install.hx script
