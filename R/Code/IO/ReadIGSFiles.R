@@ -121,7 +121,7 @@ CMTKParamsToCMTKRegistration<-function(x,reference="dummy",floating="dummy"){
 #' @export
 AffineToCMTKRegistration<-function(x,centre,reference,floating){
   .Deprecated('cmtkreglist','nat')
-  arglist=list(x=x)
+  arglist=list(x=)
   if(!missing(centre)) arglist$centre=centre
   if(!missing(reference)) arglist$reference=reference
   if(!missing(floating)) arglist$floating=floating
@@ -164,36 +164,20 @@ WriteIGSRegistrationFolder<-function(reglist,foldername){
 	WriteIGSTypedStream(studylist, file.path(foldername,"studylist"))		
 }
 
-IGSLandmarkList<-function(xyzs){
-	# IGS Landmark lists are unpaired ie contain information for only 1 brain
-	xyzs=data.matrix(xyzs)
-	ns=rownames(xyzs)
-	ll=list()
-	for(i in 1:nrow(xyzs)){
-		ll[[i]]=list(name=paste("\"",ns[i],"\"",sep=""),location=xyzs[i,])		
-	}
-	names(ll)=rep('landmark',length(ll))
-	ll
-}
-
+#' WriteIGSLandmarks
+#'
+#' deprecated in favour of nat::write.cmtklandmarks
 WriteIGSLandmarks<-function(xyzs,filename,Force=FALSE){
-	ll=IGSLandmarkList(xyzs)
-	if(file.exists(filename) && file.info(filename)$isdir) filename=file.path(filename,"landmarks")
-	if(file.exists(filename) && !Force) {
-		stop(paste(filename,"already exists, use Force=TRUE to replace"))
-	}
-	WriteIGSTypedStream(ll,filename)
+	.Deprecated('write.cmtklandmarks','nat')
+	write.cmtklandmarks(xyzs,filename,Force=Force)
 }
 
+#' ReadIGSLandmarks
+#'
+#' deprecated in favour of nat::read.cmtklandmarks
 ReadIGSLandmarks<-function(...){
-	l=ReadIGSTypedStream(...,CheckLabel=FALSE)
-	x=t(sapply(l,function(x) x[["location"]]))
-	rn=sapply(l,function(x) x[["name"]])
-	# nb this is necessary to avoid the names having names 
-	# of the form landmarks.1, landmarks.1 ...
-	names(rn)<-NULL
-	rownames(x)=rn
-	x
+	.Deprecated('read.cmtklandmarks','nat')
+	read.cmtklandmarks(...)
 }
 
 #' Convert a CMTK registration to Amira format (suitable for ResultViewer.hx)
