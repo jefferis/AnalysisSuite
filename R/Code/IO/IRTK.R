@@ -263,3 +263,8 @@ irtk.TransformNeuron<-function(neuron,dofin=NULL,transform=c("warp","affine"),..
 		dofins=dofin,transforms=transform,...)[[transform]]
 	neuron
 }
+
+#' check if irtk is present
+irtk.present<-function(tooltocheck='stransformation'){
+  .callirtk(tooltocheck,'-h',ignore.stderr=TRUE)==1
+}

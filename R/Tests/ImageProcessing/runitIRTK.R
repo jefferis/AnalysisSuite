@@ -21,6 +21,8 @@ RunIdentityRegistration<-function(regtype){
 		msg=paste("Failure in",regtype,"identity registration"),tol=1e-6)
 }
 
+if(irtk.present()){
+
 test.RunIdentityRegistrations<-function(){
 	RunIdentityRegistration("rigid")
 	RunIdentityRegistration("affine")
@@ -78,5 +80,6 @@ test.dof2mat<-function(){
 	checkEqualsNumeric(correctmat,solve(mat),tol=1e-3)
 }
 
+}
 # debug(test.RunIdentityRegistration)
 # debug(test.dof2mat)
