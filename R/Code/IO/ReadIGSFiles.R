@@ -37,11 +37,6 @@
 #################
 #ENDMAINCOPYRIGHT
 
-# source(file.path(CodeDir,"ReadIGSFiles.R"))
-
-
-trim =function(t) sub('[[:space:]]+$', '', sub('^[[:space:]]+', '', t))
-
 #' Read CMTK(IGS) format registration
 #'
 #' @details Note that ReturnRegistrationOnly defaults to FALSE in the new

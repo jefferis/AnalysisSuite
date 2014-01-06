@@ -192,6 +192,8 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
   return(l)
 }
 
+trim =function(t) sub('[[:space:]]+$', '', sub('^[[:space:]]+', '', t))
+
 ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=TRUE){
 	headerLines=NULL
 	if(!inherits(con,"connection")) con<-file(con,open='rt')
