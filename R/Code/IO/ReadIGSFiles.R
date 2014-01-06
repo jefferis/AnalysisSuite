@@ -102,18 +102,8 @@ IGSParamsToIGSRegistration<-function(x,reference="dummy",model="dummy"){
 #'   \code{\link{WriteIGSRegistration}}
 #' @export
 CMTKParamsToCMTKRegistration<-function(x,reference="dummy",floating="dummy"){
-  affine_xform=unlist(apply(x,1,list),rec=F)
-  names(affine_xform)=c("xlate","rotate","scale","shear","center")
-  
-  l=list(registration=list(reference_study=reference,
-                           floating_study=floating,
-                           affine_xform=affine_xform))
-  attr(l$registration$reference_study,"quoted")=TRUE
-  attr(l$registration$floating_study,"quoted")=TRUE
-  version=attr(x,'version')
-  if(is.null(version)) version=numeric_version('2.4')
-  attr(l,'version')=version
-  l
+  .Deprecated('cmtkreglist','nat')
+  nat::cmtkreglist(x,reference=reference,floating=floating)
 }
 
 #' Convert homogeneous affine registration to CMTK registration list
@@ -130,12 +120,12 @@ CMTKParamsToCMTKRegistration<-function(x,reference="dummy",floating="dummy"){
 #' \code{\link{CMTKParamsToCMTKRegistration},\link{WriteIGSRegistrationFolder}}
 #' @export
 AffineToCMTKRegistration<-function(x,centre,reference,floating){
-  if(!missing(centre)) d=DecomposeAffineToIGSParams(x,centre=centre)
-  else d=DecomposeAffineToIGSParams(x)
-  arglist<-list(x=d)
+  .Deprecated('cmtkreglist','nat')
+  arglist=list(x=x)
+  if(!missing(centre)) arglist$centre=centre
   if(!missing(reference)) arglist$reference=reference
   if(!missing(floating)) arglist$floating=floating
-  do.call(CMTKParamsToCMTKRegistration, arglist)
+  do.call(nat::cmtkreglist, arglist)
 }
 
 AffineToIGSRegistration<-function(x,centre,reference,model){
