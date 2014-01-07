@@ -121,7 +121,7 @@ CMTKParamsToCMTKRegistration<-function(x,reference="dummy",floating="dummy"){
 #' @export
 AffineToCMTKRegistration<-function(x,centre,reference,floating){
   .Deprecated('cmtkreglist','nat')
-  arglist=list(x=)
+  arglist=list(x=x)
   if(!missing(centre)) arglist$centre=centre
   if(!missing(reference)) arglist$reference=reference
   if(!missing(floating)) arglist$floating=floating
