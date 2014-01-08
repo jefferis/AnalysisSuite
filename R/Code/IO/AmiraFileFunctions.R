@@ -1222,6 +1222,8 @@ ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inne
 		if(Verbose) cat("nTriangles =",nTriangles,"for patch =",i,"\n")
 		# Check if we want to load in this region
 		if( ("ALL"%in%RegionNames) || (RegionName%in%RegionNames) ){
+			# Ensure we do not try to add no triangles
+			if(nTriangles == 0) next
 			# check if we have already loaded a patch in this name
 			if(RegionName%in%names(d)){
 				#return(d)
