@@ -443,7 +443,7 @@ DotPropertiesFromFile<-function(f, xformfun=NULL, ...){
 		stop("Cannot extract dots from file type: ",ext)
 	if(!is.null(xformfun))
 		l$points=xformfun(l$points)
-	l=DotProperties(l$points,...)
+	l=dotprops(l$points,...)
 	attr(l,'file')=f
 	fi=file.info(f)
 	attr(l,'mtime')=fi$mtime
@@ -451,7 +451,9 @@ DotPropertiesFromFile<-function(f, xformfun=NULL, ...){
 	l
 }
 
-#' Transform dot property object using specified registration
+#' Deprecated Transform dot property object using specified registration
+#'
+#' see nat::xform
 #'
 #' @param dp dotprops object to transform
 #' @param reg Path to CMTK registration file OR function to transform points
@@ -464,24 +466,9 @@ DotPropertiesFromFile<-function(f, xformfun=NULL, ...){
 #' @seealso \code{\link{transformedPoints}}
 transform.dotprops<-function(dp,reg,k, RecalculateDotProps=T,na.action=c('warn','drop','error'),...) {
 	na.action=match.arg(na.action)
-	if(is.function(reg)){
-	  # we've been given a function - apply this to points
-	  pointst=reg(dp$points,...)
-	} else {
-	  # we've been given a CMTK registration file
-	  pointst=transformedPoints(xyzs=dp$points,warpfile=reg,transforms='warp',...)[['warp']]
-	}
-	
-	naPoints=is.na(pointst[,1])
-	if(any(naPoints)){
-		if(na.action=='warn')
-			warning("Dropping ",sum(naPoints),' points')
-		else if (na.action=='error')
-			stop("Error: Failed to transform ",sum(naPoints),' points')
-		
-		pointst=pointst[!naPoints,]
-	}
-	dpn=DotProperties(pointst,k)
+	if(!RecalculateDotProps) stop("RecalculateDotProps must always be TRUE!")
+	.Deprecated('xform','nat')
+	nat::xform(dp,reg,k=k)
 }
 
 #' Compute point & tangent vector similarity score between two dotprops objects
