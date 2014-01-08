@@ -1159,7 +1159,7 @@ ReadMBLHFromAMSurf<-function(AMSurfFile,Components=c("MB","LH"),WithConvexHull=F
 }
 
 
-ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inner",Verbose=FALSE){	
+ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inner",Verbose=FALSE,FallbackRegionCol="grey"){
 	# function to parse a an amira  HxSurface file
 	# nb RegionChoice is a switch to allow the inneror outer region to
 	# define the name of the region
@@ -1242,6 +1242,24 @@ ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inne
 		}
 	}
 	d$RegionList=setdiff(names(d),"Vertices")
+
+	# Handle colours for regions
+	d$RegionColourList <- vector(length=length(d$RegionList))
+	closeBraces <- grep("}", headerLines)
+	for(regionName in d$RegionList) {
+		# Find section in headerLines corresponding to this region
+		headerSecStart <- grep(paste0(" ", regionName, " \\{"), headerLines)[1]
+		headerSecEnd <- closeBraces[closeBraces > headerSecStart][1]
+		# Extract colour information
+		colorLine <- grep("Color", headerLines[headerSecStart:headerSecEnd], value=T)
+		if(length(colorLine) > 0) {
+			rgbValues <- strsplit(regmatches(colorLine, regexpr("[0-9].*", colorLine, perl=T)), " ")[[1]]
+			color <- rgb(rgbValues[1], rgbValues[2], rgbValues[3])
+		} else {
+			color <- FallbackRegionCol
+		} 
+		d$RegionColourList[which(d$RegionList == regionName)] <- color
+	}
 	return(d)
 }
 
