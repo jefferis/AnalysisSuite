@@ -238,25 +238,3 @@ write.neuronlist<-function(nl,dir,subdir=NULL,INDICES=names(nl),...){
     write.neuron(n,dir=thisdir,...)
   }
 }
-
-#' Arithmetic for neuron coordinates applied to neuronlists
-#'
-#' If x is one number or 4-vector, multiply xyz and diameter by that
-#' If x is a 3-vector, multiply xyz only
-#' TODO Figure out how to document arithemtic functions in one go
-#' @param x a neuronlist
-#' @param y (a numeric vector to multiply coords in neuronlist members)
-#' @return modified neuronlist
-#' @export
-#' @rdname neuronlist.arithmetic
-#' @examples
-#' mn2<-MyNeurons[1:10]*2
-`*.neuronlist` <- function(x,y) {
-	# TODO look into S3 generics for this functionality
-	nlapply(x,`*`,y)
-}
-
-`+.neuronlist` <- function(x,y) nlapply(x,`+`,y)
-`-.neuronlist` <- function(x,y) x+(-y)
-`/.neuronlist` <- function(x,y) x*(1/y)
-
