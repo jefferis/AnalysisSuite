@@ -1253,13 +1253,14 @@ ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inne
 		# Extract colour information
 		colorLine <- grep("Color", headerLines[headerSecStart:headerSecEnd], value=T)
 		if(length(colorLine) > 0) {
-			rgbValues <- strsplit(regmatches(colorLine, gregexpr("[1]|[0-9]\\.[0-9]+", colorLine, perl=T))[[1]], " ")
+			rgbValues <- strsplit(regmatches(colorLine, gregexpr("[0-9]|[0-9]\\.[0-9]+", colorLine, perl=T))[[1]], " ")
 			color <- rgb(rgbValues[[1]], rgbValues[[2]], rgbValues[[3]])
 		} else {
 			color <- FallbackRegionCol
 		} 
 		d$RegionColourList[which(d$RegionList == regionName)] <- color
 	}
+	class(d) <- c(class(d), 'hxSurf')
 	return(d)
 }
 
