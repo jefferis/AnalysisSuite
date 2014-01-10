@@ -1230,16 +1230,13 @@ ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inne
 				#return(d)
 				# add to the old patch
 				if(Verbose) cat("Adding to patch name",RegionName,"\n")
-				# d[[RegionName]]=rbind(d[[RegionName]],read.table(filename,skip=linesSkipped+TriangleDeflines[i],nrows=nTriangles,col.names=c("V1","V2","V3")))
 				d[['Regions']][[RegionName]]=rbind(d[['Regions']][[RegionName]],read.table(filename,skip=linesSkipped+TriangleDeflines[i],nrows=nTriangles,col.names=c("V1","V2","V3")))
-				#d[[RegionName]]=rbind(d[[RegionName]],read.table(filename,skip=linesSkipped+TriangleDeflines[i],nrows=nTriangles,col.names=c("V1","V2","V3")))
 			} else {
 				# new patch
 				if(Verbose) cat("Making new patch name",RegionName,"\n")
 				# scan no quicker in these circs, problem is repeated file 
 				# access
 				#d[[RegionName]]=as.data.frame(matrix(scan(filename,skip=linesSkipped+TriangleDeflines[i],nlines=nTriangles),ncol=3,byrow=T))
-				# d[[RegionName]]=read.table(filename,skip=linesSkipped+TriangleDeflines[i],nrows=nTriangles,col.names=c("V1","V2","V3"))
 				d[['Regions']][[RegionName]]=read.table(filename,skip=linesSkipped+TriangleDeflines[i],nrows=nTriangles,col.names=c("V1","V2","V3"))
 			}
 		}
