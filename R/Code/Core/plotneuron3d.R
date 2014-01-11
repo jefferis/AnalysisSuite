@@ -50,7 +50,7 @@ plot3dsurface<-function(material,d,VertexComponent="Vertices",col=rainbow,...){
 			plot3dsurface,material,VertexComponent=VertexComponent,col=col,...,MoreArgs=list(d=d)))
 	} else {
 		# get order triangle vertices
-		tri=as.integer(t(d[[material]]))
+		tri=as.integer(t(d$Regions[[material]]))
 		invisible(triangles3d(d[[VertexComponent]]$X[tri],
 			d[[VertexComponent]]$Y[tri],d[[VertexComponent]]$Z[tri],col=col,...))
 	}
