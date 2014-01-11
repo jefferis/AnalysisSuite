@@ -1159,7 +1159,7 @@ ReadMBLHFromAMSurf<-function(AMSurfFile,Components=c("MB","LH"),WithConvexHull=F
 }
 
 
-ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inner",Verbose=FALSE){	
+ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inner",Verbose=FALSE,FallbackRegionCol="grey"){
 	# function to parse a an amira  HxSurface file
 	# nb RegionChoice is a switch to allow the inneror outer region to
 	# define the name of the region
@@ -1186,6 +1186,7 @@ ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inne
 
 	d=list()
 	d$Vertices=read.table(filename,skip=dataStart,nrows=nVertices,col.names=c("X","Y","Z"),colClasses=rep("numeric",3))
+	d$Regions <- list()
 
 	# round to 3dp to avoid any surprises (like v small -ve numbers)
 	d$Vertices=round(d$Vertices,digits=3)
@@ -1225,23 +1226,41 @@ ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inne
 			# Ensure we do not try to add no triangles
 			if(nTriangles == 0) next
 			# check if we have already loaded a patch in this name
-			if(RegionName%in%names(d)){
+			if(RegionName%in%names(d$Regions)){
 				#return(d)
 				# add to the old patch
 				if(Verbose) cat("Adding to patch name",RegionName,"\n")
-				d[[RegionName]]=rbind(d[[RegionName]],read.table(filename,skip=linesSkipped+TriangleDeflines[i],nrows=nTriangles,col.names=c("V1","V2","V3")))
-				#d[[RegionName]]=rbind(d[[RegionName]],read.table(filename,skip=linesSkipped+TriangleDeflines[i],nrows=nTriangles,col.names=c("V1","V2","V3")))
+				d[['Regions']][[RegionName]]=rbind(d[['Regions']][[RegionName]],read.table(filename,skip=linesSkipped+TriangleDeflines[i],nrows=nTriangles,col.names=c("V1","V2","V3")))
 			} else {
 				# new patch
 				if(Verbose) cat("Making new patch name",RegionName,"\n")
 				# scan no quicker in these circs, problem is repeated file 
 				# access
 				#d[[RegionName]]=as.data.frame(matrix(scan(filename,skip=linesSkipped+TriangleDeflines[i],nlines=nTriangles),ncol=3,byrow=T))
-				d[[RegionName]]=read.table(filename,skip=linesSkipped+TriangleDeflines[i],nrows=nTriangles,col.names=c("V1","V2","V3"))
+				d[['Regions']][[RegionName]]=read.table(filename,skip=linesSkipped+TriangleDeflines[i],nrows=nTriangles,col.names=c("V1","V2","V3"))
 			}
 		}
 	}
-	d$RegionList=setdiff(names(d),"Vertices")
+	d$RegionList=names(d$Regions)
+
+	# Handle colours for regions
+	d$RegionColourList <- vector(length=length(d$RegionList))
+	closeBraces <- grep("}", headerLines)
+	for(regionName in d$RegionList) {
+		# Find section in headerLines corresponding to this region
+		headerSecStart <- grep(paste0(" ", regionName, " \\{"), headerLines)[1]
+		headerSecEnd <- closeBraces[closeBraces > headerSecStart][1]
+		# Extract colour information
+		colorLine <- grep("Color", headerLines[headerSecStart:headerSecEnd], value=T)
+		if(length(colorLine) > 0) {
+			rgbValues <- strsplit(regmatches(colorLine, gregexpr("[0-9]$|[0-9][^\\.]|[0-9]\\.[0-9]+", colorLine, perl=T))[[1]], " ")
+			color <- rgb(rgbValues[[1]], rgbValues[[2]], rgbValues[[3]])
+		} else {
+			color <- FallbackRegionCol
+		} 
+		d$RegionColourList[which(d$RegionList == regionName)] <- color
+	}
+	class(d) <- c(class(d), 'hxSurf')
 	return(d)
 }
 
