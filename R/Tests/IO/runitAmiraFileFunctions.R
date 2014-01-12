@@ -890,6 +890,7 @@ test.ReadAmiraTutorialSurfaceData<-function(){
 	lobus.surf<-checkNonNullOutput(
 		ParseAMSurfToContourList(file.path(AmiraTutorialDirectory,"lobus.surf")),
 		"Failed to read lobus.surf")
+	plot3dsurface(lobus.surf)
 }
 }
 

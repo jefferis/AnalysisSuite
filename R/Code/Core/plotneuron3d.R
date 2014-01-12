@@ -40,20 +40,21 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,NeuronNames=FALSE,
 }
 
 plot3dsurface<-function(material,d,VertexComponent="Vertices",col=rainbow,...){
-	# simple function to plot surfaces as read in using ParseAMSurfToContourList
-	# handle multiple objects
-	if(length(material)>1) {
-		if(is.function(col)) col=col(length(material))
-		if(is.factor(col)) col=rainbow(nlevels(col))[as.integer(col)]		
-		
-		invisible(mapply(
-			plot3dsurface,material,VertexComponent=VertexComponent,col=col,...,MoreArgs=list(d=d)))
-	} else {
-		# get order triangle vertices
-		tri=as.integer(t(d$Regions[[material]]))
-		invisible(triangles3d(d[[VertexComponent]]$X[tri],
-			d[[VertexComponent]]$Y[tri],d[[VertexComponent]]$Z[tri],col=col,...))
+	.Deprecated('plot3d.hxsurf','nat')
+	invisible(plot3d(as.hxsurf(d),materials=material,col=col,...))
+}
+
+#' convert old style surface object into hxsurf
+as.hxsurf<-function(x){
+	if(!inherits(x,'hxsurf')){
+		# check if this looks like a surface
+		if(!is.list(x) || is.null(x$Vertices) || is.null(x$RegionList))
+			stop("d does not look like an hxsurf object")
+		class(x)<-c('hxsurf',class(x))
+		x$Regions=x[x$RegionList]
+		x[x$RegionList]=NULL
 	}
+	x
 }
 
 IdentifyNeuronsMatchingRegion<-function(neurons,select3dfunc,EndPointsOnly=TRUE,Verbose=FALSE,...){
