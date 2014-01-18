@@ -94,6 +94,11 @@ animate3d<-function(time=10,degrees=360,filestem=NULL){
 	}	
 }
 
+#' Set the 3d view using some standard Drosophila anatomical terms
+#' 
+#' @param pos The chosen view. Defaults to front (=anterior)
+#' @param zoom Numeric zoom factor (default 0.7)
+#' @seealso \code{\link[rgl]{view3d}}
 set3d<-function(pos=c("front","left","back","right","ventral","dorsal"),zoom=.7,...){
 	pos=match.arg(pos)
 	m=diag(c(1,-1,-1,1)) # front
