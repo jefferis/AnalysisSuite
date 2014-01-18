@@ -123,10 +123,13 @@ for (MyPath in SourcePaths) {
 	try(sys.source(MyPath,envir=topenv(),keep.source=TRUE))
 }
 
-if(!require("nat")){
+if(!require("nat") || 
+  compareVersion(installed.packages()['nat','Version'],'0.5.2')<0){
   if(interactive())
     browseURL('https://github.com/jefferis/nat#installation')
-  stop("Please install nat R package\nSee https://github.com/jefferis/nat#installation")
+  
+  message("Please install/update nat R package\nSee https://github.com/jefferis/nat#installation")
+  stop()
 }
 
 setwd(owd)
