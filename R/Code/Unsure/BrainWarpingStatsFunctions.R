@@ -43,7 +43,7 @@
 
 transformedPoints=function(Brain=NULL,xyzs=NULL,
 	warpfile=NULL,AllRegDir=get('AllRegDir',envir=.GlobalEnv),
-	gregxform=file.path(IGSRegToolsDir,"gregxform"),direction=c("inverse","forward"),
+	gregxform=file.path(cmtk.bindir(check=TRUE),"gregxform"),direction=c("inverse","forward"),
 	transforms=c("warp","affine"),gregxoptions="-b"){
 	if(file.access(gregxform,mode=1)<0 || file.info(gregxform)$isdir)
 		stop(paste("Unable to access gregxform executable at:",gregxform))
@@ -253,7 +253,7 @@ calcOriginalPos<-function(Brain=NULL,xyzs=NULL,...){
 
 
 findJacobian<-function(Brain=NULL,xyzs=NULL,warplistfile=NULL,
-	gregxform=file.path(IGSRegToolsDir,"gregxform"),gregxoptions="-j -b"){
+	gregxform=file.path(cmtk.bindir(check=TRUE),"gregxform"),gregxoptions="-j -b"){
 	
 	gregxform=paste(gregxform,gregxoptions)
 	if(any(grep("\\-b",gregxoptions))) binary=TRUE else binary=FALSE
@@ -295,7 +295,7 @@ findJacobianVolume<-function(...){
 }
 
 findGlobalScaling<-function(Brain=NULL,warplistfile=NULL,
-	gregxform=file.path(IGSRegToolsDir,"gregxform"),gregxoptions="-g"){
+	gregxform=file.path(cmtk.bindir(check=TRUE),"gregxform"),gregxoptions="-g"){
 	
 	if(is.null(warplistfile)){
 		# we haven't been supplied with a warp file try and find one
@@ -553,7 +553,7 @@ MergeSexInfo<-function(x){
 }
 
 deformationField=function(warplistfile,xyzs,xs=seq(0,168.78,len=16),ys=seq(0,168.78,len=16),zs=c(40,77),
-	gregxform="gregxform",direction=c("inverse","forward"), request=c("warp","affine"),opts=NULL){
+	gregxform=file.path(cmtk.bindir(check=TRUE),"gregxform"),direction=c("inverse","forward"), request=c("warp","affine"),opts=NULL){
 	
 	direction=match.arg(direction)
 	#nb inverse implies from sample to ref

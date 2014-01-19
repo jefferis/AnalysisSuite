@@ -232,7 +232,7 @@ CMTKRegFromAmira<-function(amirareg,cmtkregfolder=NULL,Transpose=TRUE,Invert=FAL
 	if(file.exists(cmtkregpath))
 		file.rename(cmtkregpath,paste(cmtkregpath,'bak',sep="."))
 	# now make new CMTK format registration
-	cmd='mat2dof'
+	cmd=file.path(cmtk.bindir(check=TRUE),'mat2dof')
 	if(Invert) cmd=paste(cmd,'--inverse')
 	if(!Transpose) cmd=paste(cmd,'--transpose')
 	cmd=paste(cmd,"--list",shQuote(cmtkregfolder),"<",shQuote(amirareg))

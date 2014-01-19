@@ -26,7 +26,7 @@ test.AutoCropNrrd<-function(){
 }
 
 test.CMTKStatistics<-function(){
-	if(nchar(system("which statistics",intern=TRUE))<1){
+	if(is.null(cmtk.bindir())){
 		message("Can't find CMTK statistics executable, skipping test")
 		return()
 	}

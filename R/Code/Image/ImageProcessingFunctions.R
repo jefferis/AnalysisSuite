@@ -118,7 +118,7 @@ FlipAndORMasks<-function(masks,outdir,FlipBridgingReg,flipAxis=c("X","Y","Z"),gz
 ReformatImage<-function(floating,target,registrations,output, 
 	dryrun=FALSE, Verbose=TRUE, MakeLock=TRUE, OverWrite=c("no","update","yes"),
 	filesToIgnoreModTimes=NULL,
-	reformatxPath="reformatx",reformatoptions="-v --pad-out 0",
+	reformatxPath=file.path(cmtk.bindir(check=TRUE),"reformatx"),reformatoptions="-v --pad-out 0",
 	Push=FALSE,...){
 		# TODO improve default ouput file name
 	if(missing(output)){
@@ -202,7 +202,8 @@ WriteIdentityRegistration<-function(regfolder=file.path(tempdir(),"identityreg.l
 }
 
 AutoCropNrrd<-function(infile, threshold=1,suffix="-acrop",
-	outfile=NULL,outdir=NULL, options="",convertTool="convertx",Force=FALSE,UseLock=FALSE)
+	outfile=NULL,outdir=NULL, options="",convertTool=file.path(cmtk.bindir(check=TRUE),"convertx"),
+	Force=FALSE,UseLock=FALSE)
 {
 	if(is.null(outfile) && is.null(outdir))
 		outfile=sub("(\\.[^.]+)$",paste(suffix,"\\1",sep=""),infile)
@@ -335,7 +336,8 @@ SimplifyLabelFile<-function(f,omitMaterials="CellBody",includeMaterials=NULL)
 #' @export
 #' @examples
 #' #CMTKStatistics('someneuron.nrrd',mask='neuropilregionmask.nrrd')
-CMTKStatistics<-function(f,mask,masktype=c("label","binary"),exe="statistics"){
+CMTKStatistics<-function(f,mask,masktype=c("label","binary"),
+	exe=file.path(cmtk.bindir(check=TRUE),"statistics")){
 	masktype=match.arg(masktype)
 	if(length(f)>1) return(sapply(f,CMTKStatistics,mask=mask,masktype=masktype,exe=exe))
 	args=f
@@ -353,7 +355,8 @@ CMTKStatistics<-function(f,mask,masktype=c("label","binary"),exe="statistics"){
 	read.table(text=rval,header=TRUE,skip=1,comment.char="")
 }
 
-CMTKSimilarity<-function(floating,reference,exe="similarity",simargs=NULL,...){
+CMTKSimilarity<-function(floating,reference,exe=file.path(cmtk.bindir(check=TRUE),"similarity"),
+	simargs=NULL,...){
 	if(length(floating)>1 || length(reference)>1){
 		return(t(mapply(CMTKSimilarity,floating,reference,
 			MoreArgs=list(exe=exe,simargs=simargs))))

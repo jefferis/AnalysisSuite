@@ -89,20 +89,6 @@ setwd(ObjDir)
 ScriptDir<-file.path(HomeDir,"ScriptDir")
 # contains perl utility scripts (and perhaps registration binaries)
 BinDir=file.path(RootDir,"bin")
-# Edit next line if you get the warning below and comment out the multiline if statement
-# IGSRegToolsDir=file.path("path to directory containing gregxform binary")
-if(file.exists(file.path(BinDir,"gregxform"))) {
-	IGSRegToolsDir=BinDir
-} else if (isTRUE(nchar(gregxform<-system('which gregxform',intern=TRUE))>0)){
-	# identify current gregxform on path
-	IGSRegToolsDir=dirname(gregxform)
-} else if(file.exists(file.path("/Applications","IGSRegistrationTools","bin","gregxform"))) {
-	IGSRegToolsDir=file.path("/Applications","IGSRegistrationTools","bin")
-} else if(file.exists(file.path("~/bin","gregxform"))) {
-	IGSRegToolsDir=path.expand(file.path("~/bin"))
-} else if(file.exists(file.path("/usr/local/bin","gregxform"))) {
-	IGSRegToolsDir="/usr/local/bin"
-} else cat("Unable to find IGSRegistrationTools binaries - you will not be able to transform neurons.  See Startup.R for details\n\n")
 
 AllRegDir=file.path(RootDir,"regfiles")
 if(!file.exists(AllRegDir)){
