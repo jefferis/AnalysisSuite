@@ -21,8 +21,8 @@ test.PotentialSynapes.neuron<-function(){
   "X", "Y", "Z", "W", "Parent"), row.names = c("297", "298", "299"
   ), class = "data.frame")
 
-  n1=as.neuron(n=list(SegList=list(1:3),d=d1))
-  n2=as.neuron(n=list(SegList=list(1:3),d=d2))
+  n1=as.neuron(list(SegList=list(1:3),d=d1))
+  n2=as.neuron(list(SegList=list(1:3),d=d2))
   # exactly one semgent pair in these fake neurons is within 5 microns
   checkEqualsNumeric(PotentialSynapses.neuron(n1,n2,s=5),2)
   checkEqualsNumeric(PotentialSynapses.neuron(n1,n2,s=4),1)
