@@ -9,7 +9,7 @@ test.ReadLongairNeuron.SinglePath<-function(){
 	
 	result<-structure(list(NumPoints = 11L, StartPoint = 1, 
 	    BranchPoints = numeric(0), EndPoints = c(1, 11), NumSegs = 1L, 
-	    SegList = list(1:11), d = structure(list(
+	    SegList = seglist(1:11), d = structure(list(
 	        PointNo = 1:11, Label = c(2, 2, 2, 2, 2, 2, 2, 2, 2, 
 	        2, 2), X = c(228.337419509888, 228.337419509888, 228.337419509888, 
 	        227.788531482220, 227.788531482220, 227.239643454552, 
@@ -27,7 +27,7 @@ test.ReadLongairNeuron.SinglePath<-function(){
 	"d"))
 	
 	result.new=ReadNeuronsFromLongairTraces(file.path(TestDir,"Data","neurons","SinglePath.traces"))[[1]]
-	checkEquals(result,result.new[fieldsToCheck],tol=1e-6)	
+	checkEquals(result,result.new[fieldsToCheck],tol=1e-6)
 }
 
 test.ReadLongairNeuron.PathsJoiningFirstPath<-function(){
@@ -38,7 +38,7 @@ test.ReadLongairNeuron.PathsJoiningFirstPath<-function(){
 	result<-structure(list(NumPoints = 701L, StartPoint = 1, 
 	    BranchPoints = c(149, 150), EndPoints = c(1, 568, 643, 701
 	    ), NumSegs = 5L, SegList = 
-	    list(1:149,149:150,150:568,c(150,644:701),c(149,569:643)),
+	    seglist(1:149,149:150,150:568,c(150,644:701),c(149,569:643)),
 	     d = structure(list(
 	        PointNo = 1:701, Label = c(2, 2, 2, 2, 2, 2, 2, 2, 2, 
 	        2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 
@@ -714,7 +714,7 @@ test.ReadLongairNeuron.HigherOrderPath<-function(){
 	result<-structure(list(NumPoints = 526L, StartPoint = 1, 
 	    BranchPoints = c(78, 275), EndPoints = c(1, 262, 388, 526
 	    ), NumSegs = 5L, SegList = 
-	    list(1:78,78:262,c(78,263:275),275:388,c(275,389:526)), 
+	    seglist(1:78,78:262,c(78,263:275),275:388,c(275,389:526)), 
 	    d = structure(list(PointNo = c(1, 2, 3, 4, 
 	    5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 
 	    21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 
