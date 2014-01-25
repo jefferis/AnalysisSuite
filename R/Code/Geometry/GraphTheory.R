@@ -223,8 +223,8 @@ as.igraph.swc<-function(x, directed=TRUE, prune=TRUE, keep.ids=prune, ...){
 #' @rdname CoreNeuron
 #' @seealso \code{\link{CoreNeuronFromGraph}}
 CoreNeuronFromSWC<-function(swc,origin=NULL){
-  g=neurongraph.swc(swc, directed=TRUE)
-  CoreNeuronFromGraph(g)
+  .Deprecated('as.neuron.data.frame','nat')
+  as.neuron(swc)
 }
 
 #' Contruct a graph to encode a neuron's connectivity
