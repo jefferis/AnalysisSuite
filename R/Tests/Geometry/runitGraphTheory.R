@@ -94,14 +94,14 @@ test.CoreNeuronFromGraph<-function(){
   
   # vertex labels with gaps
   g=neurongraph(c(2,4,4,3,3,6,6,9,6,7),vertexlabels=c(2:4,6,7,9))
-  sl=list(c(1,3,2,4),c(4,5),c(4,6))
-  checkEquals(graph2seglist(g,origin=1),sl)
+  sl=seglist(c(1,3,2,4),c(4,5),c(4,6))
+  checkEquals(as.seglist(g,origin=1),sl)
   checkEquals(CoreNeuronFromGraph(g,origin=2)$SegList,sl)
   # same but no origin specified (should give same result)
   checkEquals(CoreNeuronFromGraph(g)$SegList,sl)
   
   # same but different origin
-  sl2=list(c(3,1),c(3,2,4),c(4,5),c(4,6))
+  sl2=seglist(c(3,1),c(3,2,4),c(4,5),c(4,6))
   checkEquals(CoreNeuronFromGraph(g,origin=4)$SegList,sl2)
   
   # same connectivity but one extra (floating) point at end
@@ -109,25 +109,25 @@ test.CoreNeuronFromGraph<-function(){
   n=CoreNeuronFromGraph(g,origin=4)
   checkEquals(n$SegList,sl2)
   checkEquals(n$nTrees,2)
-  checkEquals(n$SubTrees,list(sl2,list(7)))
+  checkEquals(n$SubTrees,list(sl2,seglist(7)))
   
   # same connectivity but with extra (floating) points at start and end
   g=neurongraph(c(2,4,4,3,3,6,6,9,6,7),vertexlabels=c(1:4,6,7,9,10))
   # this will shift all vertex ids by 1
-  sl3=lapply(sl2,'+',1)
+  sl3=as.seglist(lapply(sl2,'+',1))
   n=CoreNeuronFromGraph(g,origin=4)
   checkEquals(n$SegList,sl3)
   checkEquals(n$nTrees,3)
-  checkEquals(n$SubTrees,list(sl3,list(1),list(8)))
+  checkEquals(n$SubTrees,list(sl3,seglist(1),seglist(8)))
   
   # 3 separate subgraphs of length 3,4,5
   g=neurongraph(c(0,1,1,2, 3,4,4,5,5,6, 7,8,8,9,9,10,10,11),vertexlabels=0:11)
   n=CoreNeuronFromGraph(g,origin=0)
-  checkEquals(n$SegList,list(c(1,2,3)))
+  checkEquals(n$SegList,seglist(c(1,2,3)))
   n2=CoreNeuronFromGraph(g,origin=3)
-  checkEquals(n2$SegList,list(c(4,5,6,7)))
+  checkEquals(n2$SegList,seglist(c(4,5,6,7)))
   n3=CoreNeuronFromGraph(g,origin=7)
-  checkEquals(n3$SegList,list(c(8,9,10,11,12)))
+  checkEquals(n3$SegList,seglist(c(8,9,10,11,12)))
   # check that it picks largest subgraph when no origin specified
   n4=CoreNeuronFromGraph(g)
   checkEquals(n4,n3)
@@ -157,80 +157,4 @@ test.nodes<-function(){
   # check that we get two roots when there are indeed 2 roots
   rps=rootpoints(as.igraph(testn.2trees))
   checkEquals(rps,c(1,6))
-}
-
-test.graph2seglist<-function(){
-  # simple linear graph
-  g=graph(c(1, 2, 2, 3))
-  sl=list(c(1, 2, 3))
-  checkEquals(graph2seglist(g), sl)
-  
-  # simple linear graph with different vids
-  g=graph(c(1, 2, 2, 3))
-  igraph::V(g)$vid=3:5
-  sl=list(3:5)
-  checkEquals(graph2seglist(g), sl)
-  
-  # simple linear graph with different vids and different origin
-  g=graph(c(1, 2, 2, 3))
-  igraph::V(g)$vid=3:5
-  sl=list(5:3)
-  checkEquals(graph2seglist(g, origin=5), sl)
-  
-  # simple linear graph with different vids and origin at centre, resulting
-  # in a branched seglist
-  g=graph(c(1, 2, 2, 3))
-  igraph::V(g)$vid=3:5
-  sl=list(4:3,4:5)
-  checkEquals(graph2seglist(g, origin=4), sl)
-  
-  # multiple subtrees -> exception since seglist only defined for 1 subtree
-  g=graph(c(1,2,2,3,3,4,5,6))
-  checkException(graph2seglist(g),silent=TRUE)
-  
-  # cyclic graph -> exception since seglist is undefined
-  g=graph(c(1, 2, 2, 3, 3, 1))
-  checkException(graph2seglist(g),silent=TRUE)
-  
-  # single floating point
-  g=graph(NULL,n=1)
-  checkEquals(graph2seglist(g),list(1))
-  
-  # single floating point with different vid
-  igraph::V(g)$vid=4
-  checkEquals(graph2seglist(g),list(4))
-  
-  # trifurcation
-  g=graph(c(1,2, 2,3, 2,4, 2,5, 5,6, 6,7))
-  sl=list(c(1,2),c(2,3),c(2,4),c(2,5,6,7))
-  checkEquals(graph2seglist(g),sl)
-  # undirected equivalent - nb origin must be specified
-  checkEquals(graph2seglist(as.undirected(g),origin=1),sl)
-  
-  # rapid branching
-  g=graph(c(1,2, 2,3, 2,4, 4,5, 4,6))
-  sl=list( c(1,2),c(2,3),c(2,4),c(4,5),c(4,6) )
-  checkEquals(graph2seglist(g),sl)
-  
-  # different root
-  g=graph(c(1,2, 2,3, 2,4, 4,5, 4,6))
-  sl=list( c(6,4),c(4,2),c(2,1),c(2,3),c(4,5) )
-  checkEquals(graph2seglist(g,origin=6),sl)
-  
-  # non-sequential numbering
-  g=graph(c(1,2, 2,6, 2,4, 4,5, 4,3))
-  sl<-list( c(1,2),c(2,4),c(4,3),c(4,5),c(2,6) )
-  checkEquals(graph2seglist(g,origin=1),sl)
-  
-  # non-sequential numbering with vertex labels
-  # in this case we imagine that there are a set of vertices with PointNo
-  # 2,3,4,6,7,9
-  g=neurongraph(c(2,4,4,3,3,6,6,9,6,7),vertexlabels=c(2:4,6,7,9))
-  sl=list(c(1,3,2,4),c(4,5),c(4,6))
-  checkEquals(graph2seglist(g,origin=1),sl)
-  # same but with a different origin
-  # NB origin is defined in terms of sequential raw vertex id so 
-  # origin=3 means that the origin is the vertex with label=4
-  sl2=list(c(3,1),c(3,2,4),c(4,5),c(4,6))
-  checkEquals(graph2seglist(g,origin=3),sl2)
 }
