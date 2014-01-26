@@ -126,27 +126,6 @@ ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFul
 	l
 }
 
-.ReadAmiramesh.ASCIIData<-function(filename,df,DataSectionsToRead,Verbose=TRUE){
-	l=list()
-	df=subset(df,DataName%in%DataSectionsToRead)
-	df=df[order(df$DataPos),]
-
-	for(i in seq(len=nrow(df))){
-		if(df$DataLength[i]>0){
-			if(Verbose) cat("Reading ",df$DataLength[i],"lines from line",df$LineOffsets[i],"in file",filename,"\n")
-			
-			if(df$RType[i]=="integer") whatval=integer(0) else whatval=numeric(0) 
-			l[[df$DataName[i]]]=scan(filename,what=whatval,n=df$SimpleDataLength[i],skip=df$LineOffsets[i],quiet=!Verbose)
-			if(df$SubLength[i]>1){
-				l[[df$DataName[i]]]=matrix(l[[df$DataName[i]]],ncol=df$SubLength[i],byrow=TRUE)
-			}
-		} else {
-			if(Verbose) cat("Skipping data section",df$DataName[i],"\n")
-		}
-	}
-	return(l)		
-}
-
 #' Read ASCII AmiraMesh data without assuming anything about line spacing
 #' between sections
 #' @param filename file (or connection) to read
