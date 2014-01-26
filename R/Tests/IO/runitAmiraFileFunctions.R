@@ -98,6 +98,16 @@ test.ParseEdgeList<-function(){
 		NonsequentialNumberingResult,msg="Nonsequential numbering")
 }
 
+test.ReadAmiramesh<-function(){
+  neurites.data=ReadAmiramesh(file.path(TestDir,"Data","neurons","Neurites.am"))
+  neurites.rds=readRDS(file.path(TestDir,"Data","neurons","Neurites.rds"))
+  checkEquals(neurites.data,neurites.rds)
+  
+  neurites.header=ReadAmiramesh.Header(file.path(TestDir,"Data","neurons","Neurites.am"))
+  neurites.hrds=readRDS(file.path(TestDir,"Data","neurons","Neurites.header.rds"))
+  checkEquals(neurites.header,neurites.hrds)
+}
+
 test.ReadAM3D<-function(){
 	# Test output of Felix Ever's skeletonize routines
 	fieldsToCheck=c("NeuronName", "NumPoints", "StartPoint", "BranchPoints", "EndPoints", 
