@@ -266,7 +266,9 @@ CoreNeuronFromPointAndEdgeData<-function(PointData,Neighbours,Origin=NULL,Proces
 	as.neuron(CoreNeuron)
 }
 
-ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Verbose=FALSE){
+ParseAM3DToNeuron=function(datalist,filename,
+  method=c("original","igraph"),Force=FALSE,
+  ProcessAllTrees=TRUE,Verbose=FALSE){
 	# function to parse an amira mesh 3D
 	# format skeleton tree produced by the Amira Skeletonize plugin
 	# 050505 - This function has been rewritten extensively over the
@@ -286,11 +288,16 @@ ParseAM3DToNeuron=function(datalist,filename,Force=FALSE,ProcessAllTrees=TRUE,Ve
 	
 	# Bail out if we couldn't read any data
 	if(is.null(datalist)) return(NULL)
+  method=match.arg(method)
 	Neighbours=datalist$EdgeList
 	PointData=datalist$PointList
-	CoreNeuron=CoreNeuronFromPointAndEdgeData(
-			datalist$PointList,datalist$EdgeList,datalist$Origin,
-			ProcessAllTrees = ProcessAllTrees,Verbose = Verbose)
+  if(method=='original'){
+    CoreNeuron=CoreNeuronFromPointAndEdgeData(
+      datalist$PointList,datalist$EdgeList,datalist$Origin,
+      ProcessAllTrees = ProcessAllTrees, Verbose = Verbose)
+  } else {
+    CoreNeuron=CoreNeuronFromAmiraSkel(datalist, Verbose=Verbose)
+  }
 	
 	ParsedNeuron<-c(list(NeuronName=NeuronNameFromFileName(filename),
 			InputFileName=filename,
@@ -1324,4 +1331,44 @@ ReadNeuronFromAM<-function(amfile,defaultDiameter=NA){
           BranchPoints=as.integer(names(which(t>1))),
           NumSegs=length(SegList),
           SegList=SegList,d=coords))
+}
+
+#' Check if file is amiramesh format
+#' 
+#' @details Tries to be as fast as possible by reading only first 11 bytes and
+#'   checking if they equal "# AmiraMesh"
+#' @param f Path to a file to be tested
+#' @return logical
+is.amiramesh<-function(f) {
+  if(length(f)>1) return(sapply(f,is.amiramesh))
+  # AmiraMesh
+  magic=as.raw(c(0x23, 0x20, 0x41, 0x6d, 0x69, 0x72, 0x61, 0x4d, 0x65, 
+                 0x73, 0x68))
+  first11bytes=try(readBin(f,what=raw(),n=11),silent=TRUE)
+  !inherits(first11bytes,'try-error') && length(first11bytes)==11 && 
+       all(first11bytes==magic)
+}
+
+#' Return the type of an amiramesh file on disk or a parsed header
+#' 
+#' @details Note that when checking a file we first test if it is an amiramesh
+#'   file (fast) before reading the header and determining content type (slow).
+#' @param x Path to files on disk or a single pre-parsed parameter list
+#' @return character vector (NA_character_ when file invalid)
+amiratype<-function(x){
+  if(is.list(x)) h<-x
+  else {
+    # we have a file
+    if(length(x)>1) return(sapply(x,amiratype))
+    if(!isTRUE(is.amiramesh(x))) return(NA_character_)
+    h=try(ReadAmiramesh.Header(x, Verbose=FALSE), silent=TRUE)
+    if(inherits(h,'try-error')) return(NA_character_)
+  }
+  if(!is.null(ct<-h$Parameters$ContentType)){
+    ct
+  } else if(!is.null(ct<-h$Parameters$CoordType)){
+    # since e.g. uniform is not very desctiptive
+    # append field to make uniform.field
+    paste(ct,'field',sep='.')
+  } else NA_character_
 }
