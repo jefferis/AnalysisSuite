@@ -832,13 +832,6 @@ test.ReadHxZipData<-function(){
   checkEquals(counts,tabulate(x,nbins=255))
 }
 
-test.read.zlib<-function(){
-  set.seed(42)
-  raw_data=as.raw(sample(1:5,250,replace=T))
-  zlib_data=memCompress(from=raw_data,type='gzip')
-  checkEquals(read.zlib(zlib_data),raw_data)
-}
-
 test.ReadWrite3DDensityAmiraText<-function(){
 	testData=array(rnorm(10^3),dim=rep(10,3))
 	tmpfile=tempfile()

@@ -915,7 +915,7 @@ Write3DDensityToAmiraLattice<-function(filename,dens,ftype=c("binary","text","hx
 	
 	if(ftype=="hxzip"){
 		raw_data=writeBin(as.vector(d,mode=dmode),raw(),size=dtypesize,endian=endian)
-		zlibdata=write.zlib(raw_data)
+		zlibdata=nat:::write.zlib(raw_data)
 		cat("Lattice { ",dtype," ScalarField } = @1(HxZip,",length(zlibdata),")\n\n",sep="",file=fc)
 	} else cat("Lattice {",dtype,"ScalarField } = @1\n\n",file=fc)
 
@@ -1055,10 +1055,10 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 	if(binary){
 		if(dataEncoding=="HXBYTERLE"){
 			d=readBin(fc,what=raw(0),n=compressedLength,size=1)
-			d=DecodeRLEBytes(d,dataLength)
+			d=nat:::decode.rle(d,dataLength)
 			d=as.integer(d)
 		} else if(dataEncoding == "HXZIP"){
-		  uncompressed=read.zlib(fc, compressedLength=compressedLength)
+		  uncompressed=nat:::read.zlib(fc, compressedLength=compressedLength)
 		  d=readBin(uncompressed, n=dataLength, what=dataTypes$what[i],
 		            size=dataTypes$size[i], signed=dataTypes$signed[i],
                 endian=endian)
@@ -1088,99 +1088,6 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 # 			attr(d,"BoundingBox")<-NULL
 	}
 	return(d)
-}
-
-#' Uncompress zlib compressed data (from file or memory) to memory
-#' 
-#' @details zlib compressed data uses the same algorithm but a smaller header 
-#'   than gzip data.
-#' @details For connections, compressedLength must be supplied, but offset is 
-#'   ignored (i.e. you must seek beforehand)
-#' @details For files, if compressedLength is not supplied then \code{read.zlib}
-#'   will attempt to read until the end of the file.
-#' @param compressed Path to compressed file, connection or raw vector.
-#' @param offset Byte offset in file on disk
-#' @param compressedLength Bytes of compressed data to read
-#' @param ... Additional parameters passed to \code{\link{readBin}}
-#' @return raw vector of decompressed data
-#' @export
-read.zlib<-function(compressed, offset=NA, compressedLength=NA, ...){
-  if(!is.raw(compressed)){
-    if(inherits(compressed,'connection')){
-      if(is.na(compressedLength)) stop("Must supply compressedLength when reading from a connection")
-      con=compressed
-    } else {
-      con<-file(compressed,open='rb')
-      on.exit(close(con))
-      if(!is.na(offset)) seek(con,offset)
-      else offset = 0
-      if(is.na(compressedLength)) compressedLength=file.info(compressed)$size-offset
-    }
-    compressed=readBin(con, what=raw(), n=compressedLength)
-  }
-  memDecompress(compressed,type='gzip')
-}
-
-#' Compress raw data, returning raw vector or writing to file
-#' 
-#' @details The default value of \code{con=raw()} means that this function will 
-#'   return a raw vector of compressed data if con is not specified.
-#' @param uncompressed \code{raw} vector of data
-#' @param con Raw vector or path to output file
-#' @return A raw vector (if \code{con} is a raw vector) or invisibly NULL.
-#' @seealso Depends on \code{\link{memCompress}}
-#' @export
-write.zlib<-function(uncompressed, con=raw()){
-  if(!inherits(con, "connection") && !is.raw(con)){
-    con=open(con, open='wb')
-    on.exit(close(con))
-  }
-  d=memCompress(uncompressed, type='gzip')
-  if(is.raw(con)) return(d)
-  writeBin(object=d,con=con)
-}
-
-DecodeRLEBytes<-function(d,uncompressedLength){
-	# expects some raw data
-	# expects to be told how many bytes how many bytes this will turn into
-	
-	# Expects an integer array
-	# Structure is that every odd byte is a count
-	# and every even byte is the actual data
-	# So 127 0 127 0 127 0 12 0 12 1 0
-	# I think that it ends with a zero count
-	# -----
-	# in fact the above is not quite right. If >=2 consecutive bytes are different
-	# then a control byte is written giving the length of the run of different bytes
-	# and then the whole run is written out
-	# data can therefore only be parsed by the trick of making 2 rows if there 
-	# are no control bytes in range -126 to -1
-	
-	rval=raw(uncompressedLength)
-	bytesRead=0
-	filepos=1
-	while(bytesRead<uncompressedLength){
-		x=d[filepos]
-		filepos=filepos+1
-		if(x==0)
-			stop(paste("byte at offset",seek(con),"is 0!"))
-		if(x>0x7f) {
-			# cat("x=",x,"\n")
-			x=as.integer(x)-128
-			# cat("now x=",x,"\n")
-			mybytes=d[filepos:(filepos+x-1)]
-			filepos=filepos+x
-			# that's the x that we've read
-		} else {
-			# x>0
-			mybytes=rep.int(d[filepos],x)
-			filepos=filepos+1
-		}
-		rval[(bytesRead+1):(bytesRead+length(mybytes))]=mybytes
-		bytesRead=bytesRead+length(mybytes)
-		# cat('bytesRead=',bytesRead,"filepos=",seek(con),"\n")
-	}
-	rval
 }
 
 ReadAmiraLandmarks<-function(filename,Verbose=FALSE,CoordinatesOnly=TRUE){
