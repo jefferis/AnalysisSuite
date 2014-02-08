@@ -910,7 +910,7 @@ test.readGzipAmirameshNeuron<-function(){
   
   fcl=read.neuron(file.path(TestDir,"Data","neurons","testneuron_fclineset.am"))
   fclz=read.neuron(file.path(TestDir,"Data","neurons","testneuron_fclineset.am.gz"))
-  checkEquals(fcl,fclz)
+  checkEquals(fcl,fclz,fieldsToExclude='NeuronName')
   nopencons.end=length(showConnections())
   checkEquals(nopencons.end,nopencons.start,"Managed to leave a connection open")
 }
