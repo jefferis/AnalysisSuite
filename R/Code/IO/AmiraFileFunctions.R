@@ -580,7 +580,7 @@ WriteNeuronToAM3D<-function(ANeuron,AMFile=NULL,
 		dir=AMFile
 	}
 	.Deprecated('write.neuron','nat')
-	nat::write.neuron(ANeuron, file=file, dir=dir, format='hxskel', 
+	nat::write.neuron(ANeuron, file=file, dir=dir, format='hxskel', Force=Force,
 		MakeDir=MakeDir,WriteAllSubTrees=WriteAllSubTrees,
 		ScaleSubTreeNumsTo1=ScaleSubTreeNumsTo1,sep=sep)
 }
