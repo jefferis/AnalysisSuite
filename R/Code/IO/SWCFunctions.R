@@ -47,9 +47,9 @@
 # MyNeuron<-SWC2Neuron(ReadSWCFile("A:File:Path:JL2R.swc"),"JL2R")
 # plotneuron2d(MyNeuron,ToFile=T) # produce a rotater file
 
-ReadNeuronFromSWC<-function(f){
-	d=ReadSWCFile(f)
-	SWC2Neuron(d,f)
+ReadNeuronFromSWC<-function(f, ...){
+  .Deprecated('read.neuron','nat')
+  nat::read.neuron(f, format='swc', ...)
 }
 
 # ReadSWCFile reads in an SWC format file
@@ -64,23 +64,6 @@ ReadSWCFile<-function(FileName,...){
 	# ... so multiply by 2 to get diam which is what I work with internally
 	d$W=d$W*2
 	d
-}
-
-WriteSWCFile<-function(ANeuron,
-    FileName=gsub("(.*)[.]+[^.]+$","\\1.swc",basename(ANeuron$InputFileName)),...){
-    # function to write out an SWC file from a Neuron
-    # GJ 040328
-	cat("FileName:",FileName)
-    ColumnNames<-c("PointNo","Label","X","Y","Z","radius","Parent")
-    df=ANeuron$d[,seq(ColumnNames)]
-    names(df)=ColumnNames
-    # nb neurolucida seems to use diam, while swc uses radius
-	# 
-	df$radius=df$radius/2
-	writeLines(c("# SWC format file","# based on specifications at http://www.soton.ac.uk/~dales/morpho/morpho_doc/"),con=FileName)
-	cat("# Created by WriteSWCFile - ",format(Sys.time(),usetz=T),"\n\n",file=FileName,append=TRUE)	
-	cat("#",ColumnNames,"\n",file=FileName,append=TRUE)
-    write.table(df,FileName,col.names=F,row.names=F,append=TRUE,...)
 }
 
 #' Convert SWC style definition of a neuron into complete neuron object
@@ -108,111 +91,9 @@ SWC2Neuron<-function(swc,filename,parse.method=c("CoreNeuronFromSWC","ParseSWC")
 	as.neuron(c(neuron_extra,neuron_core,list(d=swc)))
 }
 
-#' Low level function to convert SWC data into core components of neuron object
-#' 
-#' In particular this will generate a SegList describing branch structure:
-#' NumPoints
-#' StartPoint
-#' BranchPoints
-#' EndPoints
-#' NumSegs
-#' SegList
-#'
-#' NB read.neuron or ReadNeuronFromSWC are more appropriate for general use.
-#' 
-#' @param swc Dataframe containing PointNo, Label, X,Y,Z,W, Parent
-#' @return List containing core components of neuron
-#' @export
-#' @seealso \code{\link{read.neuron}}, \code{\link{ReadNeuronFromSWC}}, \code{\link{SWC2Neuron}}
-#' @examples
-ParseSWC<-function(swc){
-    NumPoints<-length(swc[,1])
-    #Find out which PointNos occur > 1 in $Parent column
-    BranchPoints<-as.numeric(names(which(table(swc$Parent)>1)))
-    NumBranches<-table(swc$Parent)[ table(swc$Parent)>1]
-    #Find out which PointNos occur in $Parent column
-    NotEndPoints<-as.numeric(names(table(swc$Parent)))
-    #Get rid of any -1s
-    NotEndPoints<-NotEndPoints[NotEndPoints>0]
-    EndPoints<-swc$PointNo[-NotEndPoints]
-    
-    PointType<-rep(0,NumPoints)
-    PointType[BranchPoints]<-1
-    PointType[EndPoints]<-2
-    PointType[1]<- (-1)
-    
-    #I'm interested in the Nodes
-    Nodes<-c(EndPoints,BranchPoints)
-    #OK this is going to be the list of segments
-    SegmentList<-list()
-
-    # Counter for Current Segment
-    CurrSeg<-0
-    for(ThisNode in Nodes){
-	#Set the next point to the parent of this one
-	Parent<-swc$Parent[ThisNode]
-	# Is this a valid parent?
-	# if not, terminate the node immediately
-	if(Parent>0){
-	    # OK there is a a parent so start setting up this segment
-	    # as it will have more than one point in it
-	    CurrSeg<-CurrSeg+1
-	    SegmentList[[CurrSeg]]<-ThisNode
-	    PointofSeg<-1
-
-	    #Keep looping through points so long as they have valid parents
-	    while(Parent>0) {
-		# OK It's valid so increment point index
-		PointofSeg<-PointofSeg+1
-		CurrentPoint<-Parent
-		# Add the point to the big list
-		SegmentList[[CurrSeg]][PointofSeg]<-CurrentPoint
-		# Check if we've got to a node
-		if(PointType[CurrentPoint]>0){
-		    # we have so lets start a new segment
-		    break
-		} else {
-		    # we haven't so lets keep going with this segment
-		    Parent<-swc$Parent[CurrentPoint]
-		}
-	    } # end of while(Parent>0) loop
-	} # end of if(Parent>0)
-    } # end of for(ThisNode in Nodes) loop
-    
-    # The root point type does need special handling.
-    StartType<-PointType[1]
-    #If it's not a branch point, then it must be an end point
-    # I'm changing it only now because otherwise there would be an
-    # extra endpoint to visit.
-    # that will keep the Ant from stalling
-    # (it checks to see if the current point is an EndPoint so it would 
-    # never get past the first point!)
-    if(StartType!=1){
-	EndPoints<-sort(c(EndPoints,1))
-    }
-
-    # Check if we ended up with something sensible
-    if(length(SegmentList)>0){
-		#OK There's at least one segment
-		list(NumPoints=NumPoints,
-			StartPoint=1,
-			BranchPoints=BranchPoints,
-			EndPoints=EndPoints,
-			NumSegs=length(SegmentList),
-			SegList=SegmentList)
-    }
-    else return(NULL)
-}
-
-# ParseSWCTree 
-# This function takes an SWC format array (e.g. from ReadSWCFile)
-# and returns a Neuron list - it retains the input data
-# in Neuron$d.  The most important new component of Neuron is
-# a segment array, Neuron$SegList with one row for each segment
-# whose elements are the PointNo of the points in a segment
-ParseSWCTree<-function(MySWCTree,FileName){
-	warning("This function is deprecated, please use SWC2Neuron")
-	SWC2Neuron(MySWCTree,FileName)
+WriteSWCFile<-function(ANeuron,FileName, ...){
+  .Deprecated('write.neuron','nat')
+  nat::write.neuron(ANeuron, FileName, format='swc', ...)
 }
 
 # this is a utility function to find all the points neighbouring
