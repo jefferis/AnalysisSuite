@@ -33,8 +33,10 @@ read.neuron.extra<-function(f, ...){
 	else n
 }
 
-#' Write out a neuron in any of the file formats we know about
+#' [Deprecated] Write out a neuron in any of the file formats we know about 
 #'
+#' This function is being retained only for the ability to write neurolucida and
+#' Borst format neurons.
 #' If filename is not specified the neuron's InputFileName field will be checked.
 #' If this is missing there will be an error.
 #' If dir is specified it will be combined with basename(filename).
@@ -52,8 +54,7 @@ read.neuron.extra<-function(f, ...){
 #' @export
 #' @seealso \code{\link{WriteSWCFile, WriteNeuronToAM, WriteNeuronToAM3D, 
 #'   WriteAscFromNeuron, WriteBorstFile,saveRDS}}
-write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am',
-    'skeletonize.am','neurolucida.asc','borst','rds'),suffix=NULL,...){
+write.neuron.extra<-function(n,filename=NULL,dir=NULL,ftype=c('neurolucida.asc','borst'),suffix=NULL,...){
   if(is.dotprops(n)){
     # we only know how to save dotprops objects in R's internal format
     ftype='rds'
@@ -91,16 +92,8 @@ write.neuron<-function(n,filename=NULL,dir=NULL,ftype=c('swc','lineset.am',
   if(!is.null(dir)){
     filename=file.path(dir,basename(filename))
   }
-  if(ftype=='rds'){
-    saveRDS(n,file=filename,...)
-  } else if(ftype=='lineset.am'){
-    WriteNeuronToAM(n,filename,...)
-  } else if(ftype=='skeletonize.am'){
-    WriteNeuronToAM3D(n,filename,...)
-  } else if(ftype=='neurolucida.asc'){
+  if(ftype=='neurolucida.asc'){
     WriteAscFromNeuron(n,filename,...)
-  } else if(ftype=='swc'){
-    WriteSWCFile(n,filename,...)
   } else if(ftype=='borst'){
     WriteBorstFile(n,filename,...)
   } else {
