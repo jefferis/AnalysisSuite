@@ -128,6 +128,7 @@ read.neurons<-function(paths, pattern=NULL, neuronnames=basename, nl=NULL,
 #' write.neurons(MyNeurons,'/path/to/some/dir',subdir=file.path(PNType,Glomerulus,Sex))
 #' }
 write.neuronlist<-function(nl,dir,subdir=NULL,INDICES=names(nl),...){
+  .Deprecated("nat::write.neurons")
   if(!file.exists(dir)) dir.create(dir)
   # Construct subdirectory structure based on 
   df=attr(nl,'df')
