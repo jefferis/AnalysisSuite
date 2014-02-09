@@ -2,35 +2,27 @@
 # plot(ANeuron)
 plot.neuron<-function(...) plotneuron2d(...)
 
-read.neuron<-function(f, ...){
+# register a catch all function to read any file types that aren't handled by
+# other readers.
+# NB1 that calling the format zzz ensures that it will be the last format to be
+# called (since they are processed in alphabetical order). 
+# NB2 note that setting magic to a function that swallows all arguments and always returns TRUE
+# captures 
+nat::registerformat("zzz",read="nat.as::read.neuron.extra",magic=function(...) TRUE,class='neuron')
+# This function can be called directly or using the registration above
+# it will be called as a fall-through by nat::read.neuron
+read.neuron.extra<-function(f, ...){
 	# generic function to read in neuron from any kind of file we know about
 	# should return exactly one neuron on success
 	if(!file.exists(f)) stop("Unable to read file: ",f)
 	ext=tolower(sub(".*\\.([^.]+$)","\\1",basename(f)))
 
-	if(ext=="asc")
+	if(ext=="asc") {
 		n=ReadNeuronFromAsc(f, ...)
-	else if(ext=="swc")
-		n=ReadNeuronFromSWC(f, ...)
-	else if(ext=="rds")
-		n=readRDS(f)
-	else if(ext=="rda"){
-		objname=load(f,envir=environment())
-		if(length(objname)>1) stop("More than 1 object in file:",f)
-		n=get(objname,envir=environment())
 	} else {
-    h=readLines(f,1) # nb readLines can cope with gzipped data
-    
-		if(regexpr("amira",h,ignore.case=TRUE)>0){
-      # check to see what kind of amiramesh neuron we have
-      ftype=try(ReadAmiramesh.Header(f)$Parameters$ContentType[1])
-      if(inherits(ftype,'try-error') || is.null(ftype))
-        stop("Unable to indentify amiramesh neuron")
-      else if(ftype=='HxLineSet')
-        n=ReadNeuronFromAM(f, ...)
-      else 
-        n=ReadNeuronFromAM3D(f, ...)
-    } else if(regexpr("xml",h,ignore.case=TRUE)>0)
+		h=readLines(f,1) # nb readLines can cope with gzipped data
+		
+		if(regexpr("xml",h,ignore.case=TRUE)>0)
 			n=ReadNeuronsFromLongairTraces(f, MergePaths=TRUE, ...)
 		else if(regexpr("^;",h)>0)
 			n=ReadNeuronFromAsc(f, ...)
