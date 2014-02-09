@@ -237,16 +237,19 @@ DotPropertiesFromFile<-function(f, xformfun=NULL, ...){
 	if(ext=="nrrd"){
 		x=Read3DDensityFromNrrd(f)
 		l$points=ind2coord(x)
-	} else if(ext=="swc") {
-		l$points=ReadSWCFile(f)[,c("X","Y","Z")]
 	} else if(ext=='csv') {
 		l$points=read.csv(f,header=FALSE)
 		colnames(l$points)=c("X","Y","Z")
-	} else 
-		stop("Cannot extract dots from file type: ",ext)
+	} else {
+		# maybe some kind of neuron
+		t=try(read.neuron(f))
+		if(inherits(t,'try-error'))
+			stop("Cannot extract dots from file type: ",ext)
+		l$points=t$d[,c("X","Y","Z")]
+	}
 	if(!is.null(xformfun))
 		l$points=xformfun(l$points)
-	l=dotprops(l$points,...)
+	l=dotprops(l$points, ...)
 	attr(l,'file')=f
 	fi=file.info(f)
 	attr(l,'mtime')=fi$mtime
