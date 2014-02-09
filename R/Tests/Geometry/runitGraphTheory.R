@@ -63,12 +63,6 @@ testSWC2Neuron<-function(){
   checkTrue(is.neuron(testn))
 }
 
-testParseSWCTreeEquivalent<-function(){
-	# ParseSWCTree has been replaced by SWC2Neuron
-	# Check they produce the same result
-	checkTrue(all.equal(ParseSWCTree(testd,'test'),testn))
-}
-
 testRerootNeuron<-function(){
   rn=RerootNeuron(testn)
   identicalFields=c('NumSegs','NumPoints','EndPoints','BranchPoints')
