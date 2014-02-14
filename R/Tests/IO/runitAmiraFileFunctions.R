@@ -904,9 +904,9 @@ test.readGzipAmirameshNeuron<-function(){
   checkException(read.neuron(file.path(TestDir,"IO","testneuron_am3d.am.gz")),
       silent=TRUE)
   am3da=read.neuron(file.path(TestDir,"Data","neurons","testneuron_am3d_ascii.am"))
-  checkEquals(am3d,am3da)
+  checkEquals(am3d,am3da,fieldsToExclude='NeuronName')
   am3daz=read.neuron(file.path(TestDir,"Data","neurons","testneuron_am3d_ascii.am.gz"))
-  checkEquals(am3d,am3daz)
+  checkEquals(am3d,am3daz,fieldsToExclude='NeuronName')
   
   fcl=read.neuron(file.path(TestDir,"Data","neurons","testneuron_fclineset.am"))
   fclz=read.neuron(file.path(TestDir,"Data","neurons","testneuron_fclineset.am.gz"))
