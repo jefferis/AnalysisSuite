@@ -8,9 +8,11 @@
 require(RUnit)
 test.read.neuron<-function(){
 	result.new=read.neuron(file.path(TestDir,"Data","neurons","Neurites.am"))
-	result=ReadNeuronFromAM3D(file.path(TestDir,"Data","neurons","Neurites.am"))
+	result=read.neuron(file.path(TestDir,"Data","neurons","Neurites.am"))
 	checkTrue(is.neuron(result.new))
-	checkEquals(result,result.new)
+	checkEquals(result,result.new,tol=1e-4,fieldsToExclude='d')
+	# We don't both returning NeighbourCount as the 8th column
+	checkEquals(result$d[,1:7],result.new$d,tol=1e-4)
 	
 	result.new=read.neuron(file.path(TestDir,"Data","neurons","SequentiallyBranchingTrace.traces"))
 	result=ReadNeuronsFromLongairTraces(
@@ -29,7 +31,7 @@ test.read.neuron<-function(){
 # debug(test.read.neuron)
 
 test.all.equal.neuron<-function(){
-	a=ReadNeuronFromAM3D(file.path(TestDir,"Data","neurons","Neurites.am"))
+	a=read.neuron(file.path(TestDir,"Data","neurons","Neurites.am"))
 	b=ReadNeuronsFromLongairTraces(
 		file.path(TestDir,"Data","neurons","SequentiallyBranchingTrace.traces"))
 	checkTrue(all.equal(a, a))

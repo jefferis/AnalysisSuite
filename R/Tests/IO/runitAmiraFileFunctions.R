@@ -359,7 +359,7 @@ test.ReadAM3D<-function(){
 	"StartPoint", "BranchPoints", "EndPoints", "NumSegs", "SegList", 
 	"nTrees", "d", "OrientInfo"))
 	
-	result.new=ReadNeuronFromAM3D(file.path(TestDir,"Data","neurons","Neurites.am"))
+	result.new=read.neuron(file.path(TestDir,"Data","neurons","Neurites.am"))
 	checkEquals(result,result.new[fieldsToCheck],tol=1e-6)
 	
 	result_withna<-structure(list(NeuronName = "NeuritesWithNA", NumPoints = 290L, 
@@ -676,10 +676,10 @@ test.ReadAM3D<-function(){
 	"NumPoints", "StartPoint", "BranchPoints", "EndPoints", "NumSegs", 
 	"SegList", "nTrees", "d", "OrientInfo"))
   
-	result_withna.new=ReadNeuronFromAM3D(file.path(TestDir,"Data","neurons","NeuritesWithNA.am"))
+	result_withna.new=read.neuron(file.path(TestDir,"Data","neurons","NeuritesWithNA.am"))
 	checkEquals(result_withna,result_withna.new[fieldsToCheck],tol=1e-6)
 	
-	nwm=ReadNeuronFromAM3D(file.path(TestDir,"Data","neurons","neuron_with_materials.am"))
+	nwm=read.neuron(file.path(TestDir,"Data","neurons","neuron_with_materials.am"))
 	labels=c(1L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 
 	7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 
 	7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 7L, 3L, 4L, 
@@ -708,7 +708,7 @@ test.ReadAM3D<-function(){
 	3L, 3L, 3L, 3L)
 	checkEquals(nwm$d$Label,labels)
 
-	nwis = ReadNeuronFromAM3D(file.path(TestDir, "Data", "neurons", 
+	nwis = read.neuron(file.path(TestDir, "Data", "neurons", 
 		"NeuritesWithIsolatedPoints_veryshort.am"))
 		
 	nwis_base=structure(list(NeuronName = "NeuritesWithIsolatedSegment", NumPoints = 14L, 
@@ -755,7 +755,7 @@ test.ReadWriteNeuronFromAM<-function(){
       
 	tmpfile=tempfile()
 	on.exit(unlink(tmpfile))
-	am3d=ReadNeuronFromAM3D(file.path(TestDir,"Data","neurons","testneuron_am3d.am"))
+	am3d=read.neuron(file.path(TestDir,"Data","neurons","testneuron_am3d.am"))
 	# converted to lineset in amira by hxskeletonize
 	lineset=ReadNeuronFromAM(file.path(TestDir,"Data","neurons","testneuron_lineset.am"))
   # check seglist describes equivalent graph - they end up in different order
