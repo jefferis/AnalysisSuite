@@ -1,72 +1,6 @@
 ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
-	nrrdspec=list()
-	if(!inherits(filename,"connection")){
-		con<-file(filename,open='rt')
-		attr(nrrdspec,"path")=filename # store filename
-	} else con=filename
-		
-	if(CloseConnection) on.exit(close(con))
-	# Look for empty line signifying end of header
-	headerLines=readLines(con,1)
-	NRRDMAGIC="NRRD000"
-	if(substring(headerLines,1,nchar(NRRDMAGIC))!=NRRDMAGIC)
-		stop("This does not appear to be a NRRD file: ",summary(con)$description)
-	nrrdkeyvals=vector('character')
-	while( length(l<-readLines(con,1))>0 && l!="" ){
-		headerLines=c(headerLines,l)
-		if(substring(l,1,1)=="#") next
-		
-		if(length(grep(": ",l))>0){
-			# field
-			hingepos=regexpr(": ",l,fixed=TRUE)
-			fieldname=substring(l,1,hingepos-1)
-			# make canonical name by removing spaces if required
-			if(!fieldname%in%c("space dimension","space units","space origin","space directions","measurement frame"))
-			fieldname=gsub(" ","",fieldname,fixed=TRUE)
-			
-			fieldval=substring(l,hingepos+2,nchar(l))
-			
-			if(fieldname=="content"){
-				# don't try and process the field values
-			} else if (substring(fieldval,1,1)=="("){
-				# this is a vector, first remove all spaces
-				fieldval=gsub(" ","",fieldval)
-				# then remove first and last brackets
-				fieldval=substring(fieldval,2,nchar(fieldval)-1)
-				vectorstring=unlist(strsplit(fieldval,")(",fixed=TRUE))
-				tc=textConnection(vectorstring)
-				fieldval=scan(tc,sep=",",quiet=TRUE)
-				if(length(vectorstring)>1)
-				fieldval=matrix(fieldval,byrow=TRUE,nrow=length(vectorstring))
-				close(tc)
-			} else if(!fieldname%in%c("type","datafile")){
-				if (length(grep("^[\\-+]{0,1}[0-9.]+",fieldval,perl=T))>0) what=0
-				else what=""
-				tc=textConnection(fieldval)
-				fieldval=scan(tc,quiet=TRUE,what=what)
-				close(tc)
-			} else if(fieldname=="datafile"){
-				# TODO fix handling of complex datafile specifications
-				# See http://teem.sourceforge.net/nrrd/format.html#detached
-				if(substring(fieldval,1,4)=="LIST"){
-					# we need to keep reading in lines until we hit EOF
-					fieldval=c(fieldval,readLines(con))
-				}
-				# otherwise no special action required
-			}
-			nrrdspec[[fieldname]]=fieldval
-			
-		} else if(length(grep(":=",l))>0){
-			# key val
-			hingepos=regexpr(":=",l,fixed=TRUE)
-			nrrdkeyvals[substring(l,1,hingepos-1)]=substring(l,hingepos+2,nchar(l))
-		} else {
-			warning("Skipping malformed line #",length(headerLines)," in NRRD header\n")
-		}
-	}
-	attr(nrrdspec,'headertext')=headerLines
-	attr(nrrdspec,'keyvals')=nrrdkeyvals
-	nrrdspec
+  .Deprecated("nat::read.nrrd.header")
+  nat::read.nrrd.header(filename, Verbose=Verbose)
 }
 
 NrrdDataFiles<-function(nhdr,ReturnAbsPath=TRUE){
@@ -110,17 +44,7 @@ NrrdDataFiles<-function(nhdr,ReturnAbsPath=TRUE){
 }
 
 .standardNrrdType<-function(type){
-	if(type%in%c("float","double","block")) return (type)
-	if(type%in%c("signed char", "int8", "int8_t")) return("int8")
-	if(type%in%c("uchar", "unsigned char", "uint8", "uint8_t")) return("uint8")
-	if(type%in%c("short", "short int", "signed short", "signed short int", "int16", "int16_t")) return("int16")
-	if(type%in%c("ushort", "unsigned short", "unsigned short int", "uint16", "uint16_t")) return("uint16")
-	if(type%in%c("int", "signed int", "int32", "int32_t")) return("int32")
-	if(type%in%c("uint", "unsigned int", "uint32", "uint32_t")) return("uint32")
-	if(type%in%c("longlong", "long long", "long long int", "signed long long", "signed long long int", "int64", "int64_t"))
-		return("int64")
-	if(type%in%c("ulonglong", "unsigned long long", "unsigned long long int", "uint64", "uint64_t")) return("uint64")
-	return(NULL)
+  nat:::.standardNrrdType(type)
 }
 
 #' Read nrrd file into 3d array in memory
@@ -611,32 +535,6 @@ AddOrReplaceNrrdHeaderField<-function(infile,outfile,newfields,Force=FALSE,
 	fieldname
 }
 
-is.nrrd<-function(f,ReturnVersion=FALSE,TrustSuffix=FALSE){
-	# TrustSuffix => expect files to end in nrrd or nhdr
-	if(TrustSuffix && ReturnVersion) 
-		stop("Cannot use return nrrd version without reading file to check nrrd magic")
-
-	if(TrustSuffix)
-		return(grepl("\\.n(hdr|rrd)$",f,ignore.case=TRUE))
-	
-	if(length(f)>1)
-		return(sapply(f,is.nrrd,ReturnVersion=ReturnVersion))
-	
-	if(!file.exists(f)){
-		stop("file does not exist")
-	}
-	
-	nrrd=as.raw(c(0x4e,0x52,0x52,0x44))
-	magic=readBin(f,what=nrrd,n=8)
-	if(any(magic[1:4]!=nrrd))
-		return (FALSE)
-
-	if(ReturnVersion)
-		return(as.integer(magic[8])-0x30) # nb 0x30 is ASCII code for '0'
-
-	TRUE
-}
-
 #' Make a detached header for a specified nrrd file
 #'
 #' If nhdr is not supplied defaults to <nrrd>.nhdr.
@@ -670,20 +568,6 @@ NrrdMakeDetachedHeaderForNrrd<-function(nrrd,nhdr=paste(nrrd,sep='.','nhdr')){
 #' @seealso \link{\code{ReadNrrdHeader}}
 #' @export
 NrrdVoxDims<-function(f,ReturnAbsoluteDims=TRUE,Verbose=FALSE){
-	if(is.character(f))
-		h=ReadNrrdHeader(f)
-	else
-		h=f
-	if('space directions'%in%names(h)){
-		voxdims=rowSums(sqrt(h[['space directions']]^2))
-	} else if ('spacings'%in%names(h)){
-		voxdims=h[["spacings"]]
-	} else {
-		if(Verbose) warning("Unable to find voxel dimensions in nrrd: ",f)
-		voxdims=rep(NA,h$dimension)
-	}
-	
-	# Sometimes get -ve space dirs, take abs if requested
-	if(ReturnAbsoluteDims) abs(voxdims)
-	else voxdims
+  .Deprecated('nat::nrrd.voxdims')
+  nrrd.voxdims(f,ReturnAbsoluteDims=ReturnAbsoluteDims)
 }
