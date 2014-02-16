@@ -2,13 +2,6 @@
 # plot(ANeuron)
 plot.neuron<-function(...) plotneuron2d(...)
 
-# register a catch all function to read any file types that aren't handled by
-# other readers.
-# NB1 that calling the format zzz ensures that it will be the last format to be
-# called (since they are processed in alphabetical order). 
-# NB2 note that setting magic to a function that swallows all arguments and always returns TRUE
-# captures 
-nat::registerformat("zzz",read="nat.as::read.neuron.extra",magic=function(...) TRUE,class='neuron')
 # This function can be called directly or using the registration above
 # it will be called as a fall-through by nat::read.neuron
 read.neuron.extra<-function(f, ...){
@@ -32,6 +25,15 @@ read.neuron.extra<-function(f, ...){
 	if(is.neuron(n,Strict=FALSE) && !is.dotprops(n)) as.neuron(n)
 	else n
 }
+
+# register a catch all function to read any file types that aren't handled by
+# other readers.
+# NB1 that calling the format zzz ensures that it will be the last format to be
+# called (since they are processed in alphabetical order). 
+# NB2 note that setting magic to a function that swallows all arguments and
+# always returns TRUE captures all remaining file types
+nat::registerformat("zzz", read="read.neuron.extra", magic=function(...) TRUE,
+  class='neuron')
 
 #' [Deprecated] Write out a neuron in any of the file formats we know about 
 #'
