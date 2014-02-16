@@ -584,10 +584,10 @@ test.igraphvsoriginal<-function(){
                  "neuron_with_materials.am",
                  "testneuron_am3d_ascii.am","testneuron_am3d.am",
                  "UnbranchedNeurite.am"))
-  ff=find.am3d()
-  exceptions=c("NeuritesWithNA.am",'120818-JK56fill_skel.am')
-  
-  require(plyr)
-  l_ply(ff[!basename(ff)%in%exceptions], igraphvsoriginal.amiraneuron,
-        .progress='text')
+  # ff=find.am3d()
+  # exceptions=c("NeuritesWithNA.am",'120818-JK56fill_skel.am')
+  # 
+  # require(plyr)
+  # l_ply(ff[!basename(ff)%in%exceptions], igraphvsoriginal.amiraneuron,
+  #       .progress='text')
 }
