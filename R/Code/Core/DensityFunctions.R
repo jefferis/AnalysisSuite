@@ -307,23 +307,9 @@ is.gjdens<-function(d){
 	return(FALSE)
 }
 
-	
 voxdim.gjdens<-function(d){
-	if(all(c("x","y","z") %in% names(attributes(d)))){
-		originaldims=sapply(attributes(d)[c("x","y","z")],length)
-	} else {
-		originaldims=dim(d)
-	}
-	if (!is.null(attr(d,"bounds")))
-		# bounds = outer limit of voxels
-		return(diff(matrix(attr(d,"bounds"),nrow=2))/originaldims)
-	else if (!  is.null(attr(d,"BoundingBox"))) {
-		# BoundingBox = CENTRES of outer voxels (like Amira)
-		# therefore includes 1 fewer voxel in each dimension
-		return(diff(matrix(attr(d,"BoundingBox"),nrow=2))/(originaldims-1))
-	} 
-	#warning("Cannot find bounds or BoundingBox attribute")
-	return(NULL)
+  .Deprecated('nat::voxdims')
+  nat::voxdims(d)
 }
 
 getBounds<-function(b){
