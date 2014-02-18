@@ -309,6 +309,13 @@ is.gjdens<-function(d){
 
 voxdim.gjdens<-function(d){
   .Deprecated('nat::voxdims')
+  if(!inherits(d,'im3d')){
+    # not an im3d, so copy attributes to make a fake object
+    d0=numeric()
+    mostattributes(d0)=attributes(d)
+    class(d0)=c('im3d',class(d0))
+    d=d0
+  }
   nat::voxdims(d)
 }
 
