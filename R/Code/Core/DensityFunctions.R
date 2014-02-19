@@ -364,12 +364,6 @@ getBoundingBox<-function(b,bounds=attr(b,"bounds"),voxdim=voxdim.gjdens(b)){
 	return(NULL)
 }
 
-#' read 3d image using one of the available readers returning in gjdens format
-read.im3d<-function(f,ReadData=TRUE,...){
-	if(is.nrrd(f)) Read3DDensityFromNrrd(f,ReadData=ReadData,...)
-	else stop("Unable to read data from: ",f)
-}
-
 #@nonl
 #@-node:jefferis.20051014173041.16:Masks (TODO)
 #@+node:jefferis.20051014173041.15:image.gjdens (TODO)
