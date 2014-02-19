@@ -108,14 +108,29 @@ for (MyPath in SourcePaths) {
 	#cat(MyPath," ")
 	try(sys.source(MyPath,envir=topenv(),keep.source=TRUE))
 }
-
-if(!require("nat") || 
-  compareVersion(installed.packages()['nat','Version'],'1.2')<0){
+# Define a numeric version for AnalysisSuite - we'll keep this in sync with 
+# nat and insist that nat version is at least equal to AS major minor patch
+ASVersion<-package_version('1.2.0.1')
+natVersion=package_version(installed.packages()['nat','Version'])
+if(!require("nat")){
   if(interactive())
     browseURL('https://github.com/jefferis/nat#installation')
   
-  message("Please install/update nat R package\nSee https://github.com/jefferis/nat#installation")
+  message("Please install nat R package\nSee https://github.com/jefferis/nat#installation")
   stop()
+}
+if(natVersion[1,1:3]<ASVersion[1,1:3]){
+  if(interactive())
+    browseURL('https://github.com/jefferis/nat#installation')
+  message('nat package version: ', natVersion,' is behind AnalysisSuite version: ',ASVersion)
+  message("Please update nat R package\nSee https://github.com/jefferis/nat#installation")
+  stop()
+}
+# warn if nat major,minor is grater than AS
+if(natVersion[1,1:2]>ASVersion[1,1:2]){
+  message("nat version: ",natVersion,
+          ' is >= one point ahead of AnalysisSuite version: ',ASVersion)
+  message("You probably need to update AnalysisSuite!")
 }
 
 setwd(owd)
