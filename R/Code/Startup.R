@@ -110,7 +110,7 @@ for (MyPath in SourcePaths) {
 }
 
 if(!require("nat") || 
-  compareVersion(installed.packages()['nat','Version'],'0.5.2')<0){
+  compareVersion(installed.packages()['nat','Version'],'1.2')<0){
   if(interactive())
     browseURL('https://github.com/jefferis/nat#installation')
   
