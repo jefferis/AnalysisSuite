@@ -502,36 +502,3 @@ CoreNeuronFromAmiraSkel<-function(x, Verbose=FALSE){
   # And recalculate parents
   RecalculateSWCData(as.neuron(cn))
 }
-
-#' Ensure that all graph edges are directed and point out (or in) from root
-#' 
-#' @param g Graph, directed or undirected
-#' @param root Raw vertex id of root vertex
-#' @param mode Direction that edges should point from root (\code{'out'}=>away,
-#'   the default, or \code{'in'})
-as.directed.usingroot<-function(g, root, mode=c('out','in')){
-  mode=match.arg(mode)
-  # make a directed graph _keeping any attributes_
-  if(igraph::is.directed(g))
-  dg=igraph::as.directed(g,mode='arbitrary')
-  dfs=igraph::graph.dfs(dg, root, unreachable=FALSE, dist=TRUE, neimode='all')
-  el=igraph::get.edgelist(dg)
-  
-  connected_vertices=which(is.finite(dfs$order))
-  edges_to_check=which(el[,1]%in%connected_vertices)
-  
-  # for each edge, check if it must be flipped
-  parent.dists=dfs$dist[el[edges_to_check,1]]
-  child.dists=dfs$dist[el[edges_to_check,2]]
-  #
-  parent_closer=parent.dists<child.dists
-  same_dist=parent.dists==child.dists
-  parent_further=parent.dists>child.dists
-  #
-  if(any(same_dist)) warning(sum(same_dist)," edges connect vertices that are the same distance from the root => cycles.")
-  edges_to_flip <- edges_to_check[if(mode=='out') parent_further else parent_closer]
-  
-  dg=igraph::delete.edges(dg,edges_to_flip)
-  dg=igraph::add.edges(dg,t(el[edges_to_flip,2:1]))
-  dg
-}
