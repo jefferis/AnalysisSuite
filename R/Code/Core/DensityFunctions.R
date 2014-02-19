@@ -134,26 +134,6 @@ Interpolate3D<-function(d,newx,newy,newz,method=c("constant","linear")){
     return(newd)
 }
 #@nonl
-#@-node:jefferis.20060314184616.2:Interpolate3D
-#@+node:jefferis.20060314184616.1:NearestNeighbourInterpolate
-NearestNeighbourInterpolate<-function(d,newx,newy,newz,method=c("constant","linear")){
-    method=match.arg(method)
-    if(missing(newy) & missing(newz)){
-        # assume that we have a gj density array
-        if(is.array(newx)) x=attributes(newx)
-        # process if we have a list
-        if(is.list(newx)) {
-            newz=newx$z; newy=newx$y; newx=newx$x
-        }
-    }
-    
-    # now do the interpolation
-    # for each intersection of the grid defined by x, y, z
-    # find the corresponding nearest neighbour in d
-    
-    # INCOMPLETE - see Interpoalate3D     
-}
-#@nonl
 #@-node:jefferis.20060314184616.1:NearestNeighbourInterpolate
 #@+node:jefferis.20060305164352:IntegrateDensity
 IntegrateDensity<-function(d){
@@ -284,18 +264,7 @@ rgl.gjdens<-function(d,x=attr(d,"x"),y=attr(d,"y"),z=attr(d,"z"),scaleFact=1,
     else rgl.sprites(xyzpoints[,1],xyzpoints[,2],xyzpoints[,3],alpha=vd[vd>thresh],
             textype='alpha',texture=system.file("textures/particle.png",package="rgl"),...)		
 }
-#@nonl
-#@-node:jefferis.20051014173041.14:rgl.gjdens
-#@+node:jefferis.20051014173041.16:Masks (TODO)
-MaskDensity<-function(d,mask){
-		# function to make take eg 3D LH density and mask it
-		# so that all areas outside LH are set to 0
-}
 
-MakeMaskToFitBounds<-function(mask,bounds,n){
-		# take a mask and interpolate it to fit 
-		# 
-}
 is.gjdens<-function(d){
 	if(inherits(d,"gjdens")) {
 		return(TRUE)

@@ -344,19 +344,6 @@ AdjacencyMatrix<-function(SWCData){
 	A
 }
 
-# For a simple Y
-#        3
-# 1 -> 2 
-#        4
-#
-colSwap=function(A,a,b){
-	if(a>ncol(A) || b>ncol(A)) stop("a or b exceeds matrix dimensions")
-	tcol=A[,a]
-	A[,a]=A[,b]
-	A[,b]=tcol
-	A
-}
-
 NumTreesInEdgeList<-function(Nb){
 	# returns the number of trees in a set of neighbour pairs
 	nPoints=length(unique(Nb[,2]))
