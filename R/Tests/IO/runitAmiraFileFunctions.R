@@ -330,11 +330,11 @@ test.ReadWriteNeuronFromAM<-function(){
 	# converted to lineset in amira by hxskeletonize
 	lineset=ReadNeuronFromAM(file.path(TestDir,"Data","neurons","testneuron_lineset.am"))
   # check seglist describes equivalent graph - they end up in different order
-  g1=Neuron2Graph(lineset)
-  g2=Neuron2Graph(am3d)
+  g1=as.ngraph(lineset)
+  g2=as.ngraph(am3d)
   checkEquals(g1,g2,msg='seglist graphs do not match')
-#  checkEquals(lineset[fieldsToCheck],am3d[fieldsToCheck],tol=1e-6,
-#    msg="Same tracing saved as AM3D and AM by Amira produces different results")
+  checkEquals(lineset[fieldsToCheck],am3d[fieldsToCheck],tol=1e-6,
+    msg="Same tracing saved as AM3D and AM by Amira produces different results")
   
   WriteNeuronToAM(am3d,tmpfile)
   amfromam3d=ReadNeuronFromAM(tmpfile)
@@ -348,7 +348,6 @@ test.ReadWriteNeuronFromAM<-function(){
   checkEquals(fcamresaved[fieldsToCheck],fcam[fieldsToCheck],tol=1e-6,
     msg="AM file from flycircuit and AM file resaved by R produce different results")
   checkEquals(fcamresaved$d[,1:5],fcam$d[,1:5],tol=1e-6)
-    
 }
 
 
