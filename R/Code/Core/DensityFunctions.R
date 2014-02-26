@@ -319,16 +319,15 @@ getBoundingBox<-function(b,bounds=attr(b,"bounds"),voxdim=voxdim.gjdens(b)){
 	# nb BoundingBox = CENTRES of outer voxels (like Amira)
 	if(!is.null(attr(b,"BoundingBox"))) return(attr(b,"BoundingBox"))
 	else if(!is.null(bounds) && !is.null(voxdim)){
-		
 		if(is.vector(bounds)) bounds<-matrix(bounds,nrow=2)
+		input
 		halfVoxelDims=voxdim/2
 		bounds[1,]=bounds[1,]+halfVoxelDims
 		bounds[2,]=bounds[2,]-halfVoxelDims
 		# zap small gets rid of FP rounding errors
 		return(zapsmall(bounds))
-	}
-	else if(is.character(b) && file.exists(b)){
-		return(attr(read.im3d(b,ReadData=FALSE),'BoundingBox'))
+	}else if(is.character(b)){
+		return(nat::boundingbox(b))
 	}
 	return(NULL)
 }
