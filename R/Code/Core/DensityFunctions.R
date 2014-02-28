@@ -40,15 +40,6 @@
 #################
 #ENDMAINCOPYRIGHT
 
-#@+others
-#@+node:jefferis.20060522195714.1:unmask
-unmask=function(d,mask,default=NA,attributes.=attributes(mask),copyAttributes=TRUE){
-	rval=mask
-	if(copyAttributes) attributes(rval)=attributes.
-	rval[mask!=1]=default
-	rval[mask==1]=d
-	rval
-}
 #@nonl
 #@-node:jefferis.20060522195714.1:unmask
 #@+node:jefferis.20060522182249.2:DensityCumSumFracThreshold
@@ -519,90 +510,7 @@ MakeMaskFromDensity<-function(d,bounds=attr(d,"bounds"),BoundingBox=attr(d,"Boun
 		m[d>threshold]=1
 		m
 }
-#@-node:jefferis.20051014173041.17:Masks
-#@+node:jefferis.20051014173041.18:projection
-projection<-function(a,projdim='z',projfun=c('integrate','mean','sum'),warn=F,na.rm=T,mask=NULL,...){
-    ndims=length(dim(a))
-    if(is.character(projdim)){
-        projdim=tolower(projdim)
-        projdim=which(letters==projdim)-which(letters=="x")+1
-    }
-	if(ndims<3) {
-		if(warn) warning("3D arrays only in zproj - no z axis in array")
-		return (a)
-	}
-	if(!is.null(mask)) a[mask==0]=NA
 
-	if(is.character(projfun) && projdim==ndims) {
-		# This will do fast sums over the last dimension for 3 funcs
-		projfun=match.arg(projfun)
-		# These functions are handled specially
-		if( projfun=="sum" || projfun=="integrate" ){
-			rval=rowSums(a,dims=ndims-1,na.rm=na.rm)
-		} else if(projfun=="mean"){ 		
-			rval=rowMeans(a,dims=ndims-1,na.rm=na.rm)
-		}
-	} else {
-		# This is the more general routine
-		if(is.character(projfun) && projfun=="integrate") projfun.fun=sum
-		else projfun.fun=match.fun(projfun)
-		# Now do the projection
-		margins=setdiff(1:ndims,projdim)
-		rval=apply(a,margins,projfun.fun,na.rm=na.rm,...)
-	}
-	if(is.character(projfun) && projfun=="integrate") {
-		dx=voxdim.gjdens(a)[projdim]
-		rval=rval*dx
-	}
-
-	# copy over attributes
-	attributeNamesToCopy=setdiff(names(attributes(a)),names(attributes(rval)))
-    attributes(rval)=c(attributes(rval),attributes(a)[attributeNamesToCopy])
-	# ... and set the ProjDim to the correct letter
-	projDimChar=letters[23+projdim]
-    attr(rval,'ProjDim')=if(!is.na(projDimChar)) projDimChar else projdim
-    rval
-}
-#@nonl
-#@-node:jefferis.20051014173041.18:projection
-#@+node:jefferis.20051014173041.19:flip.array
-flip.array=function(a,flipdim='X'){
-	ndims=length(dim(a))
-	if(ndims>3) stop("Can't handle more than 3D arrays")
-	
-	if(is.character(flipdim)){
-		flipdim=tolower(flipdim)
-		# fixed a bug which prevented y axis flips
-		flipdim=which(letters==flipdim)-which(letters=="x")+1
-	}
-	if(!flipdim%in%seq(len=length(dim(a)))){
-		stop("Can't match dimension to flip")
-	}
-	
-	revidxs=dim(a)[flipdim]:1
-	
-	if(ndims==3){
-		if(flipdim==1) rval=a[revidxs,,]
-		if(flipdim==2) rval=a[,revidxs,]
-		if(flipdim==3) rval=a[,,revidxs]
-	}
-	else if(ndims==2){
-		if(flipdim==1) rval=a[revidxs,]
-		if(flipdim==2) rval=a[,revidxs]
-	}
-	else if (ndims==1){
-		return(flip.vector(a))
-	}
-        attributes(rval)=attributes(a)
-	return (rval)
-}
-
-
-flip.vector=function(x) rev(x)
-
-flip.matrix=function(x,...) {
-		flip.array(x,...)
-}
 #@-node:jefferis.20051014173041.19:flip.array
 #@+node:jefferis.20051015023212:blendDensities.gjdensityArray
 blendDensities.gjdensityArray<-function(dens, mat, scaleFact,
@@ -739,27 +647,6 @@ getMBTips<-function(ANeuron,verbose=TRUE){
 #@-at
 #@-node:jefferis.20051014173041.13:@thin R/DensityFunctions.R
 #@-leo
-
-clampmax<-function(xmin,xmax) {
-	# this fn returns a new function that will find the maximum of its inputs
-	# and then clamp the return value between xmin and xmax
-	# +/- Inf are converted to NA
-	if(missing(xmax)) {
-		xmax=xmin[2]
-		xmin=xmin[1]
-	}
-	# Example: image.gjdens(projection(d,projfun=clampmax(0,15)))
-	function(x,...){
-		r=max(x,...)
-		if(r==Inf || r==-Inf) 
-			NA
-		else if(r<xmin)
-			xmin 
-		else if(r>xmax)
-			xmax
-		else r
-	}
-}
 
 xyzpos.gjdens<-function(d,ijk)
 {
