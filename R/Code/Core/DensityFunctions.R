@@ -59,41 +59,17 @@ DensityCumSumFracThreshold<-function(d,fractions,decreasing=TRUE,returnValue=TRU
 #@-node:jefferis.20060522182249.2:DensityCumSumFracThreshold
 #@+node:jefferis.20060314194700:expand.grid.gjdens
 expand.grid.gjdens<-function(d){
-    # takes the x,y and z attributes of d and
-    # makes an n x 3 matrix containing the grid points
-    
-    # this is basically the guts of expand.grid
-    # but returns a nice clean matrix
-    
+  .Deprecated('nat::imexpand.grid')
+  if(!inherits(d,'im3d')){
+    # not an im3d, so make a fake im3d
+    # ensuring that we get dims properly set (as well as bounding box)
     dims=dim(d)
-    orep <- prod(dims)
-    nargs=3
-	
-	if(all(c("x","y","z") %in% names(attributes(d)))){
-		args=attributes(d)[c("x","y","z")]
-	} else {
-		args=list()
-		boundingBox=matrix(getBoundingBox(d),nrow=2)
-		for(i in seq(dims)){
-			args[[i]]=seq(from=boundingBox[1,i],to=boundingBox[2,i],length=dims[i])
-		}
-	}
-    rep.fac <- 1
-    rval=matrix(nrow=orep,ncol=length(dims))
-    for (i in 1:nargs) {
-        x <- args[[i]]
-        nx <- length(x)
-        orep <- orep/nx
-        x <- x[rep.int(rep.int(seq(length = nx), rep.int(rep.fac, 
-            nx)), orep)]
-        if (!is.factor(x) && is.character(x)){
-            cat("converting to factor")
-            x <- factor(x, levels = unique(x))
-        }
-        rval[,i]=x
-        rep.fac <- rep.fac * nx
+    if(is.null(dims)){
+      dims=sapply(attributes(d)[c('x','y','z')], length)
     }
-    return(rval)
+    d=im3d(dims=dims,BoundingBox=getBoundingBox(d))
+  }
+  nat::imexpand.grid(d)
 }
 #@nonl
 #@-node:jefferis.20060314194700:expand.grid.gjdens
@@ -384,104 +360,38 @@ contour.gjdens<-function(x=NULL,y=NULL,
 	}
 }
 
-
 image.gjdens<-function(x=NULL,y=NULL,
-	z, zlim=NULL, xlim=range(x,finite=TRUE), ylim=range(y,finite=TRUE),
+	z, zlim=range(z, finite = TRUE), xlim=NULL, ylim=NULL,
     plotdims=NULL,flipdims='y',filledContour=FALSE,asp=NA, axes=FALSE,
     xlab=NULL,ylab=NULL,
     nlevels=20,levels = pretty(zlim, nlevels+1),
-    color.palette=jet.colors,col = color.palette(length(levels) - 1),...){
-		
-    # # function which will extend R's image function
-    # by 
-    # 1. allowing images to have inverted x or ylims.
-    #    - What would be the best here - I thought of just checking whether
-    #    xlim or ylim were reversed, but I think that an actual flip command
-    #    is preferable.
-    # 2. Defaulting to a suitable colour ramp
-    #@    << handle z as first argument >>
-    #@+node:jefferis.20051016235253.1:<< handle z as first argument >>
-    if (missing(z)) {
-    	if (!is.null(x)) {
-    		z <- x
-    		attributes(z)<-attributes(x)
-    		x <- NULL
-    	}
-    	else stop("no 'z' matrix specified")
-    }
-    #@-node:jefferis.20051016235253.1:<< handle z as first argument >>
-    #@nl
-    #@    << set x y z >>
-    #@+node:jefferis.20051024111842:<< set x y z >>
-    # don't try and plot anything if we have malformed zlims
-    if(is.null(zlim)) zlim=range(z,finite=TRUE)
-    if(!all(is.finite(zlim))){
-    	warning(paste("supplied zlim is not finite:",zlim))
-    	zlim=c(0,0)
-    }
-    
-    if(!is.null(plotdims)){
-        plotdims=tolower(plotdims); plotdims=unlist(strsplit(plotdims,split=""))
-        if(is.null(x)) x=attr(z,plotdims[1])
-        if(is.null(y)) y=attr(z,plotdims[2])
-    } else if(!is.null(attr(z,"ProjDim"))){
-        # if this is a projection, then choose correct axes to display
-        plotdims=setdiff(c("x","y","z"),attr(z,"ProjDim"))
-        if(is.null(x)) x=attr(z,plotdims[1])
-        if(is.null(y)) y=attr(z,plotdims[2])
-    } else if (all( c("x","y")%in%names(attributes(z)) )){
-        if(is.null(x)) x=attr(z,"x")
-        if(is.null(y)) y=attr(z,"y")
-    }
-    # If we still haven't set anything, then use default
-    if(is.null(x)) x=seq(0,1,len=nrow(z))
-    if(is.null(y)) y=seq(0,1,len=ncol(z))
-    if(is.null(plotdims)) plotdims=c("x","y")
-    #@-node:jefferis.20051024111842:<< set x y z >>
-    #@nl
-    #@    << handle flipdims >>
-    #@+node:jefferis.20051016235253:<< handle flipdims >>
-    numbers=1:3;names(numbers)=letters[24:26]
-    
-    # what about transposing matrix if axes have been swapped?
-    if(numbers[plotdims[1]]>numbers[plotdims[2]]){
-        z=t(z)
-    }
-    
-    if(is.numeric(flipdims)) flipdims=names(numbers(flipdims))
-    if(is.character(flipdims)) {
-        flipdims=unlist(strsplit(tolower(flipdims),split=""))
-        # nb at this stage we assume z looks like our axes, so
-        # we don't try to match axis names etc
-        if(plotdims[1]%in%flipdims) z<-flip.array(z,1)
-        if(plotdims[2]%in%flipdims) z<-flip.array(z,2)
-    }
-    
-    # now reverse axes if required
-    if(plotdims[1]%in%flipdims) x=-rev(x)
-    if(plotdims[2]%in%flipdims) y=-rev(y)
-    #@nonl
-    #@-node:jefferis.20051016235253:<< handle flipdims >>
-    #@nl
-    
-    
-    if(filledContour){
-	    plot(0,0,xlim,ylim,type='n',asp=asp,axes=FALSE,
-        xlab=plotdims[1],ylab=plotdims[2],xaxs="i",yaxs="i",...)
-        if (!is.double(z)) storage.mode(z) <- "double"
-        .Internal(filledcontour(as.double(x), as.double(y), z, as.double(levels), 
-        col = col))
-    } else {
-        image(x=x,y=y,z=z,zlim=zlim,xlim=xlim,ylim=ylim,col=col,asp=asp,axes=FALSE,
-        xlab=plotdims[1],ylab=plotdims[2],...)
-    }
-    if(axes){
-        axis(2,pretty(par("usr")[3:4]),abs(pretty(par("usr")[3:4])))
-        axis(1,pretty(par("usr")[1:2]),abs(pretty(par("usr")[1:2])))
+    color.palette=jet.colors, col = color.palette(length(levels) - 1), ...){
+	
+
+	# # function which will extend R's image function
+	# by 
+	# 1. allowing images to have inverted x or ylims.
+	#    - What would be the best here - I thought of just checking whether
+	#    xlim or ylim were reversed, but I think that an actual flip command
+	#    is preferable.
+	# 2. Defaulting to a suitable colour ramp
+	#@    << handle z as first argument >>
+	#@+node:jefferis.20051016235253.1:<< handle z as first argument >>
+	if (missing(z)) {
+		if (!is.null(x)) {
+			z <- x
+			attributes(z)<-attributes(x)
+			x <- NULL
+		}
+		else stop("no 'z' matrix specified")
 	}
-    # Return info that will be useful for creating scalebars
-	invisible(list(zlim=zlim,nlevels.actual=length(levels),nlevels.orig=nlevels,
-        levels=levels,colors=col))
+	if(!inherits(z,'im3d')) class(z)=c('im3d',class(z))
+	if(is.null(x)) x=attr(z,'x')
+	if(is.null(y)) x=attr(z,'y')
+	image(z, xlim = xlim, ylim = ylim, zlim = zlim, plotdims = plotdims, 
+		flipdims = flipdims, filled.contour = filledContour, asp = asp, axes = axes, 
+		xlab = xlab, ylab = ylab, nlevels = nlevels, levels = levels, 
+		color.palette = color.palette, col = col, ...)
 }
 
 # function (x = seq(0, 1, len = nrow(z)), y = seq(0, 1, len = ncol(z)), 
@@ -650,41 +560,28 @@ getMBTips<-function(ANeuron,verbose=TRUE){
 
 xyzpos.gjdens<-function(d,ijk)
 {
-	# return the xyz position for a pixel location (i,j,k)
-	# This will be the pixel centre based on the bounding box
-	# Note that ijk will be 1-indexed according to R's convention
-
-	# transpose if we have received a matrix (with 3 cols i,j,k) so that
-	# multiplication below doesn not need to be changed
-	if(is.matrix(ijk)) ijk=t(ijk)
-	if(any(ijk<1)) warning("expects 1-indexed pixel coordinate so pixels <1 make little sense")
-	dxyz=as.vector(voxdim.gjdens(d))
-	origin=getBoundingBox(d)[c(1,3,5)]
-	xyz=(ijk-1)*dxyz+origin
-	if(is.matrix(xyz)) t(xyz) else xyz
+  .Deprecated('nat::xyzpos')
+  if(!inherits(d,'im3d')){
+    # not an im3d, so copy attributes to make a fake object
+    d0=numeric()
+    mostattributes(d0)=attributes(d)
+    class(d0)=c('im3d',class(d0))
+    d=d0
+  }
+  nat::xyzpos(d, ijk)
 }
 
 ijkpos.gjdens<-function(d,xyz,roundToNearestPixel=TRUE)
 {
-	# return the ijk position for a physical location (x,y,z)
-	# This will be the pixel centre based on the bounding box
-	# Note that ijk will be 1-indexed according to R's convention
-
-	# transpose if we have received a matrix (with 3 cols x,y,z) so that
-	# multiplication below doesn not need to be changed
-	if(is.matrix(xyz)) xyz=t(xyz)
-
-	dxyz=as.vector(voxdim.gjdens(d))
-	BB=getBoundingBox(d)
-	origin=BB[c(1,3,5)]
-	farcorner=BB[c(2,4,6)]
-
-	ijk=(xyz-origin)/dxyz+1
-	if(roundToNearestPixel) {
-		ijk=round(ijk)
-		if(any(ijk<1) || any(ijk>dim(d))) warning("pixel coordinates outside image data")
-	}
-	if(is.matrix(ijk)) t(ijk) else ijk
+  .Deprecated('nat::ijkpos')
+  if(!inherits(d,'im3d')){
+    # not an im3d, so copy attributes to make a fake object
+    d0=numeric()
+    mostattributes(d0)=attributes(d)
+    class(d0)=c('im3d',class(d0))
+    d=d0
+  }
+  nat::ijkpos(d, xyz, roundToNearestPixel=roundToNearestPixel)
 }
 
 MinBoundingBox<-function(d,threshold=0,aspixels=TRUE)
