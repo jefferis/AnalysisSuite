@@ -126,39 +126,9 @@ IntegrateDensity<-function(d){
 #@+node:jefferis.20060302181445:makeScaleBar
 makeScaleBar<-function(levels,col,nlevels=NULL,zlim=NULL,horizontal=TRUE,lab="Density",
     mar=c(4,2,2,2)+0.1,border=NULL, ...){
-    
-	# allow 
-	if(!is.null(zlim) ){
-		nc <- length(col)
-		if ( (any(!is.finite(zlim)) || diff(zlim) < 0)) 
-			stop("invalid z limits")
-		if (diff(zlim) == 0) 
-			zlim <- if (zlim[1] == 0) 
-				c(-1, 1)
-			else zlim[1] + c(-0.4, 0.4) * abs(zlim[1])
-		#z <- (z - zlim[1])/diff(zlim)
-		#zi <- floor((nc - 1e-05) * z + 1e-07)
-		#zi[zi < 0 | zi >= nc] <- NA
-		levels=seq(from=zlim[1],to=zlim[2],len=nc+1)
-	}
-    # allow scaleinfo objects to be passed directly
-    if(missing(col) && is.list(levels)){
-        col=levels$col
-        levels=levels$levels
-	}
-	if(horizontal){
-        par(mar=mar)
-        plot(range(levels), c(0,1), type="n",
-            xaxs="i", yaxs="i", xlab=lab, ylab="", yaxt="n", ...)
-        rect(levels[-length(levels)], 0, border=border,
-             levels[-1], col = col  , 1)
-    } else {
-        par(mar=mar[c(2,1,3,4)])
-        plot(c(0,1), range(levels), type="n",
-            xaxs="i", yaxs="i", xlab="", ylab=lab, xaxt="n", ...)
-        rect(0, levels[-length(levels)], border=border,
-             1, levels[-1], col = col)
-    }
+	.Deprecated("nat::imscalebar")
+	nat::imscalebar(levels=levels,col=col,nlevels=nlevels,zlim=zlim,
+		horizontal=horizontal,lab=lab,mar=mar, border=NULL, ...)
 }
 #@-node:jefferis.20060302181445:makeScaleBar
 #@+node:jefferis.20051015010751:densityArrayFromList
