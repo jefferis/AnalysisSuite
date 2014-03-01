@@ -51,3 +51,22 @@ test.getBoundingBox<-function(){
 		getBounds(lh),tol=1e-6)
 	checkEquals(getBounds(lh),getBounds(lhfile))
 }
+
+test.makeScaleBar<-function(){
+	lhfile=file.path(TestDir,'Data','LHMask.nrrd')
+	lh=Read3DDensityFromNrrd(lhfile,ReadByteAsRaw='none')
+	p=projection(lh)
+	rval=image.gjdens(p)
+	rval_baseline=structure(list(zlim = c(0, 54.6), nlevels.actual = 29L, nlevels.orig = 20, 
+	    levels = c(0, 2, 4, 6, 8, 10, 12, 14, 16, 18, 20, 22, 24, 
+	    26, 28, 30, 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 
+	    56), colors = c("#000080", "#001C8E", "#00389C", "#0055AA", 
+	    "#0071B8", "#008DC6", "#00AAD4", "#00C6E2", "#00E2F0", "#00FFFF", 
+	    "#1CFFE2", "#38FFC6", "#55FFAA", "#71FF8D", "#8DFF71", "#AAFF54", 
+	    "#C6FF38", "#E2FF1C", "#FFFF00", "#FFE200", "#FFC600", "#FFAA00", 
+	    "#FF8D00", "#FF7100", "#FF5500", "#FF3800", "#FF1C00", "#FF0000"
+	    )), .Names = c("zlim", "nlevels.actual", "nlevels.orig", 
+	"levels", "colors"))
+	checkEquals(rval,rval_baseline)
+	makeScaleBar(rval)
+}
