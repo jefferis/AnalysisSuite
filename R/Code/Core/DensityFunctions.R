@@ -374,23 +374,7 @@ image.gjdens<-function(x=NULL,y=NULL,
 #@nonl
 #@-node:jefferis.20051014173041.15:image.gjdens (TODO)
 #@+node:jefferis.20051014173041.17:Masks
-MakeMaskFromDensity<-function(d,bounds=attr(d,"bounds"),BoundingBox=attr(d,"BoundingBox"),threshold=-1){
-		# function that makes a mask object of the same size as
-		# a particular density and sets values to 0 or 1 depending
-		# on whether they exceed a threshold
-		
-		# Threshold could perhaps also be a plugin function
-		# to allow fancier setting of levels
-
-		m=integer(length(d))
-		dim(m)<-dim(d)
-		if(missing(BoundingBox))
-		attr(m,"BoundingBox")=BoundingBox
-		attr(m,"BoundingBox")=bounds
-		m[d>threshold]=1
-		m
-}
-
+# MakeMaskFromDensity-> nat::threshold
 #@-node:jefferis.20051014173041.19:flip.array
 #@+node:jefferis.20051015023212:blendDensities.gjdensityArray
 blendDensities.gjdensityArray<-function(dens, mat, scaleFact,
