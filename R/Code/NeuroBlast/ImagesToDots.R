@@ -30,7 +30,9 @@ length.dotprops<-function(dp) nrow(dp$points)
 # redefining length upsets str
 str.dotprops<-function(dp,...) {class(dp)<-"list";str(dp,...)}
 
-#' Carry out in memory digest of a dotprops object
+#' Deprecated: Carry out in memory digest of a dotprops object
+#'
+#' see nat::ndigest
 #'
 #' This takes care to remove non-essential attributes
 #' @param dp Dotprops object
@@ -42,10 +44,8 @@ str.dotprops<-function(dp,...) {class(dp)<-"list";str(dp,...)}
 #' @examples
 #' digest(dps[[1]])
 digest.dotprops<-function(dp,...){
-  # remove mtime and file attributes
-  atts=attributes(dp)
-  mostattributes(dp)<-atts[setdiff(names(atts),c("mtime",'file'))]
-  digest(dp,...)
+  .Deprecated("nat::ndigest")
+  nat::ndigest(as.dotprops(dp), ...)
 }
 
 # Set up a private function that directly accesses internal LAPACK routine of eigen
