@@ -110,7 +110,7 @@ for (MyPath in SourcePaths) {
 }
 # Define a numeric version for AnalysisSuite - we'll keep this in sync with 
 # nat and insist that nat version is at least equal to AS major minor patch
-ASVersion<-package_version('1.4.3')
+ASVersion<-package_version('1.4.7')
 natVersion=package_version(installed.packages()['nat','Version'])
 if(!require("nat")){
   if(interactive())
