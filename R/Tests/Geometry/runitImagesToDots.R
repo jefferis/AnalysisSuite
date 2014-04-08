@@ -40,7 +40,7 @@ test.ind2coord<-function(){
 	
 	checkEqualsNumeric(i2c.matlab,i2c.r,tol=1e-6)
 	
-	lh=Read3DDensityFromAmiraLattice(file.path(ObjDir,"LHMask.am"))
+	lh=read.im3d(file.path(ObjDir,"LHMask.am"))
 	x=ind2coord(lh)
 	y=ind2coord(lh>0,voxdims=lh)
 	checkEqualsNumeric(x,y,tol=1e-6)
@@ -80,11 +80,11 @@ test.coord2ind<-function(){
 }
 
 test.coord2ind.roundtrip<-function(){
-	lh=Read3DDensityFromAmiraLattice(file.path(ObjDir,"LHMask.am"))
+	lh=read.im3d(file.path(ObjDir,"LHMask.am"))
 	coords=ind2coord(lh)
 	inds=coord2ind(coords,lh)
 	lhorigin=getBoundingBox(lh)[c(1,3,5)]
-	coordsagain=ind2coord(inds,dim=dim(lh),voxdim=voxdim.gjdens(lh),origin=lhorigin)
+	coordsagain=ind2coord(inds,dims=dim(lh),voxdim=voxdims(lh),origin=lhorigin)
 	checkEqualsNumeric(coords,coordsagain,tol=1e-6)
 }
 

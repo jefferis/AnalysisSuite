@@ -62,31 +62,6 @@ DotProperties<-function(points,k=20,UseLabels=TRUE,na.rm=FALSE){
 	nat::dotprops(x=points,k=k,Labels=UseLabels,na.rm=TRUE)
 }
 
-ind2coord.array<-function(inds, voxdims, origin, ...){
-	dims=dim(inds)
-	# can supply a gjdens object as 2nd param - which will then
-	# provide origin, voxdims
-	if(missing(voxdims)){
-		if(is.gjdens(inds))
-			voxdims=voxdim.gjdens(inds)
-		else
-			stop("no voxdims supplied and inds has no physical dimension attributes")
-	} else if(is.gjdens(voxdims)){
-		if(missing(origin))
-			origin=matrix(getBoundingBox(voxdims),nrow=2)[1,]
-		voxdims=voxdim.gjdens(voxdims)
-	}
-
-	if(missing(origin)){
-		if(is.gjdens(inds))
-			origin=matrix(getBoundingBox(inds),nrow=2)[1,]
-		else
-			origin=rep(0,length(dims))
-	}
-
-	NextMethod(inds, dims=dims, voxdims=voxdims, origin=origin, ...)
-}
-
 DotPropertiesFromFile<-function(f, xformfun=NULL, ...){
 	ext=sub(".*\\.([^.]+$)","\\1",basename(f))
 	l=list()
