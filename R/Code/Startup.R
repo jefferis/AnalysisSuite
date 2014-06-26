@@ -110,7 +110,7 @@ for (MyPath in SourcePaths) {
 }
 # Define a numeric version for AnalysisSuite - we'll keep this in sync with 
 # nat and insist that nat version is at least equal to AS major minor patch
-ASVersion<-package_version('1.4.7')
+ASVersion<-package_version('1.5.5')
 natVersion=package_version(installed.packages()['nat','Version'])
 if(!require("nat")){
   if(interactive())
@@ -128,7 +128,7 @@ if(natVersion[1,1:3]<ASVersion[1,1:3]){
   message('***********')
   stop()
 }
-# warn if nat major,minor is grater than AS
+# warn if nat major,minor is greater than AS
 if(natVersion[1,1:2]>ASVersion[1,1:2]){
   message("nat version: ",natVersion,
           ' is >= one point ahead of AnalysisSuite version: ',ASVersion)
