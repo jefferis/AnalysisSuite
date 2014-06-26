@@ -147,7 +147,7 @@ AffineTranslateRotateScale<-function(tx=0,ty=0,tz=0,rx=0,ry=0,rz=0,
 ComposeAffineFromIGSParams<-function(params=NULL, tx=0, ty=0, tz=0, rx=0, ry=0, 
   rz=0, sx=1, sy=1, sz=1, shx=0, shy=0, shz=0, cx=0, cy=0, cz=0, legacy=NA){
 
-	.Deprecated('cmtkparams2affmat','nat')
+	.Deprecated('nat::cmtkparams2affmat')
 	cmtkparams2affmat(params=params, tx=tx, ty=ty, tz=tz, rx=rx, ry=ry, 
 		rz=rz, sx=sx, sy=sy, sz=sz, shx=shx, shy=shy, shz=shz, cx=cx, cy=cy, cz=cz, 
 		legacy=NA)
@@ -292,6 +292,6 @@ CalculateIGSParamsFromLandmarkPairs<-function(landmarks,dofs=c(3,6,9,12),
 #' @export
 #' @seealso \code{\link{ComposeAffineFromIGSParams}}
 DecomposeAffineToIGSParams<-function(matrix,centre=c(0,0,0)){
-	.Deprecated('affmat2cmtkparams','nat')
+	.Deprecated('nat::affmat2cmtkparams')
 	nat::affmat2cmtkparams(matrix,centre=centre)
 }

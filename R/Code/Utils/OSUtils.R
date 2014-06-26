@@ -9,8 +9,8 @@ makehardlink<-function(...){
 }
 
 swapfilenames<-function(...){
-  .Deprecated('file.swap')
-  file.swap(...)
+  .Deprecated('nat.utils::file.swap')
+  nat.utils::file.swap(...)
 }
 
 is.dir<-function(dir){

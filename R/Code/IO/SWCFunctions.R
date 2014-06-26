@@ -48,7 +48,7 @@
 # plotneuron2d(MyNeuron,ToFile=T) # produce a rotater file
 
 ReadNeuronFromSWC<-function(f, ...){
-  .Deprecated('read.neuron','nat')
+  .Deprecated('nat::read.neuron')
   nat::read.neuron(f, format='swc', ...)
 }
 
@@ -92,7 +92,7 @@ SWC2Neuron<-function(swc,filename,parse.method=c("CoreNeuronFromSWC","ParseSWC")
 }
 
 WriteSWCFile<-function(ANeuron,FileName, ...){
-  .Deprecated('write.neuron','nat')
+  .Deprecated('nat::write.neuron')
   nat::write.neuron(ANeuron, FileName, format='swc', ...)
 }
 

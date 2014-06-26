@@ -58,7 +58,7 @@ if(R.version$major<3){
 #' Deprecated method to calculate dotprops
 #' see nat::dotprops
 DotProperties<-function(points,k=20,UseLabels=TRUE,na.rm=FALSE){
-	.Deprecated('dotprops','nat')
+	.Deprecated('nat::dotprops')
 	nat::dotprops(x=points,k=k,Labels=UseLabels,na.rm=TRUE)
 }
 
@@ -104,7 +104,7 @@ DotPropertiesFromFile<-function(f, xformfun=NULL, ...){
 transform.dotprops<-function(dp,reg,k, RecalculateDotProps=T,na.action=c('warn','drop','error'),...) {
 	na.action=match.arg(na.action)
 	if(!RecalculateDotProps) stop("RecalculateDotProps must always be TRUE!")
-	.Deprecated('xform','nat')
+	.Deprecated('nat::xform')
 	nat::xform(dp,reg,k=k)
 }
 

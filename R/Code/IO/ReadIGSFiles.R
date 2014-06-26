@@ -43,7 +43,7 @@
 #' read.cmtkreg function but we have kept the old default of TRUE for calls
 #' coming in via ReadIGSRegistration
 ReadIGSRegistration <- function (filename, ReturnRegistrationOnly=NULL){
-	.Deprecated('read.cmtkreg','nat')
+	.Deprecated('nat::read.cmtkreg')
 	if(is.null(ReturnRegistrationOnly)) ReturnRegistrationOnly=TRUE
 	read.cmtkreg(filename,ReturnRegistrationOnly)
 }
@@ -56,7 +56,7 @@ ReadIGSRegistration <- function (filename, ReturnRegistrationOnly=NULL){
 #' @param CheckLabel Check, fix and warn for invalid or duplicate labels (by
 #'   default)
 ReadIGSTypedStream<-function(con, CheckLabel=TRUE){
-	.Deprecated('read.cmtk','nat')
+	.Deprecated('nat::read.cmtk')
 	read.cmtk(con,CheckLabel=CheckLabel)
 }
 
@@ -102,7 +102,7 @@ IGSParamsToIGSRegistration<-function(x,reference="dummy",model="dummy"){
 #'   \code{\link{WriteIGSRegistration}}
 #' @export
 CMTKParamsToCMTKRegistration<-function(x,reference="dummy",floating="dummy"){
-  .Deprecated('cmtkreglist','nat')
+  .Deprecated('nat::cmtkreglist')
   nat::cmtkreglist(x,reference=reference,floating=floating)
 }
 
@@ -120,7 +120,7 @@ CMTKParamsToCMTKRegistration<-function(x,reference="dummy",floating="dummy"){
 #' \code{\link{CMTKParamsToCMTKRegistration},\link{WriteIGSRegistrationFolder}}
 #' @export
 AffineToCMTKRegistration<-function(x,centre,reference,floating){
-  .Deprecated('cmtkreglist','nat')
+  .Deprecated('nat::cmtkreglist')
   arglist=list(x=x)
   if(!missing(centre)) arglist$centre=centre
   if(!missing(reference)) arglist$reference=reference
@@ -168,7 +168,7 @@ WriteIGSRegistrationFolder<-function(reglist,foldername){
 #'
 #' deprecated in favour of nat::write.cmtklandmarks
 WriteIGSLandmarks<-function(xyzs,filename,Force=FALSE){
-	.Deprecated('write.cmtklandmarks','nat')
+	.Deprecated('nat::write.cmtklandmarks')
 	write.cmtklandmarks(xyzs,filename,Force=Force)
 }
 
@@ -176,7 +176,7 @@ WriteIGSLandmarks<-function(xyzs,filename,Force=FALSE){
 #'
 #' deprecated in favour of nat::read.cmtklandmarks
 ReadIGSLandmarks<-function(...){
-	.Deprecated('read.cmtklandmarks','nat')
+	.Deprecated('nat::read.cmtklandmarks')
 	read.cmtklandmarks(...)
 }
 

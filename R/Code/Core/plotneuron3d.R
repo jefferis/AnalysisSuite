@@ -9,7 +9,7 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,NeuronNames=FALSE,
 	WithNodes=T,WithAllPoints=F,WithText=F,HighlightLongestSegment=FALSE,PlotSubTrees=T,
 	ClearRGL=T,NeuronList=MyNeurons,col=NULL,...){
 	
-	.Deprecated('plot3d.neuron','nat')
+	.Deprecated('nat::plot3d.neuron')
 	if(HighlightLongestSegment)
 		stop("HighlightLongestSegment has been retired. See GetLongestSegment")
 	plot3d(ANeuron)
@@ -40,7 +40,7 @@ plotneuron3d.simple<-function(ANeuron, WithLine=T,NeuronNames=FALSE,
 }
 
 plot3dsurface<-function(material,d,VertexComponent="Vertices",col=rainbow,...){
-	.Deprecated('plot3d.hxsurf','nat')
+	.Deprecated('nat::plot3d.hxsurf')
 	invisible(plot3d(as.hxsurf(d),materials=material,col=col,...))
 }
 

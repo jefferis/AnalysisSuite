@@ -175,7 +175,7 @@ as.igraph.swc<-function(x, directed=TRUE, prune=TRUE, keep.ids=prune, ...){
 #' @rdname CoreNeuron
 #' @seealso \code{\link{CoreNeuronFromGraph}}
 CoreNeuronFromSWC<-function(swc,origin=NULL){
-  .Deprecated('as.neuron.data.frame','nat')
+  .Deprecated('nat::as.neuron.data.frame')
   as.neuron(swc)
 }
 
@@ -238,7 +238,7 @@ neurongraph.swc<-function(x, directed=TRUE){
 #' @rdname CoreNeuron
 #' @seealso \code{\link{graph.dfs},\link{RerootNeuron},\link{}}
 CoreNeuronFromGraph<-function(g, origin=NULL, Verbose=TRUE){
-  .Deprecated('as.neuron.ngraph','nat')
+  .Deprecated('nat::as.neuron.ngraph')
   if(!inherits(g,'ngraph')) class(g)=c("ngraph",class(g))
   as.neuron(g,origin=origin,Verbose=Verbose)
 }

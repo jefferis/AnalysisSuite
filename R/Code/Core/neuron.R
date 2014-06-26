@@ -116,7 +116,7 @@ write.neuron.extra<-function(n,filename=NULL,dir=NULL,ftype=c('neurolucida.asc',
 #' @seealso \code{\link{transform.dotprops}}
 transform.points3d<-function(x,reg,na.action=c('warn','drop','error'),FallBackToAffine=FALSE,...)
 {
-	.Deprecated('xform','nat')
+	.Deprecated('nat::xform')
 	xform(x,reg,na.action=na.action,FallBackToAffine=FallBackToAffine,...)
 }
 
@@ -133,6 +133,6 @@ transform.points3d<-function(x,reg,na.action=c('warn','drop','error'),FallBackTo
 #' @export
 #' @seealso \code{\link{transform.dotprops}}
 transform.neuron<-function(x,reg,na.action='error',FallBackToAffine=TRUE,...) {
-	.Deprecated('xform','nat')
+	.Deprecated('nat::xform')
 	xform(x,reg,na.action=na.action,FallBackToAffine=FallBackToAffine,...)
 }

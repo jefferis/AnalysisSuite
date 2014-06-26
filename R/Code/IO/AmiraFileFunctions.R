@@ -45,13 +45,13 @@
 require(tools) # for md5sum
 
 ReadAmiramesh<-function(filename,DataSectionsToRead=NULL,Verbose=FALSE,AttachFullHeader=FALSE,Simplify=TRUE,endian=NULL){
-  .Deprecated('read.amiramesh','nat')
+  .Deprecated('nat::read.amiramesh')
   nat::read.amiramesh(file=filename,sections=DataSectionsToRead,
     header=AttachFullHeader,simplify=Simplify,Verbose=Verbose,endian=endian)
 }
 
 ReadAmiramesh.Header<-function(con,Verbose=TRUE,CloseConnection=NULL){
-  .Deprecated('read.amiramesh.header','nat')
+  .Deprecated('nat::read.amiramesh.header')
   
   if( is.logical(CloseConnection) && xor(is.character(con), CloseConnection) )
     stop("If con is a character vector, CloseConnection must now be TRUE.",
@@ -70,7 +70,7 @@ WriteNeuronToAM<-function(ANeuron,AMFile=NULL,
 		file=NULL
 		dir=AMFile
 	}
-	.Deprecated('write.neuron','nat')
+	.Deprecated('nat::write.neuron')
 	nat::write.neuron(ANeuron, file=file, dir=dir, format='hxlineset', 
 		Force=Force, MakeDir=MakeDir, WriteAllSubTrees=WriteAllSubTrees,
 		ScaleSubTreeNumsTo1=ScaleSubTreeNumsTo1, WriteRadius=WriteRadius)
@@ -158,7 +158,7 @@ WriteNeuronToAM3D<-function(ANeuron,AMFile=NULL,
 		file=NULL
 		dir=AMFile
 	}
-	.Deprecated('write.neuron','nat')
+	.Deprecated('nat::write.neuron')
 	nat::write.neuron(ANeuron, file=file, dir=dir, format='hxskel', Force=Force,
 		MakeDir=MakeDir,WriteAllSubTrees=WriteAllSubTrees,
 		ScaleSubTreeNumsTo1=ScaleSubTreeNumsTo1,sep=sep)
@@ -186,7 +186,7 @@ ReadMBLHFromAMSurf<-function(AMSurfFile,Components=c("MB","LH"),WithConvexHull=F
 
 
 ParseAMSurfToContourList<-function(filename,RegionNames="ALL",RegionChoice="Inner",Verbose=FALSE,FallbackRegionCol="grey"){
-	.Deprecated('read.hxsurf','nat')
+	.Deprecated('nat::read.hxsurf')
 	nat::read.hxsurf(filename,RegionNames=if(RegionNames=="ALL") NULL else RegionNames,
 		RegionChoice=RegionChoice,Verbose=Verbose,FallbackRegionCol=FallbackRegionCol)
 }
@@ -456,13 +456,13 @@ Read3DDensityFromAmiraLattice<-function(filename,Verbose=FALSE){
 }
 
 ReadAmiraLandmarks<-function(filename,Verbose=FALSE,CoordinatesOnly=TRUE){
-  .Deprecated("read.amiralandmarks","nat")
+  .Deprecated('nat::read.amiralandmarks')
   nat::read.amiralandmarks(filename, CoordinatesOnly=CoordinatesOnly, 
     Verbose=Verbose)
 }
 
 WriteAmiraLandmarks<-function(filename,d){
-  .Deprecated("write.amiralandmarks","nat")
+  .Deprecated('nat::write.amiralandmarks')
   nat::write.amiralandmarks(file=filename, x=d)
 }
 
@@ -525,7 +525,7 @@ WriteGenericAmiramesh<-function(filename,d,ContentType){
 #' @export
 #' @seealso \code{\link{read.neuron},\link{ReadNeuronFromAM3D}
 ReadNeuronFromAM<-function(amfile,defaultDiameter=NA_real_){
-  .Deprecated('read.neuron.hxlineset','nat')
+  .Deprecated('nat::read.neuron.hxlineset')
   nat:::read.neuron.hxlineset(amfile, defaultDiameter=defaultDiameter)
 }
 
