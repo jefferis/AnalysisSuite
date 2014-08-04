@@ -110,8 +110,8 @@ for (MyPath in SourcePaths) {
 }
 # Define a numeric version for AnalysisSuite - we'll keep this in sync with 
 # nat and insist that nat version is at least equal to AS major minor patch
-ASVersion<-package_version('1.5.5')
-natVersion=package_version(installed.packages()['nat','Version'])
+ASVersion<-package_version('1.5.11')
+natVersion=packageVersion("nat")
 if(!require("nat")){
   if(interactive())
     browseURL('https://github.com/jefferis/nat#installation')
