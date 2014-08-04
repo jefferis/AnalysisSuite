@@ -324,7 +324,7 @@ test.ReadWriteNeuronFromAM<-function(){
   fieldsToCheckLong=c("NeuronName", "NumPoints", "StartPoint", "BranchPoints", "EndPoints", 
     "NumSegs", "SegList", "d")
       
-	tmpfile=tempfile()
+	tmpfile=tempfile(fileext='.am')
 	on.exit(unlink(tmpfile))
 	am3d=read.neuron(file.path(TestDir,"Data","neurons","testneuron_am3d.am"))
 	# converted to lineset in amira by hxskeletonize
