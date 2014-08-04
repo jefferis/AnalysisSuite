@@ -338,21 +338,8 @@ SimplifyLabelFile<-function(f,omitMaterials="CellBody",includeMaterials=NULL)
 #' #CMTKStatistics('someneuron.nrrd',mask='neuropilregionmask.nrrd')
 CMTKStatistics<-function(f,mask,masktype=c("label","binary"),
 	exe=file.path(cmtk.bindir(check=TRUE),"statistics")){
-	masktype=match.arg(masktype)
-	if(length(f)>1) return(sapply(f,CMTKStatistics,mask=mask,masktype=masktype,exe=exe))
-	args=f
-	if(!missing(mask)){
-		args=c(ifelse(masktype=='label','--Mask','--mask'),mask,args)
-	}
-	rval=system2(exe,args,stdout=TRUE)
-	# there is a bug in versions of CMTK statistics <2.3.1 when used with a mask 
-	# the header says that there are two entropy columns (H1,H2)
-	# but in fact there is only 1. 
-	rval[2]=sub('H1\tH2','Entropy',rval[2])
-  # use Entropy as standard columen method name
-	rval[2]=sub('\tH\t','\tEntropy\t',rval[2])
-	rval[2]=sub('#M','MaskLevel',rval[2])
-	read.table(text=rval,header=TRUE,skip=1,comment.char="")
+	.Deprecated("nat::cmtk.statistics")
+	nat::cmtk.statistics(f=f, mask=mask, masktype=masktype)
 }
 
 CMTKSimilarity<-function(floating,reference,exe=file.path(cmtk.bindir(check=TRUE),"similarity"),
