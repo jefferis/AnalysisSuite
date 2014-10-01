@@ -88,7 +88,7 @@ SWC2Neuron<-function(swc,filename,parse.method=c("CoreNeuronFromSWC","ParseSWC")
 		CreatedAt=Sys.time(),
 		NodeName=Sys.info()["nodename"],
 		InputFileStat=file.info(filename)[1,])
-	as.neuron(c(neuron_extra,neuron_core,list(d=swc)))
+	as.neuron(c(neuron_extra,neuron_core))
 }
 
 WriteSWCFile<-function(ANeuron,FileName, ...){
