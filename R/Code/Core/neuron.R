@@ -15,9 +15,7 @@ read.neuron.extra<-function(f, ...){
 	} else {
 		h=readLines(f,1) # nb readLines can cope with gzipped data
 		
-		if(regexpr("xml",h,ignore.case=TRUE)>0)
-			n=ReadNeuronsFromLongairTraces(f, MergePaths=TRUE, ...)
-		else if(regexpr("^;",h)>0)
+		if(regexpr("^;",h)>0)
 			n=ReadNeuronFromAsc(f, ...)
 		else stop("Unable to identify file format of file: ",f)
 	}
