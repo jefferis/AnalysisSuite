@@ -29,7 +29,7 @@ local({
       zip_file=paste(tempfile(),'-analysissuite.zip',sep="")
       message("Downloading AnalysisSuite from github")
       zip_url='https://github.com/jefferis/AnalysisSuite/zipball/master'
-      request=GET(zip_url, config(ssl.verifypeer = FALSE))
+      request=GET(zip_url)
       stop_for_status(request)
       writeBin(content(request), zip_file)
       on.exit(unlink(zip_file),add=TRUE)
