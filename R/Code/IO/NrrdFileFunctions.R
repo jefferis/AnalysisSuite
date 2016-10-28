@@ -5,7 +5,7 @@ ReadNrrdHeader<-function(filename,Verbose=TRUE,CloseConnection=TRUE){
 
 NrrdDataFiles<-function(nhdr,ReturnAbsPath=TRUE){
   .Deprecated("nat::nrrd.datafiles")
-  nat::nrrd.datafiles(nhdr, full.names=ReturnAbsPath)
+  nat:::nrrd.datafiles(nhdr, full.names=ReturnAbsPath)
 }
 
 .standardNrrdType<-function(type){

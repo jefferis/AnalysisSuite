@@ -236,7 +236,7 @@ NrrdTestDataLength<-function(infile,defaultReturnVal=TRUE){
 	}
 	# figure out how many bytes we are expecting
 	dataLength=attr(fullh,"datablock")$n*attr(fullh,"datablock")$size
-	datafile=nat::nrrd.datafiles(h)
+	datafile=nat:::nrrd.datafiles(h)
 	if(length(datafile)>1){
 		warning("Don't yet know how to handle detached headers with more than one data file")
 		return(defaultReturnVal)
