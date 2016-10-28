@@ -28,7 +28,7 @@ NrrdDataFiles<-function(nhdr,ReturnAbsPath=TRUE){
 #' @export
 Read3DDensityFromNrrd<-function(filename,Verbose=FALSE,ReadData=TRUE,AttachFullHeader=!ReadData,
 	ReadByteAsRaw=c("unsigned","all","none"),origin=NULL){
-  .Deprecated("nat::.read.nrrd")
+  .Deprecated("nat::read.nrrd")
   nat::read.nrrd(filename,Verbose=Verbose,ReadData=ReadData,AttachFullHeader=AttachFullHeader,
   	ReadByteAsRaw=ReadByteAsRaw,origin=origin)
 }
