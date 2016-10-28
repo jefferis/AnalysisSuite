@@ -90,3 +90,31 @@ ReadVTKLandmarks<-function(filename){
 	attr(m,"vtk_datatype")=datatype
 	m
 }
+
+#' Write 3D mesh in VTK legacy format 
+WriteVTKMesh<-function(filename,d,title,datatype=c("float","double")){
+  if(!inherits(d, "mesh3d")) d=nat::as.mesh3d(d)
+  xyz=t(d$vb[1:3, ])
+  numpoints=nrow(xyz)
+  datatype=match.arg(datatype)
+  if(missing(title)) title=paste("Data written from R by WriteVTKMesh at",Sys.time())
+  
+  cat("# vtk DataFile Version 2.0",
+      title,
+      "ASCII",
+      "DATASET POLYDATA",
+      paste("POINTS",numpoints,datatype),sep="\n",file=filename)
+  
+  write.table(xyz,col.names=F,row.names=F,file=filename,append=TRUE)
+  
+  # now for the polygon info
+  faces=if(!is.null(d$ib)) t(d$ib) else t(d$it)
+  nfaces=nrow(faces)
+  points_per_face=ncol(faces)
+  nints=nfaces*(points_per_face+1)
+  cat(sprintf("POLYGONS %d %d\n", nfaces, nints), file = filename, append = T)
+  write.table(cbind(points_per_face, faces), col.names=F, row.names=F, 
+              file=filename, append=TRUE)
+  cat("", paste("CELL_DATA", nfaces), paste("POINT_DATA", numpoints), sep="\n",
+      file = filename, append = T)
+}
