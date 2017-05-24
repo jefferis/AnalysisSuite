@@ -173,7 +173,7 @@ NrrdHisto<-function(infile,outfile=sub("\\.([^.]+)$",".histo.\\1",infile),
 		}
 	}
 	unuhistooptions=paste(unuhistooptions,"-b",bins)
-	if(!missing(maskfile)) unuhistooptions=paste(options,"-w",shQuote(maskfile))
+	if(!missing(maskfile)) unuhistooptions=paste(unuhistooptions,"-w",shQuote(maskfile))
 	.callunu("histo",paste(unuhistooptions,"-i",shQuote(infile),"-o",shQuote(outfile)),...)
 	return(outfile)
 }
