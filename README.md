@@ -1,3 +1,5 @@
+**NB most AnalysisSuite functionality has been superseded by the much more modern [nat R package](http://jefferis.github.io/nat/) however this code is still of more than historical interest since a small amount of functionality has yet to be ported to nat.**
+
 This package provides numerous functions for reading/writing and analysing neuroanatomical data in R.  It is an update to accompany the paper:
 
 Cachero, Ostrovsky et al., Sexual Dimorphism in the Fly Brain, Current Biology (2010), doi:10.1016/j.cub.2010.07.045
