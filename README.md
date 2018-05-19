@@ -21,6 +21,7 @@ R Install
 =========
 Make sure you have a recent version of R installed (R>=2.15.1 recommended). Choose from one of the 3 install
 methods below and then see **Running AnalysisSuite in R**.
+
 Easy Install
 ------------
 This is the recommended installation method if you just want to try this out. 
